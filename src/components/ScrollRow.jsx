@@ -2,7 +2,7 @@ import { useRef } from 'react';
 
 // A single-line horizontally scrollable row with left/right arrow buttons,
 // used for swatch pickers that would otherwise wrap onto multiple lines.
-export default function ScrollRow({ children, hideNav, navInline }) {
+export default function ScrollRow({ children, hideNav, navInline, className }) {
   const trackRef = useRef(null);
 
   const scrollBy = (dir) => {
@@ -23,7 +23,7 @@ export default function ScrollRow({ children, hideNav, navInline }) {
   );
 
   return (
-    <div className={'scroll-row' + (navInline ? ' scroll-row-inline-wrap' : '')}>
+    <div className={'scroll-row' + (navInline ? ' scroll-row-inline-wrap' : '') + (className ? ' ' + className : '')}>
       <div className="scroll-row-track" ref={trackRef}>
         {children}
       </div>

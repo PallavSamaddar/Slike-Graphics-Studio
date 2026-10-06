@@ -1,6 +1,7 @@
 import { decodeState } from '../utils.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
+import JacketView from './JacketView.jsx';
 
 // Standalone page: renders ONLY the ticker bar (or widget card) at real
 // size, on a transparent page background — meant to be opened as its own
@@ -29,7 +30,7 @@ export default function PlayerView({ hash }) {
 
   return (
     <div className="player-page">
-      {kind === 'widget' ? <WidgetView st={st} /> : <TickerView st={st} />}
+      {kind === 'widget' ? <WidgetView st={st} /> : kind === 'jacket' ? <JacketView st={st} /> : <TickerView st={st} />}
     </div>
   );
 }

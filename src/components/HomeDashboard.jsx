@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TPLS } from '../data/templates.js';
 import { WIDGET_TPLS } from '../data/widgetTemplates.js';
+import { JACKET_TPLS } from '../data/jacketTemplates.js';
 import { autoTextColor } from '../utils.js';
 import ThemeToggle from './ThemeToggle.jsx';
 import UserMenu from './UserMenu.jsx';
@@ -21,8 +22,14 @@ const FEATURED_WIDGETS = [
   { id: 'midnight-image-right', badge: null },
   { id: 'emerald-globe', badge: null },
 ];
+const FEATURED_JACKETS = [
+  { id: 'crimson-global', badge: null },
+  { id: 'midnight-global', badge: null },
+  { id: 'charcoal-global', badge: null },
+  { id: 'emerald-global', badge: null },
+];
 
-export default function HomeDashboard({ onPickTicker, onPickWidget, onSeeAllTicker, onSeeAllWidgets, theme, onToggleTheme }) {
+export default function HomeDashboard({ onPickTicker, onPickWidget, onPickJacket, onSeeAllTicker, onSeeAllWidgets, onSeeAllJackets, theme, onToggleTheme }) {
   const [menuOpenId, setMenuOpenId] = useState(null);
   const tickerCards = FEATURED_TICKERS
     .map((f) => ({ f, t: TPLS.find((tpl) => tpl.id === f.id) }))
@@ -32,6 +39,10 @@ export default function HomeDashboard({ onPickTicker, onPickWidget, onSeeAllTick
     .map((f) => ({ f, t: WIDGET_TPLS.find((tpl) => tpl.id === f.id) }))
     .filter((x) => x.t)
     .slice(0, 6);
+  const jacketCards = FEATURED_JACKETS
+    .map((f) => ({ f, t: JACKET_TPLS.find((tpl) => tpl.id === f.id) }))
+    .filter((x) => x.t)
+    .slice(0, 4);
 
   return (
     <div className="gallery">
@@ -146,16 +157,46 @@ export default function HomeDashboard({ onPickTicker, onPickWidget, onSeeAllTick
 
         <div className="home-section">
           <div className="home-section-hd">
+            <span className="home-section-title">Jackets</span>
+            <button className="home-section-link" onClick={onSeeAllJackets}>See all templates →</button>
+          </div>
+          <div className="gallery-grid home-featured-grid">
+            {jacketCards.map(({ f, t }) => (
+              <div
+                key={t.id}
+                className={'gallery-card home-featured-card' + (menuOpenId === t.id ? ' card-menu-open' : '')}
+                role="button"
+                tabIndex={0}
+                onClick={() => onPickJacket(t.id)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onPickJacket(t.id); }}
+              >
+                {f.badge && <span className="home-card-badge">{f.badge}</span>}
+                <div className="jacket-mini">
+                  <div className="jacket-mini-video" />
+                  <div className="jacket-mini-inset" />
+                  <div className="jacket-mini-bar">
+                    <span className="jacket-mini-logo" style={{ background: t.style.logoGradient || t.style.logoColor, color: autoTextColor(t.style.logoColor) }}>TOI</span>
+                    <span className="jacket-mini-ticker" />
+                    <span className="jacket-mini-time" style={{ background: t.style.timeColor, color: autoTextColor(t.style.timeColor) }} />
+                  </div>
+                </div>
+                <div className="home-card-name">
+                  {t.name}
+                  <CardMenu onDuplicate={() => onPickJacket(t.id)} onOpenChange={(o) => setMenuOpenId(o ? t.id : null)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="home-section">
+          <div className="home-section-hd">
             <span className="home-section-title">More coming soon</span>
           </div>
           <div className="gallery-grid home-featured-grid">
             <div className="gallery-card home-featured-card home-card-disabled">
               <span className="home-card-badge home-card-badge-soon">Coming soon</span>
               <div className="tpl-scratch-preview tpl-scratch-preview-16x9 gallery-preview-bg">Captions</div>
-            </div>
-            <div className="gallery-card home-featured-card home-card-disabled">
-              <span className="home-card-badge home-card-badge-soon">Coming soon</span>
-              <div className="tpl-scratch-preview tpl-scratch-preview-16x9 gallery-preview-bg">Jackets</div>
             </div>
           </div>
         </div>

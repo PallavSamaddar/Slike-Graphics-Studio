@@ -224,16 +224,28 @@ export default function WidgetStyleControls({ st, setSt }) {
           </div>
         </div>
 
+        <div className="form-g" style={{ marginBottom: 10 }}>
+          <label className="form-lbl">Category text</label>
+          <input
+            type="text"
+            className="form-inp"
+            placeholder="e.g. News, Sports"
+            value={st.category}
+            onChange={(e) => setSt((state) => ({ ...state, category: e.target.value }))}
+          />
+        </div>
+
         <div className="form-row meta-fields-row" style={{ marginBottom: 16 }}>
           <div className="form-g">
             <label className="form-lbl">Category</label>
-            <input
-              type="text"
-              className="form-inp"
-              placeholder="e.g. News, Sports"
-              value={st.category}
-              onChange={(e) => setSt((state) => ({ ...state, category: e.target.value }))}
-            />
+            <label className="widget-toggle-field">
+              <input
+                type="checkbox"
+                checked={!!st.showCategory}
+                onChange={(e) => setSt((state) => ({ ...state, showCategory: e.target.checked }))}
+              />
+              Show category
+            </label>
           </div>
           <div className="form-g">
             <label className="form-lbl">Time</label>

@@ -3,6 +3,7 @@ import { TPLS } from '../data/templates.js';
 import CategoryRail from './CategoryRail.jsx';
 import ComingSoonPanel from './ComingSoonPanel.jsx';
 import WidgetGallery from './WidgetGallery.jsx';
+import JacketGallery from './JacketGallery.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import UserMenu from './UserMenu.jsx';
 
@@ -40,6 +41,8 @@ export default function TemplateGallery({ onPick, theme, onToggleTheme, initialC
 
         {category === 'widgets' ? (
           <WidgetGallery onPick={(id) => onPick('widgets', id)} />
+        ) : category === 'jackets' ? (
+          <JacketGallery onPick={(id) => onPick('jackets', id)} />
         ) : category !== 'ticker' ? (
           <div className="gallery-body gallery-body-center">
             <ComingSoonPanel category={category} />

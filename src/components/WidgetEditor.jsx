@@ -16,11 +16,9 @@ export default function WidgetEditor({ st, setSt, viewTab, setViewTab }) {
       <input
         type="text"
         className="form-inp"
-        placeholder={viewTab === 'manual' ? 'Enter title here' : 'Set automatically from the first line'}
+        placeholder="Enter title here"
         value={st.heading}
         onChange={(e) => setHeading(e.target.value)}
-        readOnly={viewTab !== 'manual'}
-        title={viewTab !== 'manual' ? 'Heading follows the first line from this source — switch to Manual to edit it directly.' : undefined}
       />
     </div>
   );

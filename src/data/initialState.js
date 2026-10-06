@@ -36,6 +36,7 @@ export const initialWidgetState = {
   heading: '',
   items: [''],
   category: 'News',
+  showCategory: true,
   showTime: true,
   publishedAt: null,
   showProduct: true,
@@ -83,5 +84,52 @@ export const initialWidgetState = {
   behavior: {
     animation: 'fade',
     itemDuration: 4,
+  },
+};
+
+// A "Jacket" overlays a full-bleed live feed with a few broadcast-standard
+// elements: a bottom-left logo + scrolling ticker headline, a bottom-right
+// time/weather box, and an optional vertical image panel on the left or
+// right edge. Unlike the widget, it has no content-source machinery
+// (Feed/JSON/media) — just a headline string and branding fields.
+export const initialJacketState = {
+  template: 'crimson-global',
+  logoText: 'TOI',
+  logoSubtext: 'News That Moves, Nonstop.',
+  tagText: 'GLOBAL',
+  headline: "Breaking news from India ◆ Markets hit record high ◆ Watch: today's top stories",
+  tickerTemplate: null,
+  tickerStyleOverrides: {},
+  tickerBadgeOverrides: {},
+  weather: '',
+  showTime: true,
+  showWeather: false,
+  showLogo: true,
+  showHeadline: true,
+  mainVideoUrl: null,
+  mainVideoName: '',
+  mainVideoPreset: null,
+  logoImage: null,
+  logoImageName: '',
+  logoPos: 'bottom-left',
+  imagePanelPos: 'left',
+  imagePanelSize: 26,
+  sideImage: null,
+  sideImageName: '',
+  style: {
+    logoColor: '#C22F1E',
+    logoGradient: null,
+    tagColor: '#1A1714',
+    timeColor: '#C22F1E',
+    fontFamily: 'Inter, sans-serif',
+  },
+  headlineText: {
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '22px',
+    fontWeight: '800',
+    fontStyle: 'normal',
+    textDecoration: 'none',
+    textAlign: 'left',
+    textTransform: 'uppercase',
   },
 };

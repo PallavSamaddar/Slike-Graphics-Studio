@@ -170,7 +170,7 @@ export default function WidgetView({ st, setSt, viewTab }) {
       <div className="widget-card-content">
         <div className="widget-card-top">
           <div className="widget-card-headline-col">
-            {st.category && (
+            {st.showCategory && st.category && (
               <span className="widget-card-category">
                 <span className="widget-card-category-dot" />
                 {st.category}
