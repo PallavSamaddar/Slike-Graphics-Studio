@@ -1,51 +1,31 @@
 import ContentSource, { ContentSourceTabs } from './ContentSource.jsx';
+import { Field } from '../ui/controls.jsx';
 
-// Left-panel form for the Heading + List widget: a Manual/Feed/JSON source
-// picker up top (drives both Heading and Description lines), then the
-// fields themselves — mirroring the ticker's Content Source model on `st`.
-// viewTab/setViewTab are lifted to App so the live preview (a sibling panel)
-// can mirror whichever draft tab is open, not just the last-saved source.
+// The Heading + List widget's Content section: the Manual/Feed/JSON source tabs up top
+// (they drive both the Heading and the Description lines), then the fields themselves —
+// mirroring the ticker's Content source model on `st`.
+// viewTab/setViewTab are lifted to App so the live preview (beside the form) can mirror
+// whichever draft tab is open, not just the last-saved source.
 export default function WidgetEditor({ st, setSt, viewTab, setViewTab }) {
   const setHeading = (v) => setSt((s) => ({ ...s, heading: v }));
 
   const headingField = (
-    <div className="form-g" style={{ marginBottom: 16 }}>
-      <label className="form-lbl">
-        Heading <span className="req-mark">*</span>
-      </label>
-      <input
-        type="text"
-        className="form-inp"
-        placeholder="Enter title here"
-        value={st.heading}
-        onChange={(e) => setHeading(e.target.value)}
-      />
+    <div className="frow">
+      <Field label={<>Heading <span className="req-mark">*</span></>} grow path="heading">
+        <input type="text" placeholder="Enter title here" value={st.heading} onChange={(e) => setHeading(e.target.value)} />
+      </Field>
     </div>
   );
 
   return (
-    <div className="sec">
-      <div className="sec-hd"><span className="sec-title">Content</span></div>
-
-      <div className="form-g" style={{ marginBottom: 16 }}>
-        <ContentSourceTabs st={st} viewTab={viewTab} onViewTabChange={setViewTab} kind="widget" />
-      </div>
+    <div className="fieldset">
+      <div className="fieldset-title">Content</div>
+      <ContentSourceTabs st={st} viewTab={viewTab} onViewTabChange={setViewTab} kind="widget" />
 
       {viewTab === 'manual' && (
         <>
           {headingField}
-          <div className="form-g widget-desc-items" style={{ marginBottom: 16 }}>
-            <label className="form-lbl">
-              Description lines <span className="req-mark">*</span>
-            </label>
-            <ContentSource st={st} setSt={setSt} bare hideTabs kind="widget" viewTab={viewTab} onViewTabChange={setViewTab} />
-          </div>
-        </>
-      )}
-
-      {viewTab !== 'manual' && (
-        <>
-          <div className="widget-desc-items">
+          <div className="frow widget-desc-items">
             <ContentSource
               st={st}
               setSt={setSt}
@@ -54,10 +34,25 @@ export default function WidgetEditor({ st, setSt, viewTab, setViewTab }) {
               kind="widget"
               viewTab={viewTab}
               onViewTabChange={setViewTab}
-              afterUrl={headingField}
+              itemsLabel={<>Description lines <span className="req-mark">*</span></>}
             />
           </div>
         </>
+      )}
+
+      {viewTab !== 'manual' && (
+        <div className="widget-desc-items">
+          <ContentSource
+            st={st}
+            setSt={setSt}
+            bare
+            hideTabs
+            kind="widget"
+            viewTab={viewTab}
+            onViewTabChange={setViewTab}
+            afterUrl={headingField}
+          />
+        </div>
       )}
     </div>
   );

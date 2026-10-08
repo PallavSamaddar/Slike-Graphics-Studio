@@ -1,10 +1,20 @@
+import Select from '../ui/Select.jsx';
+import { Field, NumBox, Seg } from '../ui/controls.jsx';
+
 const ANIMATIONS = [
-  { id: 'fade', label: 'Fade' },
-  { id: 'flip', label: 'Flip' },
-  { id: 'slide', label: 'Slide' },
-  { id: 'typewriter', label: 'Typewriter' },
+  { value: 'fade', label: 'Fade' },
+  { value: 'flip', label: 'Flip' },
+  { value: 'slide', label: 'Slide' },
+  { value: 'typewriter', label: 'Typewriter' },
+];
+const SPEEDS = [
+  { value: 1, label: 'Slow' },
+  { value: 2, label: 'Medium' },
+  { value: 3, label: 'Fast' },
 ];
 
+// The ticker's Behaviour section. Every field stays in place; the ones the display mode
+// doesn't use grey where they sit (interaction rules: every field is always in the DOM).
 export default function TickerBehaviour({ st, setSt }) {
   const { behavior } = st;
 
@@ -12,52 +22,29 @@ export default function TickerBehaviour({ st, setSt }) {
   const setMode = (m) => setSt((state) => ({ ...state, behavior: { ...state.behavior, mode: m } }));
   const setAnimation = (a) => setSt((state) => ({ ...state, behavior: { ...state.behavior, animation: a } }));
   const setItemDuration = (v) => setSt((state) => ({ ...state, behavior: { ...state.behavior, itemDuration: Math.min(30, Math.max(1, v)) } }));
+  const loop = behavior.mode === 'loop';
 
   return (
-    <div className="style-sec">
-      <div className="form-row form-row-4">
-        <div className="form-g" style={{ gridColumn: 'span 2' }}>
-          <label className="form-lbl">Display Mode</label>
-          <div className="src-tog" style={{ marginBottom: 0 }}>
-            <button className={'src-opt' + (behavior.mode === 'loop' ? ' active' : '')} onClick={() => setMode('loop')}>Continuous</button>
-            <button className={'src-opt' + (behavior.mode === 'single' ? ' active' : '')} onClick={() => setMode('single')}>Sequential</button>
-          </div>
-        </div>
-
-        {behavior.mode === 'loop' && (
-          <div className="form-g">
-            <label className="form-lbl">Scroll Speed</label>
-            <select className="form-inp form-sel" value={behavior.speed} onChange={(e) => setSpeed(e.target.value)}>
-              <option value={1}>Slow</option>
-              <option value={2}>Medium</option>
-              <option value={3}>Fast</option>
-            </select>
-          </div>
-        )}
-
-        {behavior.mode === 'single' && (
-          <>
-            <div className="form-g">
-              <label className="form-lbl">Text Animation</label>
-              <select className="form-inp form-sel" value={behavior.animation || 'fade'} onChange={(e) => setAnimation(e.target.value)}>
-                {ANIMATIONS.map((a) => (
-                  <option key={a.id} value={a.id}>{a.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-g">
-              <label className="form-lbl">Duration (sec)</label>
-              <input
-                type="number"
-                className="form-inp"
-                min={1}
-                max={30}
-                value={behavior.itemDuration || 5}
-                onChange={(e) => setItemDuration(parseInt(e.target.value, 10) || 1)}
-              />
-            </div>
-          </>
-        )}
+    <div className="fieldset">
+      <div className="fieldset-title">Behaviour</div>
+      <div className="frow">
+        <Field label="Display mode" path="behavior.mode">
+          <Seg
+            value={behavior.mode}
+            onChange={setMode}
+            ariaLabel="Display mode"
+            options={[{ value: 'loop', label: 'Continuous' }, { value: 'single', label: 'Sequential' }]}
+          />
+        </Field>
+        <Field label="Scroll speed" path="behavior.speed" off={!loop} offReason="Only for Continuous display mode">
+          <Select value={behavior.speed} options={SPEEDS} onChange={setSpeed} ariaLabel="Scroll speed" />
+        </Field>
+        <Field label="Text animation" path="behavior.animation" off={loop} offReason="Only for Sequential display mode">
+          <Select value={behavior.animation || 'fade'} options={ANIMATIONS} onChange={setAnimation} ariaLabel="Text animation" />
+        </Field>
+        <Field label="Duration" path="behavior.itemDuration" off={loop} offReason="Only for Sequential display mode">
+          <NumBox value={behavior.itemDuration || 5} unit="sec" min={1} max={30} off={loop} onChange={(n) => setItemDuration(Math.round(n))} ariaLabel="Duration" />
+        </Field>
       </div>
     </div>
   );

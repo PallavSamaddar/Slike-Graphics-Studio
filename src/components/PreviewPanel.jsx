@@ -1,13 +1,12 @@
 import { useRef } from 'react';
 import TickerView from './TickerView.jsx';
-import StyleControls from './StyleControls.jsx';
 import FullscreenButton from './FullscreenButton.jsx';
 
 export default function PreviewPanel({ st, setSt }) {
   const canvasRef = useRef(null);
 
   return (
-    <aside className="panel-right">
+    <div className="card studio-canvas-card">
       <div className="broadcast-canvas" ref={canvasRef}>
         <FullscreenButton targetRef={canvasRef} />
         <div className="broadcast-frame-group">
@@ -24,9 +23,6 @@ export default function PreviewPanel({ st, setSt }) {
         </div>
       </div>
 
-      <div className="panel-right-scroll">
-        <StyleControls st={st} setSt={setSt} />
-      </div>
-    </aside>
+    </div>
   );
 }

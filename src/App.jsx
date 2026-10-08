@@ -4,15 +4,25 @@ import { TPLS } from './data/templates.js';
 import { WIDGET_TPLS } from './data/widgetTemplates.js';
 import { JACKET_TPLS } from './data/jacketTemplates.js';
 import { useTheme } from './useTheme.js';
+import { ToastHost } from './ui/Toast.jsx';
+import TopBar from './ui/TopBar.jsx';
 import TemplateGallery from './components/TemplateGallery.jsx';
 import HomeDashboard from './components/HomeDashboard.jsx';
-import Header from './components/Header.jsx';
+import StudioPage from './components/StudioPage.jsx';
 import EditorPanel from './components/EditorPanel.jsx';
 import PreviewPanel from './components/PreviewPanel.jsx';
+import StyleControls from './components/StyleControls.jsx';
 import WidgetEditor from './components/WidgetEditor.jsx';
 import WidgetPreviewPanel from './components/WidgetPreviewPanel.jsx';
+import WidgetStyleControls from './components/WidgetStyleControls.jsx';
 import JacketEditor from './components/JacketEditor.jsx';
 import JacketPreviewPanel from './components/JacketPreviewPanel.jsx';
+import JacketStyleControls from './components/JacketStyleControls.jsx';
+
+const ROOMS = [
+  { id: 'home', label: 'Home' },
+  { id: 'templates', label: 'Templates', count: TPLS.length + WIDGET_TPLS.length + JACKET_TPLS.length },
+];
 
 export default function App() {
   const [view, setView] = useState('home'); // 'home' | 'gallery' | 'studio' | 'studio-widget' | 'studio-jacket'
@@ -25,8 +35,16 @@ export default function App() {
   const [jst, setJst] = useState(initialJacketState);
   const [savedJst, setSavedJst] = useState(initialJacketState);
   const [widgetPreviewTab, setWidgetPreviewTab] = useState(initialWidgetState.src);
-  const [saved, setSaved] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  // What is on air, per graphic: the published snapshot (what the player URL carries), its
+  // version and note, and the template state it started from. null until first published.
+  const [pub, setPub] = useState({ ticker: null, widget: null, jacket: null });
+  const [base, setBase] = useState({ ticker: initialState, widget: initialWidgetState, jacket: initialJacketState });
+  const { pick: themePick, setPick: setThemePick } = useTheme();
+
+  const startFrom = (kind, next) => {
+    setBase((b) => ({ ...b, [kind]: next }));
+    setPub((p) => ({ ...p, [kind]: null }));
+  };
 
   const applyTemplate = (id) => {
     setSt((s) => {
@@ -39,6 +57,7 @@ export default function App() {
         text: JSON.parse(JSON.stringify(t.text)),
       };
       setSavedSt(next);
+      startFrom('ticker', next);
       return next;
     });
   };
@@ -48,6 +67,7 @@ export default function App() {
       const t = WIDGET_TPLS.find((tpl) => tpl.id === id);
       const next = !t ? { ...s, template: id } : { ...s, template: id, style: JSON.parse(JSON.stringify(t.style)) };
       setSavedWst(next);
+      startFrom('widget', next);
       return next;
     });
   };
@@ -57,6 +77,7 @@ export default function App() {
       const t = JACKET_TPLS.find((tpl) => tpl.id === id);
       const next = !t ? { ...s, template: id } : { ...s, template: id, style: JSON.parse(JSON.stringify(t.style)) };
       setSavedJst(next);
+      startFrom('jacket', next);
       return next;
     });
   };
@@ -77,23 +98,26 @@ export default function App() {
     setView('studio');
   };
 
-  const handleSave = (kind) => {
-    if (kind === 'widget') setSavedWst(wst);
-    else if (kind === 'jacket') setSavedJst(jst);
-    else setSavedSt(st);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2600);
-  };
+  const room = view === 'home' ? 'home' : view === 'gallery' ? 'templates' : returnView === 'gallery' ? 'templates' : 'home';
+  const onRoom = (id) => setView(id === 'home' ? 'home' : 'gallery');
+  const shellTop = <TopBar room={room} rooms={ROOMS} onRoom={onRoom} themePick={themePick} onThemePick={setThemePick} />;
 
-  const handleResetTicker = () => setSt(savedSt);
-  const handleResetWidget = () => setWst(savedWst);
-  const handleResetJacket = () => setJst(savedJst);
+  // Save keeps the draft; Publish saves quietly, then puts it on air as the next version.
+  const writer = (kind, cur, setSaved, setCur, saved) => ({
+    onSave: () => setSaved(cur),
+    onPublish: (note) => {
+      setSaved(cur);
+      const v = (pub[kind]?.v || 0) + 1;
+      setPub((p) => ({ ...p, [kind]: { snap: cur, v, note } }));
+      return v;
+    },
+    onDiscard: () => setCur(saved),
+  });
 
+  let page;
   if (view === 'home') {
-    return (
+    page = (
       <HomeDashboard
-        theme={theme}
-        onToggleTheme={toggleTheme}
         onPickTicker={(id) => { setReturnView('home'); applyTemplate(id); setView('studio'); }}
         onPickWidget={(id) => { setReturnView('home'); applyWidgetTemplate(id); setView('studio-widget'); }}
         onPickJacket={(id) => { setReturnView('home'); applyJacketTemplate(id); setView('studio-jacket'); }}
@@ -102,82 +126,67 @@ export default function App() {
         onSeeAllJackets={() => { setGalleryCategory('jackets'); setView('gallery'); }}
       />
     );
-  }
-
-  if (view === 'gallery') {
-    return (
-      <TemplateGallery
-        onPick={handlePick}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        initialCategory={galleryCategory}
-        onHome={() => setView('home')}
+  } else if (view === 'gallery') {
+    page = <TemplateGallery key={galleryCategory} onPick={handlePick} initialCategory={galleryCategory} />;
+  } else if (view === 'studio-widget') {
+    page = (
+      <StudioPage
+        kind="widget"
+        cur={wst}
+        saved={savedWst}
+        base={base.widget}
+        pub={pub.widget}
+        {...writer('widget', wst, setSavedWst, setWst, savedWst)}
+        onBack={() => { if (returnView === 'gallery') setGalleryCategory('widgets'); setView(returnView); }}
+        form={<>
+          <WidgetEditor st={wst} setSt={setWst} viewTab={widgetPreviewTab} setViewTab={setWidgetPreviewTab} />
+          <WidgetStyleControls st={wst} setSt={setWst} />
+        </>}
+        preview={<WidgetPreviewPanel st={wst} setSt={setWst} viewTab={widgetPreviewTab} />}
       />
     );
-  }
-
-  if (view === 'studio-widget') {
-    return (
-      <>
-        <Header
-          st={wst}
-          kind="widget"
-          onSave={() => handleSave('widget')}
-          saved={saved}
-          onBack={() => { if (returnView === 'gallery') setGalleryCategory('widgets'); setView(returnView); }}
-          dirty={JSON.stringify(wst) !== JSON.stringify(savedWst)}
-          onReset={handleResetWidget}
-        />
-        <div className="studio">
-          <main className="panel-center">
-            <div className="tab-body">
-              <WidgetEditor st={wst} setSt={setWst} viewTab={widgetPreviewTab} setViewTab={setWidgetPreviewTab} />
-            </div>
-          </main>
-          <WidgetPreviewPanel st={wst} setSt={setWst} viewTab={widgetPreviewTab} />
-        </div>
-      </>
+  } else if (view === 'studio-jacket') {
+    page = (
+      <StudioPage
+        kind="jacket"
+        cur={jst}
+        saved={savedJst}
+        base={base.jacket}
+        pub={pub.jacket}
+        {...writer('jacket', jst, setSavedJst, setJst, savedJst)}
+        onBack={() => { if (returnView === 'gallery') setGalleryCategory('jackets'); setView(returnView); }}
+        form={<>
+          <JacketEditor st={jst} setSt={setJst} />
+          <JacketStyleControls st={jst} setSt={setJst} />
+        </>}
+        preview={<JacketPreviewPanel st={jst} setSt={setJst} />}
+      />
     );
-  }
-
-  if (view === 'studio-jacket') {
-    return (
-      <>
-        <Header
-          st={jst}
-          kind="jacket"
-          onSave={() => handleSave('jacket')}
-          saved={saved}
-          onBack={() => { if (returnView === 'gallery') setGalleryCategory('jackets'); setView(returnView); }}
-          dirty={JSON.stringify(jst) !== JSON.stringify(savedJst)}
-          onReset={handleResetJacket}
-        />
-        <div className="studio">
-          <main className="panel-center">
-            <div className="tab-body">
-              <JacketEditor st={jst} setSt={setJst} />
-            </div>
-          </main>
-          <JacketPreviewPanel st={jst} setSt={setJst} />
-        </div>
-      </>
+  } else {
+    page = (
+      <StudioPage
+        kind="ticker"
+        cur={st}
+        saved={savedSt}
+        base={base.ticker}
+        pub={pub.ticker}
+        {...writer('ticker', st, setSavedSt, setSt, savedSt)}
+        onBack={() => { if (returnView === 'gallery') setGalleryCategory('ticker'); setView(returnView); }}
+        form={<>
+          <EditorPanel st={st} setSt={setSt} />
+          <StyleControls st={st} setSt={setSt} />
+        </>}
+        preview={<PreviewPanel st={st} setSt={setSt} />}
+      />
     );
   }
 
   return (
-    <>
-      <Header
-        st={st}
-        onSave={() => handleSave('ticker')}
-        saved={saved}
-        onBack={() => { if (returnView === 'gallery') setGalleryCategory('ticker'); setView(returnView); }}
-        dirty={JSON.stringify(st) !== JSON.stringify(savedSt)}
-        onReset={handleResetTicker}
-      />
-      <div className="studio">
-        <EditorPanel st={st} setSt={setSt} />
-        <PreviewPanel st={st} setSt={setSt} />
+    <ToastHost>
+      <div className="shell">
+        {shellTop}
+        <main id="main" className="view-in" key={view}>{page}</main>
       </div>
-    </>
+    </ToastHost>
   );
 }

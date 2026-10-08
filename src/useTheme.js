@@ -1,22 +1,45 @@
 import { useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'gs-theme'; // 'light' | 'dark'
+// The person's theme, as the Player Console's ThemeSwitch keeps it: Light, Dark or
+// Match device, picked in the profile menu, stored in this browser as `pc-theme`.
+// Everyone starts on Light. index.html applies the same pick before the page draws.
+const STORAGE_KEY = 'pc-theme'; // 'light' | 'dark' | 'device'
 
-function getInitialTheme() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function readPick() {
+  try {
+    const v = localStorage.getItem(STORAGE_KEY);
+    if (v === 'light' || v === 'dark' || v === 'device') return v;
+  } catch { /* storage blocked: the pick lasts until reload */ }
+  return 'light';
+}
+
+const deviceDark = () => !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+function apply(pick) {
+  const theme = pick === 'dark' || (pick === 'device' && deviceDark()) ? 'dark' : 'light';
+  const root = document.documentElement;
+  if (root.getAttribute('data-theme') === theme) return;
+  const paint = () => {
+    root.setAttribute('data-theme', theme);
+    document.dispatchEvent(new CustomEvent('pc-themechange', { detail: { theme } }));
+  };
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (document.startViewTransition && !reduce) document.startViewTransition(paint);
+  else paint();
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState(getInitialTheme);
+  const [pick, setPick] = useState(readPick);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
+    apply(pick);
+    try { localStorage.setItem(STORAGE_KEY, pick); } catch { /* ignore */ }
+    if (pick !== 'device' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => apply('device');
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [pick]);
 
-  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
-
-  return { theme, toggleTheme };
+  return { pick, setPick };
 }

@@ -285,11 +285,11 @@ export default function ImageCropperModal({ src, fileName, onCancel, onConfirm }
             <div className="cropper-panel-g">
               <label className="cropper-panel-lbl">Rotate</label>
               <div className="cropper-rotate-row">
-                <button type="button" className="btn btn-ghost cropper-rotate-btn" onClick={() => setRotation((r) => (r - 90 + 360) % 360)}>
+                <button type="button" className="btn ghost cropper-rotate-btn" onClick={() => setRotation((r) => (r - 90 + 360) % 360)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 109-9" /><polyline points="3 3 3 12 12 12" /></svg>
                   Left
                 </button>
-                <button type="button" className="btn btn-ghost cropper-rotate-btn" onClick={() => setRotation((r) => (r + 90) % 360)}>
+                <button type="button" className="btn ghost cropper-rotate-btn" onClick={() => setRotation((r) => (r + 90) % 360)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 10-9 9" /><polyline points="21 3 21 12 12 12" /></svg>
                   Right
                 </button>
@@ -299,13 +299,13 @@ export default function ImageCropperModal({ src, fileName, onCancel, onConfirm }
             <div className="cropper-panel-g">
               <label className="cropper-panel-lbl">Quick Actions</label>
               <div className="cropper-rotate-row">
-                <button type="button" className="btn btn-ghost cropper-rotate-btn" onClick={fitToImage}>
+                <button type="button" className="btn ghost cropper-rotate-btn" onClick={fitToImage}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" /></svg>
                   Fit to image
                 </button>
                 <button
                   type="button"
-                  className="btn btn-ghost cropper-rotate-btn"
+                  className="btn ghost cropper-rotate-btn"
                   onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); setRotation(0); fitToImage(); }}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
@@ -317,8 +317,8 @@ export default function ImageCropperModal({ src, fileName, onCancel, onConfirm }
         </div>
 
         <div className="cropper-actions">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
-          <button type="button" className="btn btn-primary" onClick={confirm} disabled={!rect}>Use image</button>
+          <button type="button" className="btn ghost" onClick={onCancel}>Cancel</button>
+          <button type="button" className="btn" onClick={confirm} disabled={!rect}>Use image</button>
         </div>
       </div>
     </div>

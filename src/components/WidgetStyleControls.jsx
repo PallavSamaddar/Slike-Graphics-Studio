@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import ColorField from './ColorField.jsx';
+import Select from '../ui/Select.jsx';
+import { Field, NumBox, Seg, Toggle } from '../ui/controls.jsx';
 import FormattingToolbar from './FormattingToolbar.jsx';
 import ScrollRow from './ScrollRow.jsx';
 import VideoNameModal from './VideoNameModal.jsx';
@@ -9,10 +11,10 @@ import redeBgVideo from '../assets/rede-bg.mp4';
 import redBackgroundVideo from '../assets/red-background.mp4';
 
 const ANIMATIONS = [
-  { id: 'fade', label: 'Fade' },
-  { id: 'flip', label: 'Flip' },
-  { id: 'slide', label: 'Slide' },
-  { id: 'typewriter', label: 'Typewriter' },
+  { value: 'fade', label: 'Fade' },
+  { value: 'flip', label: 'Flip' },
+  { value: 'slide', label: 'Slide' },
+  { value: 'typewriter', label: 'Typewriter' },
 ];
 
 const TEXTURES = [
@@ -99,12 +101,16 @@ export default function WidgetStyleControls({ st, setSt }) {
     setPendingVideo(null);
   };
 
+  const hasTexture = !!(s.texture && s.texture !== 'none');
+  const hasImage = !!s.badgeImage;
+
   return (
-    <div className="style-controls">
-      <div className="style-sec">
-        <div className="form-row heading-row">
-          <div className="form-g" style={{ maxWidth: 140 }}>
-            <label className="form-lbl">Heading Background</label>
+    <>
+      <div className="fieldset">
+        <div className="fieldset-title">Style</div>
+        <div className="grp-label type-group-label">Heading</div>
+        <div className="frow">
+          <Field label="Heading background" path={['style.headingBg', 'style.headingBgGradient']}>
             <ColorField
               value={s.headingBg}
               fallback="#1A1714"
@@ -113,190 +119,117 @@ export default function WidgetStyleControls({ st, setSt }) {
               gradientValue={s.headingBgGradient}
               onChangeGradient={(css) => setStyle('headingBgGradient', css)}
             />
-          </div>
-          <div className="form-g" style={{ minWidth: 0 }}>
-            <label className="form-lbl">Heading Formatting</label>
-            <FormattingToolbar tx={ht} setTx={setHt} />
-          </div>
+          </Field>
+          <FormattingToolbar tx={ht} setTx={setHt} path="headingText" />
+        </div>
+
+        <div className="grp-label type-group-label">Description</div>
+        <div className="frow">
+          <Field label="Background colour" path={['style.bg', 'style.bgGradient']} off={isVideo} offReason="A background video fills the widget — pick an animation to set a colour">
+            <ColorField value={s.bg} fallback="#8A1B12" onChange={setSolidBg} />
+          </Field>
+          <Field label="Text animation" path="behavior.animation">
+            <Select value={behavior.animation || 'fade'} options={ANIMATIONS} onChange={(v) => setBehavior('animation', v)} ariaLabel="Text animation" />
+          </Field>
+          <Field label="Duration" path="behavior.itemDuration">
+            <NumBox value={behavior.itemDuration || 4} unit="sec" min={1} max={30} onChange={(n) => setBehavior('itemDuration', Math.round(n))} ariaLabel="Duration" />
+          </Field>
+        </div>
+        <div className="frow">
+          <Field label="Image" path={['style.badgeImageName', 'style.badgeImage']} off={usingPerItemMedia} offReason="Feed/JSON images are on for these headlines — they drive the image">
+            <div className="badge-img-row">
+              {s.badgeImage ? (
+                <div className="badge-img-thumb-wrap">
+                  <img className="badge-img-thumb" src={s.badgeImage} alt="" />
+                  <span className="badge-img-name">{s.badgeImageName || 'Untitled image'}</span>
+                  <button type="button" className="badge-img-remove" onClick={() => setStyle('badgeImage', null)} title="Remove image">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+              ) : (
+                <label className="badge-img-upload">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                  Upload
+                  <input type="file" accept="image/*" hidden onChange={handleBadgeImage} />
+                </label>
+              )}
+            </div>
+          </Field>
+          <Field label="Image position" path="style.badgeImagePos" off={usingPerItemMedia}>
+            <Seg
+              value={s.badgeImagePos || 'left'}
+              onChange={(v) => setStyle('badgeImagePos', v)}
+              off={!hasImage}
+              title="Upload an image first"
+              ariaLabel="Image position"
+              options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]}
+            />
+          </Field>
+          <Field label="Description vertical align" path="bodyText.verticalAlign">
+            <Seg
+              value={bt.verticalAlign || 'middle'}
+              onChange={(v) => setBt('verticalAlign', v)}
+              ariaLabel="Description vertical align"
+              options={[{ value: 'top', label: 'Top' }, { value: 'middle', label: 'Middle' }, { value: 'bottom', label: 'Bottom' }]}
+            />
+          </Field>
+        </div>
+        <div className="frow">
+          <FormattingToolbar tx={bt} setTx={setBt} path="bodyText" />
         </div>
       </div>
 
-      <hr className="style-sep" />
-
-      <div className="style-sec">
-        <div className="form-row form-row-top" style={{ marginBottom: 16 }}>
-          {!isVideo && (
-            <div className="form-g">
-              <label className="form-lbl">Background Colour</label>
-              <ColorField value={s.bg} fallback="#8A1B12" onChange={setSolidBg} />
-            </div>
-          )}
-          <div className="form-g">
-            <label className="form-lbl">Text Animation</label>
-            <select className="form-inp form-sel" value={behavior.animation || 'fade'} onChange={(e) => setBehavior('animation', e.target.value)}>
-              {ANIMATIONS.map((a) => (
-                <option key={a.id} value={a.id}>{a.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-g">
-            <label className="form-lbl">Duration (sec)</label>
-            <div className="opacity-stepper">
-              <button
-                type="button"
-                className="fmt-icon-btn fmt-step-btn"
-                onClick={() => setBehavior('itemDuration', Math.max(1, (behavior.itemDuration || 4) - 1))}
-                aria-label="Decrease duration" title="Decrease duration"
-              >−</button>
-              <span className="opacity-stepper-val">{behavior.itemDuration || 4}s</span>
-              <button
-                type="button"
-                className="fmt-icon-btn fmt-step-btn"
-                onClick={() => setBehavior('itemDuration', Math.min(30, (behavior.itemDuration || 4) + 1))}
-                aria-label="Increase duration" title="Increase duration"
-              >+</button>
-            </div>
-          </div>
-          {!usingPerItemMedia && (
-            <div className="form-g">
-              <label className="form-lbl">Image</label>
-              <div className="badge-img-combo">
-                <div className="badge-img-row">
-                  {s.badgeImage ? (
-                    <div className="badge-img-thumb-wrap">
-                      <img className="badge-img-thumb" src={s.badgeImage} alt="" />
-                      <span className="badge-img-name">{s.badgeImageName || 'Untitled image'}</span>
-                      <button type="button" className="badge-img-remove" onClick={() => setStyle('badgeImage', null)} title="Remove image">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="badge-img-upload">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                      Upload
-                      <input type="file" accept="image/*" hidden onChange={handleBadgeImage} />
-                    </label>
-                  )}
-                </div>
-                <div className="badge-img-combo-divider" />
-                <div className="src-tog badge-img-combo-pos" style={{ opacity: s.badgeImage ? 1 : 0.45, pointerEvents: s.badgeImage ? 'auto' : 'none' }}>
-                  <button type="button" className={'src-opt' + ((s.badgeImagePos || 'left') === 'left' ? ' active' : '')} onClick={() => setStyle('badgeImagePos', 'left')}>Left</button>
-                  <button type="button" className={'src-opt' + (s.badgeImagePos === 'right' ? ' active' : '')} onClick={() => setStyle('badgeImagePos', 'right')}>Right</button>
-                </div>
-              </div>
-            </div>
-          )}
+      <div className="fieldset">
+        <div className="fieldset-title">Details</div>
+        <div className="frow">
+          <Field label="Category text" path="category">
+            <input
+              type="text"
+              placeholder="e.g. News, Sports"
+              value={st.category}
+              onChange={(e) => setSt((state) => ({ ...state, category: e.target.value }))}
+            />
+          </Field>
         </div>
-
-        <div className={'form-row ' + (isVideo ? 'form-row-1' : 'desc-fmt-row')} style={{ marginBottom: 16 }}>
-          <div className="form-g">
-            <label className="form-lbl">Description Vertical Align</label>
-            <div className="fmt-toolbar" style={{ width: 'fit-content' }}>
-              <button
-                type="button"
-                className={'fmt-icon-btn' + ((bt.verticalAlign || 'middle') === 'top' ? ' active' : '')}
-                onClick={() => setBt('verticalAlign', 'top')}
-                aria-label="Align top" aria-pressed={(bt.verticalAlign || 'middle') === 'top'} title="Align top"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="4" x2="20" y2="4" /><line x1="8" y1="10" x2="16" y2="10" /><line x1="8" y1="15" x2="16" y2="15" /></svg>
-              </button>
-              <button
-                type="button"
-                className={'fmt-icon-btn' + ((bt.verticalAlign || 'middle') === 'middle' ? ' active' : '')}
-                onClick={() => setBt('verticalAlign', 'middle')}
-                aria-label="Align middle" aria-pressed={(bt.verticalAlign || 'middle') === 'middle'} title="Align middle"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="7" x2="16" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="8" y1="17" x2="16" y2="17" /></svg>
-              </button>
-              <button
-                type="button"
-                className={'fmt-icon-btn' + ((bt.verticalAlign || 'middle') === 'bottom' ? ' active' : '')}
-                onClick={() => setBt('verticalAlign', 'bottom')}
-                aria-label="Align bottom" aria-pressed={(bt.verticalAlign || 'middle') === 'bottom'} title="Align bottom"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="14" x2="16" y2="14" /><line x1="4" y1="20" x2="20" y2="20" /></svg>
-              </button>
-            </div>
-          </div>
-          <div className="form-g" style={{ minWidth: 0 }}>
-            <label className="form-lbl">Description Formatting</label>
-            <FormattingToolbar tx={bt} setTx={setBt} />
-          </div>
-        </div>
-
-        <div className="form-g" style={{ marginBottom: 10 }}>
-          <label className="form-lbl">Category text</label>
-          <input
-            type="text"
-            className="form-inp"
-            placeholder="e.g. News, Sports"
-            value={st.category}
-            onChange={(e) => setSt((state) => ({ ...state, category: e.target.value }))}
-          />
-        </div>
-
-        <div className="form-row meta-fields-row" style={{ marginBottom: 16 }}>
-          <div className="form-g">
-            <label className="form-lbl">Category</label>
-            <label className="widget-toggle-field">
-              <input
-                type="checkbox"
-                checked={!!st.showCategory}
-                onChange={(e) => setSt((state) => ({ ...state, showCategory: e.target.checked }))}
-              />
-              Show category
-            </label>
-          </div>
-          <div className="form-g">
-            <label className="form-lbl">Time</label>
-            <label className="widget-toggle-field">
-              <input
-                type="checkbox"
-                checked={!!st.showTime}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setSt((state) => ({
-                    ...state,
-                    showTime: checked,
-                    publishedAt: checked && !state.publishedAt ? Date.now() : state.publishedAt,
-                  }));
-                }}
-              />
+        <div className="frow">
+          <Field path="showCategory">
+            <Toggle on={!!st.showCategory} onChange={(v) => setSt((state) => ({ ...state, showCategory: v }))}>Show category</Toggle>
+          </Field>
+          <Field path="showTime">
+            <Toggle
+              on={!!st.showTime}
+              onChange={(checked) => setSt((state) => ({
+                ...state,
+                showTime: checked,
+                publishedAt: checked && !state.publishedAt ? Date.now() : state.publishedAt,
+              }))}
+            >
               Show time posted
-            </label>
-          </div>
-          <div className="form-g">
-            <label className="form-lbl">Publisher</label>
-            <label className="widget-toggle-field">
-              <input
-                type="checkbox"
-                checked={!!st.showProduct}
-                onChange={(e) => setSt((state) => ({ ...state, showProduct: e.target.checked }))}
-              />
-              Show publisher
-            </label>
-          </div>
+            </Toggle>
+          </Field>
+          <Field path="showProduct">
+            <Toggle on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Show publisher</Toggle>
+          </Field>
         </div>
+      </div>
 
-        <div className="form-g" style={{ marginBottom: 16 }}>
-          <div className="src-tog bg-tab-tog">
-            <button type="button" className={'src-opt' + (bgTab === 'animation' ? ' active' : '')} onClick={() => setBgTab('animation')}>Animation</button>
-            <button type="button" className={'src-opt' + (bgTab === 'video' ? ' active' : '')} onClick={() => setBgTab('video')}>Videos</button>
-          </div>
+      <div className="fieldset">
+        <div className="fieldset-title">Background</div>
+        <div className="scope-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={bgTab === 'animation'} className={'stab' + (bgTab === 'animation' ? ' on' : '')} onClick={() => setBgTab('animation')}>Animation</button>
+          <button type="button" role="tab" aria-selected={bgTab === 'video'} className={'stab' + (bgTab === 'video' ? ' on' : '')} onClick={() => setBgTab('video')}>Videos</button>
         </div>
 
         {bgTab === 'animation' && (
-          <div style={{ marginBottom: 16 }}>
+          <div className="bg-anim">
             <div className="texture-panel-swatches-hd">
-              <label className="form-lbl">Background Animation</label>
+              <span className="grp-label type-group-label">Background animation</span>
               <button
                 type="button"
-                className={'texture-settings-btn' + (showTextureSettings ? ' active' : '')}
+                className="btn ghost small"
                 onClick={toggleTextureSettings}
                 aria-expanded={showTextureSettings}
-                title="Animation settings"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></svg>
                 Settings
               </button>
             </div>
@@ -321,13 +254,11 @@ export default function WidgetStyleControls({ st, setSt }) {
             </ScrollRow>
 
             {showTextureSettings && (
-              <div className="texture-panel-settings" ref={textureSettingsRef}>
-                <div className="form-g">
-                  <label className="form-lbl">Texture Colour</label>
+              <div className="frow texture-panel-settings" ref={textureSettingsRef}>
+                <Field label="Texture colour" path="style.textureColor">
                   <ColorField value={s.textureColor || '#FFFFFF'} fallback="#FFFFFF" onChange={(v) => setStyle('textureColor', v)} allowEyedropper />
-                </div>
-                <div className="form-g" style={{ opacity: s.texture && s.texture !== 'none' ? 1 : 0.45, pointerEvents: s.texture && s.texture !== 'none' ? 'auto' : 'none' }}>
-                  <label className="form-lbl">Texture Speed</label>
+                </Field>
+                <Field label="Texture speed" path="style.textureSpeed" off={!hasTexture} offReason="Pick a background animation first">
                   <div className="opacity-stepper">
                     <button
                       type="button"
@@ -343,9 +274,8 @@ export default function WidgetStyleControls({ st, setSt }) {
                       aria-label="Increase texture speed" title="Increase texture speed"
                     >+</button>
                   </div>
-                </div>
-                <div className="form-g" style={{ opacity: s.texture && s.texture !== 'none' ? 1 : 0.45, pointerEvents: s.texture && s.texture !== 'none' ? 'auto' : 'none' }}>
-                  <label className="form-lbl">Texture Opacity</label>
+                </Field>
+                <Field label="Texture opacity" path="style.textureOpacity" off={!hasTexture} offReason="Pick a background animation first">
                   <div className="range-with-pill texture-opacity-box">
                     <input
                       type="range"
@@ -359,15 +289,15 @@ export default function WidgetStyleControls({ st, setSt }) {
                     />
                     <span className="texture-opacity-val">{Math.round((s.textureOpacity ?? 1) * 100)}%</span>
                   </div>
-                </div>
+                </Field>
               </div>
             )}
           </div>
         )}
 
         {bgTab === 'video' && (
-          <div className="form-g">
-            <label className="form-lbl">Background Videos</label>
+          <div className="bg-videos">
+            <span className="grp-label type-group-label">Background videos</span>
             <ScrollRow hideNav>
               <label className="texture-swatch texture-swatch-upload texture-swatch-upload-empty" title="Upload video">
                 <span className="texture-swatch-preview">
@@ -422,6 +352,6 @@ export default function WidgetStyleControls({ st, setSt }) {
       {cropSrc && (
         <ImageCropperModal src={cropSrc} fileName={cropFileName} onCancel={() => setCropSrc(null)} onConfirm={handleCropConfirm} />
       )}
-    </div>
+    </>
   );
 }

@@ -1,11 +1,6 @@
 import ContentSource from './ContentSource.jsx';
 
+// The ticker's Content source section, first on the editor's one surface.
 export default function EditorPanel({ st, setSt }) {
-  return (
-    <main className="panel-center">
-      <div className="tab-body">
-        <ContentSource st={st} setSt={setSt} />
-      </div>
-    </main>
-  );
+  return <ContentSource st={st} setSt={setSt} />;
 }
