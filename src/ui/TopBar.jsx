@@ -3,12 +3,15 @@ import { useDismiss } from './controls.jsx';
 
 const USER = { name: 'Diya Seth', email: 'diya.seth@timesinternet.in', initials: 'DS' };
 
-// The app's own logomark, unchanged; drawn in currentColor so it takes the band's ink.
+// The Slike mark (Player Console · assets/Logos/slike-mark.svg): full colour, transparent on the
+// band at 20px, beside the product's name set in type. Never recoloured, boxed or set on a fill.
 const Logomark = () => (
-  <svg className="brand-mark" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true">
-    <rect x="2" y="3" width="16" height="11" rx="1.5" strokeWidth="1.4" />
-    <path d="M2 11.5h16" strokeWidth="1.4" />
-    <path d="M8 17h4M10 14.5v2.5" strokeWidth="1.3" strokeLinecap="round" />
+  <svg className="brand-mark" viewBox="0 0 29 32" aria-hidden="true">
+    <g fill="none">
+      <path fill="#F37021" d="M10.645 24.165c.69.32 1.63.345 2.9.07 1.04-.225 7.5-1.35 10.465-1.895 1.545-.285 1.855-.5 2.65-2.39l1.205-2.89c.77-1.845 1.1-2.3.35-3.53.815 1.34.28 2.16-.97 2.355-.855.135-11.54 1.96-15.345 2.605-.835.146-1.534.714-1.85 1.5-.835 2.335-.28 3.76.595 4.175z" />
+      <path fill="#F7941D" d="M28.22 13.53c-6.63-9.735-6.63-9.685-7.565-11.155-.7-1.095-1.355-1.8-2.07-2.065-.955-.34-2.38.34-3.415 2.585l-.5 1.25 8.5 12.45 4.12-.715c1.21-.19 1.74-1.015.93-2.35z" />
+      <path fill="#FDB913" d="M.945 26.65c.65.785 3.89 4.28 4.795 4.58-.875-.415-1.42-1.86-.585-4.21l10-24.155c1.065-2.22 2.46-2.89 3.4-2.55-.85-.435-5.615-.27-6.63-.18-1.44.125-2.07.81-2.635 2.17L.63 23.25c-.565 1.36-.63 2.29.315 3.4z" />
+    </g>
   </svg>
 );
 
