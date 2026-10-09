@@ -1,0 +1,345 @@
+/* Graphics Studio UI kit — design tokens: colours (light and dark), spacing, radii, sizes, type, fonts.
+   Owned by this project: edit values here. Every component reads these; none types a colour of its own. */
+@font-face { font-family: "IBM Plex Sans"; src: url("./fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("./fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("./fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("./fonts/ibm-plex-sans-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("./fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("./fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("./fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+:root, [data-theme="light"] {
+  --bg: #f2f4f7;
+  --panel: #ffffff;
+  --surface-soft: #f5f6f8;
+  --ink: #121826;
+  --ink-soft: #3b4456;
+  --ink-faint: #5c6576;
+  --ink-muted: #5c6576;
+  --line: #d8dde5;
+  --line-soft: #e8ebf0;
+  --line-strong: #c2c9d4;
+  --line-dashed: #c9d0db;
+  --accent: #2b5bd7;
+  --accent-ink: #1e47ad;
+  --accent-soft: #eef3ff;
+  --accent-line: #c7d6f8;
+  --ring: rgba(43, 91, 215, 0.18);
+  --link: #1f4fc9;
+  --good: #11673f;
+  --good-soft: #e7f3ec;
+  --chg: #d99a1f;
+  --pending-ink: #8a6d1f;
+  --pending-soft: #fdf8e8;
+  --pending-line: #f0e3bd;
+  --pending-dot: #d9b64e;
+  --warn: #9a4a00;
+  --warn-soft: #fdf3e6;
+  --warn-ink: #92400e;
+  --bad: #a8241b;
+  --bad-soft: #fcecea;
+  --danger-ink: #a8241b;
+  --band: #10182b;
+  --band-ink: #aeb8cc;
+  --band-faint: #8b96ad;
+  --veil: rgba(13, 18, 28, 0.52);
+  --table-head: #f6f7f9;
+  --row-hover: #f6f8fc;
+  --menu-hover: #f2f5fa;
+  --seg-track: #e9ecf1;
+  --chip-grey: #eef0f4;
+  --prop-toi: #b8352b;
+  --prop-et: #5f43a8;
+  --prop-nbt: #d67a0c;
+  --prop-all: #8a93a5;
+  --prop-hue-l: 61%;
+  --prop-hue-ink-l: 50%;
+  --prop-hue-c: 0.12;
+  --pvd-ima-ink: #2c5d3f;
+  --pvd-ima-soft: #e8f3ec;
+  --pvd-ima-line: #cbe4d5;
+  --pvd-gpt-ink: #274b9f;
+  --pvd-gpt-soft: #e9effc;
+  --pvd-gpt-line: #ccd9f4;
+  --pvd-can-ink: #5b3a86;
+  --pvd-can-soft: #f2eafb;
+  --pvd-can-line: #e0d0f2;
+  --ttype-video-ink: #4a3a7a;
+  --ttype-video-soft: #efeafb;
+  --ttype-video-line: #ddd2f4;
+  --ttype-display-ink: #1f5b63;
+  --ttype-display-soft: #e6f4f5;
+  --ttype-display-line: #c9e6e9;
+  --ttype-quiet-soft: #f1f3f7;
+  --ttype-quiet-line: #e4e7ee;
+  --brand-amber: #fdb913;
+  --brand-orange: #f37021;
+  --brand-tangerine: #f7941d;
+  --prop-nbt-ink: #8f4c00;
+  --ctl-line: #c9d0db;
+  --band-hover: rgba(255, 255, 255, 0.06);
+  --band-on: rgba(255, 255, 255, 0.1);
+  --band-on-ico: #9db8ff;
+  --band-line: rgba(255, 255, 255, 0.08);
+  --band-count: rgba(255, 255, 255, 0.08);
+  --band-count-on: rgba(255, 255, 255, 0.16);
+  --sel-line: #d3dff9;
+  --band-strong: #ffffff;
+  --band-avatar: rgba(255, 255, 255, 0.12);
+  --row-selected: #f6f9ff;
+  --status-off: #8a93a5;
+  --panel-veil: rgba(16, 24, 43, 0.24);
+  --on-accent: #ffffff;
+  --accent-fill: #2b5bd7;
+  --accent-fill-hover: #1e47ad;
+  --panel-raised: #ffffff;
+  --knob: #ffffff;
+  --lit-soft: #f6f9ff;
+  --lit-line: #c9d6f2;
+  --glyph: #98a1b3;
+  --glyph-soft: #c4cbd9;
+  --line-faint: rgba(19, 27, 46, 0.05);
+  --fill-faint: rgba(19, 27, 46, 0.055);
+  --fill-hover: rgba(19, 27, 46, 0.03);
+  --scroll-shade: rgba(16, 24, 43, 0.12);
+  --swatch-ring: rgba(19, 27, 46, 0.15);
+  --good-line: rgba(23, 121, 75, 0.16);
+  --chg-soft: rgba(217, 154, 31, 0.1);
+  --warn-line: #f0d8a8;
+  --bad-line: #eecccc;
+  --bad-wash: #fdf6f5;
+  --notice-line: #e8d49a;
+  --surface-off: #fcfcfd;
+  --shade: rgba(20, 30, 50, 0.07);
+  --placeholder: #757575;
+  --shadow-1: none;
+  --shadow-2: 0 4px 12px rgba(16, 24, 40, 0.12);
+  --shadow-3: 0 16px 40px rgba(16, 24, 40, 0.2);
+  --shadow-button: none;
+  --shadow-menu: 0 4px 12px rgba(16, 24, 40, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(43, 91, 215, 0.18);
+  --shadow-segment: 0 0 0 1px #c9d0db;
+  --shadow-knob: 0 1px 3px rgba(16, 24, 43, 0.28);
+  --shadow-unit: inset 0 0 0 1px rgba(19, 27, 46, 0.045);
+  --shadow-panel: -8px 0 24px rgba(16, 24, 40, 0.18);
+}
+[data-theme="dark"] {
+  --bg: #0d1013;
+  --panel: #16191d;
+  --surface-soft: #1d1f24;
+  --ink: #e8ebf0;
+  --ink-soft: #c0c3c7;
+  --ink-faint: #9c9fa3;
+  --ink-muted: #9c9fa3;
+  --line: #33363a;
+  --line-soft: #272a2f;
+  --line-strong: #45484d;
+  --line-dashed: #3d4045;
+  --accent: #6f9bfb;
+  --accent-ink: #a4c1fc;
+  --accent-soft: #1a2a4d;
+  --accent-line: #324d89;
+  --ring: rgba(111, 155, 251, 0.38);
+  --link: #78a2fc;
+  --good: #64cd8e;
+  --good-soft: #143320;
+  --chg: #edae3b;
+  --pending-ink: #e7c77c;
+  --pending-soft: #352a0e;
+  --pending-line: #604d1d;
+  --pending-dot: #d5af52;
+  --warn: #f0a45e;
+  --warn-soft: #3c2610;
+  --warn-ink: #f9b87f;
+  --bad: #f7766b;
+  --bad-soft: #451e1b;
+  --danger-ink: #fb8276;
+  --band: #10182b;
+  --band-ink: #aeb8cc;
+  --band-faint: #8b96ad;
+  --veil: rgba(0, 0, 0, 0.6);
+  --table-head: #1a1d21;
+  --row-hover: #1e2025;
+  --menu-hover: #292c30;
+  --seg-track: #0f1115;
+  --chip-grey: #24272b;
+  --prop-toi: #ea6c5d;
+  --prop-et: #9b86e7;
+  --prop-nbt: #f5983f;
+  --prop-all: #8f9297;
+  --prop-hue-l: 68%;
+  --prop-hue-ink-l: 67%;
+  --pvd-ima-ink: #98d9ae;
+  --pvd-ima-soft: #173221;
+  --pvd-ima-line: #2e583d;
+  --pvd-gpt-ink: #adc7fd;
+  --pvd-gpt-soft: #202b42;
+  --pvd-gpt-line: #3b4c71;
+  --pvd-can-ink: #d1baf9;
+  --pvd-can-soft: #2f263e;
+  --pvd-can-line: #53446b;
+  --ttype-video-ink: #c8bdfd;
+  --ttype-video-soft: #2c2740;
+  --ttype-video-line: #4e466e;
+  --ttype-display-ink: #7cd8e5;
+  --ttype-display-soft: #073137;
+  --ttype-display-line: #14575f;
+  --ttype-quiet-soft: #222529;
+  --ttype-quiet-line: #33363a;
+  --brand-amber: #fdb913;
+  --brand-orange: #f37021;
+  --brand-tangerine: #f7941d;
+  --prop-nbt-ink: #faa961;
+  --ctl-line: #3d4045;
+  --band-hover: rgba(255, 255, 255, 0.06);
+  --band-on: rgba(255, 255, 255, 0.1);
+  --band-on-ico: #9db8ff;
+  --band-line: rgba(255, 255, 255, 0.08);
+  --band-count: rgba(255, 255, 255, 0.08);
+  --band-count-on: rgba(255, 255, 255, 0.16);
+  --sel-line: #304675;
+  --band-strong: #ffffff;
+  --band-avatar: rgba(255, 255, 255, 0.12);
+  --row-selected: #192236;
+  --status-off: #7e8084;
+  --panel-veil: rgba(0, 0, 0, 0.42);
+  --on-accent: #ffffff;
+  --accent-fill: #2b5bd7;
+  --accent-fill-hover: #3a6ae2;
+  --panel-raised: #1f2226;
+  --knob: #f1f4f8;
+  --lit-soft: #1c2945;
+  --lit-line: #3d568d;
+  --glyph: #727579;
+  --glyph-soft: #515459;
+  --line-faint: rgba(255, 255, 255, 0.06);
+  --fill-faint: rgba(255, 255, 255, 0.07);
+  --fill-hover: rgba(255, 255, 255, 0.035);
+  --scroll-shade: rgba(0, 0, 0, 0.45);
+  --swatch-ring: rgba(255, 255, 255, 0.22);
+  --good-line: rgba(100, 205, 142, 0.35);
+  --chg-soft: rgba(237, 174, 59, 0.16);
+  --warn-line: #6b4624;
+  --bad-line: #783c36;
+  --bad-wash: #311916;
+  --notice-line: #8b712f;
+  --surface-off: #121418;
+  --shade: rgba(0, 0, 0, 0.45);
+  --placeholder: #898c90;
+  --shadow-1: none;
+  --shadow-2: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 18px 48px rgba(0, 0, 0, 0.6);
+  --shadow-button: none;
+  --shadow-menu: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-focus: 0 0 0 3px rgba(111, 155, 251, 0.38);
+  --shadow-segment: 0 0 0 1px #3d4045;
+  --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-unit: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-panel: -12px 0 32px rgba(0, 0, 0, 0.5);
+}
+:root {
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-5: 5px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-9: 9px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-26: 26px;
+  --space-28: 28px;
+  --space-30: 30px;
+  --space-40: 40px;
+  --r-xs: 2px;
+  --r-sm: 3px;
+  --r-control: 4px;
+  --r-card: 4px;
+  --r-dialog: 6px;
+  --r-pill: 4px;
+  --radius: 4px;
+  --radius-round: 50%;
+  --r-full: 999px;
+  --size-band: 56px;
+  --size-control: 30px;
+  --size-control-dense: 26px;
+  --size-field: 260px;
+  --size-number: 150px;
+  --size-select-min: 210px;
+  --size-search: 260px;
+  --size-rail: 200px;
+  --size-frame-confirm: 440px;
+  --size-frame-sheet: 620px;
+  --size-frame-wide: 860px;
+  --size-content-max: 1760px;
+  --size-toggle-width: 34px;
+  --size-toggle-height: 20px;
+  --size-dot: 7px;
+  --size-avatar: 30px;
+  --size-monogram: 9px;
+  --size-panel: 440px;
+  --size-panel-wide: 960px;
+  --size-control-door: 36px;
+  --z-table-head: 2;
+  --z-menu: 30;
+  --z-editor-head: 40;
+  --z-rail: 41;
+  --z-band: 50;
+  --z-toast: 60;
+  --z-provider-menu: 70;
+  --z-progress: 80;
+  --z-lookup-open: 90;
+  --z-panel: 61;
+  --opacity-disabled: 0.45;
+  --opacity-segment-disabled: 0.4;
+  --opacity-field-off: 0.38;
+  --opacity-option-off: 0.55;
+  --opacity-idle: 0.6;
+  --fs-2xs: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 11px;
+  --fs-md: 12px;
+  --fs-base: 13px;
+  --fs-lg: 14px;
+  --fs-xl: 16px;
+  --fs-2xl: 20px;
+  --fs-card-title: 15px;
+  --fs-sheet-title: 18px;
+  --fs-page-title: 24px;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 600;
+  --fw-heavy: 700;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+.type-door-title { font-family: var(--font-sans); font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.type-page-title { font-family: var(--font-sans); font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
+.type-editor-title { font-family: var(--font-sans); font-size: 18px; font-weight: 600; letter-spacing: -0.35px; }
+.type-dialog-title { font-family: var(--font-sans); font-size: 18px; line-height: 1.3; font-weight: 600; letter-spacing: -0.3px; }
+.type-confirm-title { font-family: var(--font-sans); font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.type-brand { font-family: var(--font-sans); font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
+.type-card-title { font-family: var(--font-sans); font-size: 15px; font-weight: 600; letter-spacing: -0.15px; }
+.type-button { font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0; }
+.type-dialog-body { font-family: var(--font-sans); font-size: 13px; line-height: 1.55; font-weight: 400; }
+.type-table { font-family: var(--font-sans); font-size: 13px; font-weight: 400; }
+.type-row-name { font-family: var(--font-sans); font-size: 13px; font-weight: 600; letter-spacing: 0; }
+.type-label { font-family: var(--font-sans); font-size: 12px; font-weight: 500; }
+.type-value { font-family: var(--font-sans); font-size: 12px; font-weight: 400; }
+.type-status { font-family: var(--font-sans); font-size: 12px; font-weight: 500; letter-spacing: 0; }
+.type-hint { font-family: var(--font-sans); font-size: 11px; font-weight: 400; }
+.type-meta { font-family: var(--font-sans); font-size: 11px; font-weight: 400; }
+.type-section-label { font-family: var(--font-sans); font-size: 13px; font-weight: 600; letter-spacing: 0; }
+.type-group-label { font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0; }
+.type-table-head { font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+.type-chip { font-family: var(--font-sans); font-size: 11px; font-weight: 600; }
+.type-count { font-family: var(--font-sans); font-size: 11px; font-weight: 500; }
+.type-tag-mark { font-family: var(--font-sans); font-size: 10px; line-height: 1; font-weight: 700; letter-spacing: 0.4px; }
+.type-monogram { font-family: var(--font-sans); font-size: 10px; font-weight: 600; letter-spacing: 0.2px; }
+.type-key { font-family: var(--font-mono); font-size: 12px; font-weight: 400; }
+.type-url { font-family: var(--font-mono); font-size: 11px; font-weight: 400; }
+.type-version { font-family: var(--font-mono); font-size: 12px; font-weight: 500; }

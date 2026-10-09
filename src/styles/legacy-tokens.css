@@ -1,0 +1,26 @@
+/* The colour names the app's own (undesigned) parts were written with — colour picker,
+   cropper, formatting strip, swatches, preview chrome — read from the UI kit's tokens, so
+   they follow light and dark. Loaded by the studio only; #/player keeps app.css's values. */
+html:root, html:root[data-theme] {
+  --toi-red: var(--accent);
+  --toi-red-dark: var(--accent-fill-hover);
+  --toi-red-dim: var(--accent-soft);
+  --toi-red-glow: var(--ring);
+  --bg-page: var(--bg);
+  --bg-panel: var(--panel);
+  --bg-panel-alt: var(--surface-soft);
+  --bg-input: var(--panel);
+  --border: var(--ctl-line);
+  --border-subtle: var(--line-soft);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: var(--ink-faint);
+  --selected-bg: var(--row-selected);
+  --hover: var(--fill-hover);
+  --shadow-xs: none;
+  --shadow-sm: var(--shadow-2);
+  --shadow-md: var(--shadow-2);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-control);
+  --radius-lg: var(--r-card);
+}

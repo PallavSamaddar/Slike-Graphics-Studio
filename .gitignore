@@ -2,5 +2,3 @@ node_modules
 dist
 .DS_Store
 *.local
-# the Player Console design system, rebuilt by `npm run ds:sync`
-src/ds/vendor/

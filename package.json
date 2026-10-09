@@ -4,10 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "ds:sync": "node scripts/ds-sync.mjs",
-    "predev": "npm run ds:sync",
     "dev": "vite",
-    "prebuild": "npm run ds:sync",
     "build": "vite build",
     "preview": "vite preview"
   },
