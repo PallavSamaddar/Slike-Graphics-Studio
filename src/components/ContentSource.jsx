@@ -237,7 +237,7 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
 export function ContentSourceTabs({ st, viewTab, onViewTabChange, kind = 'ticker' }) {
   return (
     <div className="scope-tabs" role="tablist">
-      {Object.entries(SRC_LABEL).map(([k, label]) => (
+      {Object.entries(SRC_LABEL).filter(([k]) => !(kind === 'widget' && k === 'json')).map(([k, label]) => (
         <button
           key={k}
           type="button"

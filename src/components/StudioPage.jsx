@@ -70,7 +70,7 @@ export default function StudioPage({ kind, cur, saved, base, pub, onSave, onPubl
           title: unsaved.count === 0 ? 'Nothing changed since the last save' : undefined,
         }}
         publish={{
-          label: hasAir ? 'Publish' : 'Publish — go on air',
+          label: 'Publish',
           ghost: !somethingToPublish,
           disabled: !somethingToPublish,
           title: somethingToPublish ? undefined : `Nothing waiting — v${pub.v} is on air`,
@@ -114,7 +114,7 @@ export default function StudioPage({ kind, cur, saved, base, pub, onSave, onPubl
           sections={toAir.sections}
           empty="Nothing changed from the template — it goes on air as it is."
           note
-          act={{ label: toAir.count && hasAir ? `Publish ${changes(toAir.count)}` : 'Publish — go on air' }}
+          act={{ label: toAir.count && hasAir ? `Publish ${changes(toAir.count)}` : 'Publish' }}
           busyWord="Publishing…"
           onAct={(note) => {
             const v = onPublish(note);
