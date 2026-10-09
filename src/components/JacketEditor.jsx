@@ -4,6 +4,7 @@ import ScrollRow from './ScrollRow.jsx';
 import { TPLS } from '../data/templates.js';
 import Select from '../ui/Select.jsx';
 import { Field, Seg, Toggle } from '../ui/controls.jsx';
+import { useMediaUpload } from '../api/mediaUpload.js';
 import newsBackgroundVideo from '../assets/news-background.mp4';
 import redeBgVideo from '../assets/rede-bg.mp4';
 import redBackgroundVideo from '../assets/red-background.mp4';
@@ -23,40 +24,36 @@ export default function JacketEditor({ st, setSt }) {
   const setField = (k, v) => setSt((s) => ({ ...s, [k]: v }));
   const setShow = (k, v) => setSt((s) => ({ ...s, [k]: v }));
 
-  const [pendingMainVideo, setPendingMainVideo] = useState(null); // { url, fileName }
+  const [pendingMainVideo, setPendingMainVideo] = useState(null); // { url, file, fileName }
+  const upload = useMediaUpload();
 
   const handleMainVideoUpload = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    setPendingMainVideo({ url, fileName: file.name.replace(/\.[^.]+$/, '') });
+    setPendingMainVideo({ url, file, fileName: file.name.replace(/\.[^.]+$/, '') });
     e.target.value = '';
   };
+  // Plays from the local copy at once; the uploaded URL replaces it when the upload ends.
   const confirmMainVideo = (name) => {
-    setSt((s) => ({ ...s, mainVideoUrl: pendingMainVideo.url, mainVideoName: name, mainVideoPreset: null }));
+    const { url, file } = pendingMainVideo;
     setPendingMainVideo(null);
+    upload({ file, label: name, setSt, path: 'mainVideoUrl', local: url, fields: { mainVideoUrl: url, mainVideoName: name, mainVideoPreset: null } });
   };
   const pickPreset = (v) => setSt((s) => ({ ...s, mainVideoUrl: v.src, mainVideoName: v.label, mainVideoPreset: v.id }));
 
-  const handleLogoImageUpload = (e) => {
+  // Logo and side image: shown from a local data: URL, then uploaded the same way.
+  const handleImageUpload = (key) => (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    const name = file.name.replace(/\.[^.]+$/, '');
     const reader = new FileReader();
-    reader.onload = () => setField('logoImage', reader.result);
+    reader.onload = () => upload({ file, label: name, setSt, path: key, local: reader.result, fields: { [key]: reader.result, [`${key}Name`]: name } });
     reader.readAsDataURL(file);
-    setField('logoImageName', file.name.replace(/\.[^.]+$/, ''));
     e.target.value = '';
   };
-
-  const handleSideImageUpload = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setField('sideImage', reader.result);
-    reader.readAsDataURL(file);
-    setField('sideImageName', file.name.replace(/\.[^.]+$/, ''));
-    e.target.value = '';
-  };
+  const handleLogoImageUpload = handleImageUpload('logoImage');
+  const handleSideImageUpload = handleImageUpload('sideImage');
 
   return (
     <>

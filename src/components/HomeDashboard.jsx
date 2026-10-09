@@ -3,6 +3,7 @@ import { WIDGET_TPLS } from '../data/widgetTemplates.js';
 import { JACKET_TPLS } from '../data/jacketTemplates.js';
 import { RowMenu } from '../ui/controls.jsx';
 import { TickerThumb, WidgetThumb, JacketThumb, TemplateCard } from './TemplateThumbs.jsx';
+import SavedGraphics from './SavedGraphics.jsx';
 
 // Which templates to feature on the home dashboard, and what usage badge
 // (if any) to show on each — static for now, no real usage tracking yet.
@@ -40,8 +41,8 @@ function Section({ title, onSeeAll, children }) {
   );
 }
 
-// Home: the room's head, then the featured templates of each kind as chooser cards.
-export default function HomeDashboard({ onPickTicker, onPickWidget, onPickJacket, onSeeAllTicker, onSeeAllWidgets, onSeeAllJackets }) {
+// Home: the room's head, the saved graphics, then the featured templates of each kind as chooser cards.
+export default function HomeDashboard({ onPickTicker, onPickWidget, onPickJacket, onOpenGraphic, onSeeAllTicker, onSeeAllWidgets, onSeeAllJackets }) {
   const card = (Thumb, onPick) => ({ f, t }) => (
     <TemplateCard key={t.id} name={t.name} reach={f.badge} onOpen={() => onPick(t.id)} menu={<RowMenu label={`More for “${t.name}”`} items={[{ label: 'Duplicate', onClick: () => onPick(t.id) }]} />}>
       <Thumb t={t} />
@@ -55,6 +56,8 @@ export default function HomeDashboard({ onPickTicker, onPickWidget, onPickJacket
           <h1>What are you creating today?</h1>
         </div>
       </div>
+
+      <SavedGraphics onOpen={onOpenGraphic} />
 
       <Section title="Ticker" onSeeAll={onSeeAllTicker}>
         {featured(FEATURED_TICKERS, TPLS, 3).map(card(TickerThumb, onPickTicker))}

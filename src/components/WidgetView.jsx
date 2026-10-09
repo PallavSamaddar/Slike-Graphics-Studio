@@ -4,6 +4,7 @@ import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
 import VideoBackground from './VideoBackground.jsx';
 import ImageCropperModal from './ImageCropperModal.jsx';
+import { useMediaUpload } from '../api/mediaUpload.js';
 import newsBackgroundVideo from '../assets/news-background.mp4';
 import redeBgVideo from '../assets/rede-bg.mp4';
 import redBackgroundVideo from '../assets/red-background.mp4';
@@ -34,6 +35,7 @@ export default function WidgetView({ st, setSt, viewTab }) {
   const descStart = previewHeadlineFromFeed ? 1 : 0;
   const items = rawItems.slice(descStart);
   const [cropSrc, setCropSrc] = useState(null);
+  const upload = useMediaUpload();
   const [cropFileName, setCropFileName] = useState('');
 
   // Cycle through description lines every `itemDuration` seconds, per the
@@ -81,8 +83,8 @@ export default function WidgetView({ st, setSt, viewTab }) {
   };
 
   const handleCropConfirm = (croppedDataUrl, name) => {
-    setSt((state) => ({ ...state, style: { ...state.style, badgeImage: croppedDataUrl, badgeImageName: name } }));
     setCropSrc(null);
+    upload({ file: croppedDataUrl, label: name, setSt, path: 'style.badgeImage', local: croppedDataUrl, fields: { 'style.badgeImage': croppedDataUrl, 'style.badgeImageName': name } });
   };
 
   // Body and heading text both auto-contrast against their background

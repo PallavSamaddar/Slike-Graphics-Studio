@@ -6,6 +6,7 @@ import FormattingToolbar from './FormattingToolbar.jsx';
 import ScrollRow from './ScrollRow.jsx';
 import VideoNameModal from './VideoNameModal.jsx';
 import ImageCropperModal from './ImageCropperModal.jsx';
+import { useMediaUpload } from '../api/mediaUpload.js';
 import newsBackgroundVideo from '../assets/news-background.mp4';
 import redeBgVideo from '../assets/rede-bg.mp4';
 import redBackgroundVideo from '../assets/red-background.mp4';
@@ -53,7 +54,8 @@ export default function WidgetStyleControls({ st, setSt }) {
   const setSolidBg = (v) => setSt((state) => ({ ...state, style: { ...state.style, bg: v, bgGradient: null } }));
   const setHeadingBgColor = (v) => setSt((state) => ({ ...state, style: { ...state.style, headingBg: v, headingBgGradient: null } }));
 
-  const [pendingVideo, setPendingVideo] = useState(null); // { url, fileName }
+  const [pendingVideo, setPendingVideo] = useState(null); // { url, file, fileName }
+  const upload = useMediaUpload();
   const [cropSrc, setCropSrc] = useState(null);
   const [cropFileName, setCropFileName] = useState('');
   const [bgTab, setBgTab] = useState(isVideo ? 'video' : 'animation');
@@ -81,9 +83,8 @@ export default function WidgetStyleControls({ st, setSt }) {
   };
 
   const handleCropConfirm = (croppedDataUrl, name) => {
-    setStyle('badgeImage', croppedDataUrl);
-    setStyle('badgeImageName', name);
     setCropSrc(null);
+    upload({ file: croppedDataUrl, label: name, setSt, path: 'style.badgeImage', local: croppedDataUrl, fields: { 'style.badgeImage': croppedDataUrl, 'style.badgeImageName': name } });
   };
 
   const handleVideoUpload = (e) => {
@@ -92,13 +93,18 @@ export default function WidgetStyleControls({ st, setSt }) {
     // Video files are too large to reasonably hold as base64 in state — use
     // an object URL instead (valid for this browser session).
     const url = URL.createObjectURL(file);
-    setPendingVideo({ url, fileName: file.name.replace(/\.[^.]+$/, '') });
+    setPendingVideo({ url, file, fileName: file.name.replace(/\.[^.]+$/, '') });
     e.target.value = '';
   };
 
+  // Plays from the local copy at once; the uploaded URL replaces it when the upload ends.
   const confirmVideoUpload = (name) => {
-    setSt((state) => ({ ...state, style: { ...state.style, texture: 'video-custom', customVideoUrl: pendingVideo.url, customVideoName: name } }));
+    const { url, file } = pendingVideo;
     setPendingVideo(null);
+    upload({
+      file, label: name, setSt, path: 'style.customVideoUrl', local: url,
+      fields: { 'style.texture': 'video-custom', 'style.customVideoUrl': url, 'style.customVideoName': name },
+    });
   };
 
   const hasTexture = !!(s.texture && s.texture !== 'none');

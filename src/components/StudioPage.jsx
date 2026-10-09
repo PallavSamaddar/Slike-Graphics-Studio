@@ -6,20 +6,29 @@ import ChangeReview from '../ui/ChangeReview.jsx';
 import { Dialog } from '../ui/controls.jsx';
 import { useToast } from '../ui/Toast.jsx';
 import { diffGraphic, changes } from '../review/diff.js';
+import { useUploads } from '../api/mediaUpload.js';
 
 const NAMES = { ticker: 'Ticker', widget: 'Widget', jacket: 'Jacket' };
 
 // The studio as a Player Console editor page: the sticky editor header (what is this,
 // where it stands, Save · Publish · ⋯), the form as one surface, and the live preview
 // beside it. Every write reads back in the change review from the right.
-export default function StudioPage({ kind, cur, saved, base, pub, onSave, onPublish, onDiscard, onBack, form, preview }) {
+export default function StudioPage({ kind, cur, saved, base, pub, title, savedTitle, isNew, onTitleChange, onSave, onPublish, onDiscard, onBack, form, preview }) {
   const toast = useToast();
   const [review, setReview] = useState(null); // 'save' | 'publish'
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const name = NAMES[kind];
   const q = `“${name}”`;
 
-  const unsaved = diffGraphic(kind, saved, cur);
+  // The graphic's name is saved with it, so a renamed graphic has a change to save too.
+  const edits = diffGraphic(kind, saved, cur);
+  const renamed = title.trim() !== savedTitle.trim();
+  const unsaved = !renamed ? edits : {
+    count: edits.count + 1,
+    sections: [{ title: 'Details', rows: [{ what: 'Name', was: savedTitle.trim() || 'Untitled', now: title.trim() || 'Untitled' }] }, ...edits.sections],
+  };
+  // A graphic the backend has never seen can be saved as the template left it.
+  const canSave = isNew || unsaved.count > 0;
   const waiting = pub ? diffGraphic(kind, pub.snap, saved) : null; // saved, not on air
   const toAir = diffGraphic(kind, pub ? pub.snap : base, cur);
   const hasAir = !!pub;
@@ -29,9 +38,18 @@ export default function StudioPage({ kind, cur, saved, base, pub, onSave, onPubl
   const air = hasAir
     ? <span className="stat live"><span>On air · {vno(pub.v)}</span></span>
     : <span className="stat off">Unpublished</span>;
-  const pending = waiting && waiting.count > 0
-    ? <span className="stat pending">{changes(waiting.count)} not on air</span>
-    : null;
+  const uploads = useUploads();
+  const uploading = uploads.length > 0 && (
+    <span className="stat pending" role="status">
+      {uploads.length === 1
+        ? `Uploading “${uploads[0].label}” · ${Math.round(uploads[0].progress * 100)}%`
+        : `Uploading ${uploads.length} files · ${Math.round((uploads.reduce((n, u) => n + u.progress, 0) / uploads.length) * 100)}%`}
+    </span>
+  );
+  const pending = <>
+    {waiting && waiting.count > 0 && <span className="stat pending">{changes(waiting.count)} not on air</span>}
+    {uploading}
+  </>;
 
   const urlItems = [
     {
@@ -57,17 +75,30 @@ export default function StudioPage({ kind, cur, saved, base, pub, onSave, onPubl
 
   const closeReview = () => setReview(null);
 
+  // Runs a backend write; the review stays open on a failure so it can be tried again.
+  const write = async (act, done) => {
+    try {
+      done(await act());
+      closeReview();
+    } catch (err) {
+      toast(err.message, 'bad');
+    }
+  };
+
   return (
     <ChangeScope saved={saved} cur={cur}>
       <EditorHeader
         name={name}
+        title={title}
+        onTitleChange={onTitleChange}
+        placeholder={`Untitled ${kind}`}
         onBack={onBack}
         air={air}
         pending={pending}
         save={{
           onClick: () => setReview('save'),
-          disabled: unsaved.count === 0,
-          title: unsaved.count === 0 ? 'Nothing changed since the last save' : undefined,
+          disabled: !canSave,
+          title: canSave ? undefined : 'Nothing changed since the last save',
         }}
         publish={{
           label: 'Publish',
@@ -91,15 +122,15 @@ export default function StudioPage({ kind, cur, saved, base, pub, onSave, onPubl
           count={changes(unsaved.count)}
           who="Yours, not saved yet"
           sections={unsaved.sections}
-          empty="Nothing changed since the last save."
-          act={{ label: `Save ${changes(unsaved.count)}` }}
+          empty={isNew ? 'Nothing changed from the template — it is saved as it is.' : 'Nothing changed since the last save.'}
+          act={{ label: unsaved.count ? `Save ${changes(unsaved.count)}` : 'Save' }}
           busyWord="Saving…"
-          aside={(
+          aside={unsaved.count > 0 && (
             <button type="button" className="zlink quiet-danger rvw-discard" onClick={() => { closeReview(); setConfirmDiscard(true); }}>
               Discard {changes(unsaved.count)}
             </button>
           )}
-          onAct={() => { onSave(); closeReview(); toast('Saved, not published'); }}
+          onAct={() => write(onSave, () => toast('Saved, not published'))}
           onClose={closeReview}
         />
       )}
@@ -116,11 +147,7 @@ export default function StudioPage({ kind, cur, saved, base, pub, onSave, onPubl
           note
           act={{ label: toAir.count && hasAir ? `Publish ${changes(toAir.count)}` : 'Publish' }}
           busyWord="Publishing…"
-          onAct={(note) => {
-            const v = onPublish(note);
-            closeReview();
-            toast(<span>Published · <span className="vno">v{v}</span></span>);
-          }}
+          onAct={(note) => write(() => onPublish(note), (v) => toast(<span>Published · <span className="vno">v{v}</span></span>))}
           onClose={closeReview}
         />
       )}

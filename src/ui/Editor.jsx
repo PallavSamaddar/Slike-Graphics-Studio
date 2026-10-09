@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useDismiss, MenuItem } from './controls.jsx';
 
 // EditorHeader — back, the thing's name, where it stands, then Save · Publish · ⋯.
-export function EditorHeader({ name, onBack, air, pending, save, publish, more }) {
+export function EditorHeader({ name, title, onTitleChange, placeholder, onBack, air, pending, save, publish, more }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useDismiss(open, ref, () => setOpen(false));
@@ -10,6 +10,16 @@ export function EditorHeader({ name, onBack, air, pending, save, publish, more }
     <div className="ehead">
       <a className="eh-back" href="/" aria-label="Back" onClick={(e) => { e.preventDefault(); onBack(); }}>←</a>
       <h1>{name}</h1>
+      {onTitleChange && (
+        <input
+          className="eh-title"
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder={placeholder}
+          aria-label={`${name} name`}
+          maxLength={120}
+        />
+      )}
       {air}
       {pending}
       <span className="eh-gap" />

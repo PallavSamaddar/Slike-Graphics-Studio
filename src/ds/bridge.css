@@ -95,3 +95,22 @@ html:root, html:root[data-theme] {
 
 /* the image cropper (undesigned) keeps its glyphs at the size they always had inside a button */
 .cropper-rotate-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* the studio header: the graphic's own name, edited in place beside the kind (undesigned) */
+.ehead .eh-title {
+  width: 240px; min-width: 0; height: 30px; padding: 0 var(--space-8); font: inherit; font-size: var(--fs-md); font-weight: 600; color: var(--ink);
+  background: transparent; border: 1px solid transparent; border-radius: var(--r-control); outline: none;
+  transition: border-color .12s, box-shadow .12s;
+}
+.ehead .eh-title:hover { border-color: var(--ctl-line); }
+.ehead .eh-title:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); background: var(--panel); }
+.ehead .eh-title::placeholder { color: var(--placeholder); }
+
+/* Your graphics on Home: a saved graphic's card leads with its first headline (undesigned) */
+.saved-sum { color: var(--ink-faint); font-size: var(--fs-base); font-variant-numeric: tabular-nums; }
+.saved-status { display: flex; align-items: center; gap: var(--space-12); padding: var(--space-16) 0; color: var(--ink-soft); }
+.saved-status.bad { color: var(--accent); }
+.saved-thumb { aspect-ratio: 16 / 9; display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-12); background: var(--surface-soft); }
+.saved-src { align-self: flex-start; padding: 1px var(--space-8); border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; }
+.saved-line { flex: 1; color: var(--ink); font-weight: 500; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.saved-time { color: var(--ink-faint); font-size: 12px; }
