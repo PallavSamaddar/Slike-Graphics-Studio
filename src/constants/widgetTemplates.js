@@ -152,3 +152,8 @@ export const WIDGET_TPLS = [
     },
   },
 ];
+
+export const templateHasImage = (id) => !!WIDGET_TPLS.find((t) => t.id === id)?.style?.badgeImagePos;
+
+// The Feed source's per-headline images drive the widget's image (instead of its own upload).
+export const usesFeedMedia = (st) => st.src === 'rss' && templateHasImage(st.template) && (st.media?.rss || []).some(Boolean);

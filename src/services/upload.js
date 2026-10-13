@@ -3,7 +3,6 @@
 //   2. resumablejs sends the file in chunks to VITE_UPLOAD, method asset.resumable,
 //      with the jwt in the `token` header
 //   3. the last chunk's response carries the asset; its `url` is what the graphic keeps
-import Resumable from 'resumablejs';
 import { callRpc } from './rpc.js';
 
 const UPLOAD_TARGET = import.meta.env.VITE_UPLOAD;
@@ -45,6 +44,7 @@ export async function uploadFile(file, { onProgress } = {}) {
   const { jwt } = await callRpc('assets.register', { type: ASSET_TYPE, name: ASSET_TYPE, title: file.name });
   if (!jwt) throw new Error('no upload token from assets.register');
 
+  const { default: Resumable } = await import('resumablejs');
   return new Promise((resolve, reject) => {
     const r = new Resumable({
       ...RESUMABLE_CONFIG,

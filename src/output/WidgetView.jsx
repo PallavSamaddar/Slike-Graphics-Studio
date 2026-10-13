@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { autoTextColor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
+import { usesFeedMedia } from '../constants/widgetTemplates.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
 import VideoBackground from './VideoBackground.jsx';
+import CleoVideoBackground from './CleoVideoBackground.jsx';
 import ImageCropperModal from '../features/shared-editor/ImageCropperModal.jsx';
 import { useMediaUpload } from '../hooks/useMediaUpload.js';
 import newsBackgroundVideo from '../assets/news-background.mp4';
@@ -19,21 +21,19 @@ const VIDEO_TEXTURES = {
 // Renders the news-card widget: a category pill, headline, divider, summary
 // text, and a time/product footer over a solid/gradient/textured background.
 // Shared by the in-editor preview.
-export default function WidgetView({ st, setSt, viewTab }) {
+export default function WidgetView({ st, setSt }) {
   const { style: s, headingText: ht, bodyText: bt } = st;
 
-  // Prefer whatever tab is currently open in the editor (a draft, not yet
-  // committed via Save) so edits show up immediately here — same live-preview
-  // feel as every other control.
-  const previewSrc = viewTab || st.src;
-  const previewHeadlineFromFeed = previewSrc !== 'manual';
-  const previewItems = (st.drafts && st.drafts[previewSrc]) || (previewSrc === st.src ? st.items : []);
+  // The active source's content (the Manual | Feed switch), drafts included, so edits show
+  // up here at once — same live-preview feel as every other control.
+  const previewItems = st.drafts?.[st.src] || st.items;
   const rawItems = previewItems.filter((x) => x.trim());
-  // Feed/JSON drafts always keep their first line as the headline (it's
+  // Feed drafts always keep their first line as the headline (it's
   // sliced out of `st.items` on commit, but the raw draft list still has it
   // at index 0) — description lines start at index 1. Manual has no
   // separate headline line; its drafts are all description.
-  const descStart = previewHeadlineFromFeed ? 1 : 0;
+  const fromFeed = st.src !== 'manual';
+  const descStart = fromFeed ? 1 : 0;
   const items = rawItems.slice(descStart);
   const [cropSrc, setCropSrc] = useState(null);
   const upload = useMediaUpload();
@@ -68,9 +68,9 @@ export default function WidgetView({ st, setSt, viewTab }) {
   }, [activeIndex, items.length, itemsKey, durationSec, animation]);
   const summaryIndex = items.length ? Math.min(activeIndex, items.length - 1) : 0;
 
-  // Per-item media (Feed/JSON sources can attach a different image to each
-  // headline) — resolves to whichever line is currently showing.
-  const itemMedia = (previewSrc === 'rss' || previewSrc === 'json') ? (st.media && st.media[previewSrc]) : null;
+  // Per-item media (the Feed source can attach a different image to each
+  // headline, on templates with an image) — resolves to whichever line is showing.
+  const itemMedia = usesFeedMedia(st) ? st.media.rss : null;
   const activeMedia = itemMedia ? itemMedia[descStart + summaryIndex] : null;
 
   const handleBadgeUpload = (e) => {
@@ -118,8 +118,12 @@ export default function WidgetView({ st, setSt, viewTab }) {
     textAlign: ht.textAlign,
   };
 
-  const effectiveBadgeImage = activeMedia ? placeholderThumb(items[summaryIndex] || '') : s.badgeImage;
-  const badgePos = (activeMedia ? activeMedia.pos : s.badgeImagePos) || 'left';
+  // With the feed's images on, every line has one, so the slot never comes and goes: a line
+  // whose item has no media (or whose image fails to load) shows the widget's own image,
+  // else a placeholder made from the line.
+  const standInImage = s.badgeImage || placeholderThumb(items[summaryIndex] || rawItems[0] || '');
+  const effectiveBadgeImage = itemMedia ? (activeMedia?.url || standInImage) : s.badgeImage;
+  const badgePos = (itemMedia ? itemMedia.find(Boolean)?.pos : s.badgeImagePos) || 'left';
   const showBadgeSlot = !!(effectiveBadgeImage || (!itemMedia && s.badgeImagePos));
 
   const relativeTime = (ts) => {
@@ -132,7 +136,7 @@ export default function WidgetView({ st, setSt, viewTab }) {
     const days = Math.round(hrs / 24);
     return `${days} day${days === 1 ? '' : 's'} ago`;
   };
-  const headline = (previewHeadlineFromFeed ? rawItems[0] : st.heading) || 'News Heading';
+  const headline = (fromFeed ? rawItems[0] : st.heading) || 'News Heading';
   // Shows one line at a time (never joined), cycling on a timer through every
   // description line, per the Text Animation/Duration controls.
   const summary = items[summaryIndex] || 'Enter description here';
@@ -148,7 +152,12 @@ export default function WidgetView({ st, setSt, viewTab }) {
           per-element rather than via a wrapper, so it doesn't disturb the
           `.widget-body > [class^="widget-texture-"]` drift-animation
           selector, which relies on the texture div being a direct child. */}
-      {s.texture === 'video-custom' && s.customVideoUrl ? (
+      {/* An uploaded video is played by the Cleo player from its Slike media id (from the
+          upload, or picked from the uploaded list); only while its upload is still running
+          does it play from the local copy. */}
+      {s.texture === 'video-custom' && s.customVideoMediaId ? (
+        <CleoVideoBackground mediaId={s.customVideoMediaId} opacity={s.textureOpacity ?? 1} />
+      ) : s.texture === 'video-custom' && s.customVideoUrl ? (
         <VideoBackground src={s.customVideoUrl} opacity={s.textureOpacity ?? 1} />
       ) : VIDEO_TEXTURES[s.texture] ? (
         <VideoBackground src={VIDEO_TEXTURES[s.texture]} opacity={s.textureOpacity ?? 1} />
@@ -186,7 +195,13 @@ export default function WidgetView({ st, setSt, viewTab }) {
         <div className={'widget-card-body' + (showBadgeSlot ? ' widget-card-body-' + badgePos : '')}>
           {showBadgeSlot && (
             effectiveBadgeImage ? (
-              <img className="widget-card-thumb" src={effectiveBadgeImage} alt="" />
+              <img
+                key={effectiveBadgeImage}
+                className="widget-card-thumb"
+                src={effectiveBadgeImage}
+                alt=""
+                onError={(e) => { if (e.currentTarget.src !== standInImage) e.currentTarget.src = standInImage; }}
+              />
             ) : (
               <label className="widget-card-thumb widget-card-thumb-placeholder">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>

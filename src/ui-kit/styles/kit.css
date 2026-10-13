@@ -186,6 +186,7 @@ tbody tr:hover { background: var(--row-hover); }
 .field input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
 .field .hint { font-size: var(--fs-sm); color: var(--ink-faint); }
 .field.err input[type=text] { border-color: var(--bad); }
+.field.err textarea { border-color: var(--bad); }
 .field-err { font-size: var(--fs-md); color: var(--bad); }
 .num-wrap {
   display: inline-flex; align-items: center; width: 150px; border: 1px solid var(--line); border-radius: var(--r-control);
@@ -855,7 +856,7 @@ input[type=checkbox] { accent-color: var(--accent-fill); }
 .tpl-choice { position: relative; padding: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
 .tpl-choice:has(.rmenu.open) { z-index: 2; }
 .tpl-choice .dc-top { padding: var(--space-10) var(--space-12); margin: 0; align-items: center; }
-.tpl-choice .dc-top .dc-title { margin-right: auto; }
+.tpl-choice .dc-top .dc-title { margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .tpl-choice .tpl-thumb { border-bottom: 1px solid var(--line-soft); border-radius: var(--r-card) var(--r-card) 0 0; overflow: hidden; }
 .tpl-thumb-blank { aspect-ratio: 16 / 9; background: var(--surface-soft); }
 .dlg-card.create.tpl-choice { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-16); }

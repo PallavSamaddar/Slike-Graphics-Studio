@@ -8,8 +8,12 @@ import ImageCropperModal from '../shared-editor/ImageCropperModal.jsx';
 import ImageUpload from '../shared-editor/ImageUpload.jsx';
 import { TEXT_ANIMATIONS } from '../../constants/textAnimations.js';
 import { VIDEO_PRESETS } from '../../constants/videoPresets.js';
+import { usesFeedMedia } from '../../constants/widgetTemplates.js';
 import { baseName, readAsDataUrl, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
+import { uploadVideoWithSdk } from '../../services/uploadSdk.js';
+import { isMediaReady, mediaThumbUrl } from '../../services/media.js';
+import useUploadedVideos from '../../hooks/useUploadedVideos.js';
 
 const TEXTURES = [
   { id: 'none', label: 'None' },
@@ -28,10 +32,10 @@ const TEXTURES = [
 export default function WidgetStyleSections({ st, setSt }) {
   const { style: s, headingText: ht, bodyText: bt, behavior } = st;
   const isVideo = !!(s.texture && s.texture.startsWith('video'));
-  // Feed/JSON sources can attach per-headline media (ticked in Content) —
+  // The Feed source can attach per-headline media (ticked in Content) —
   // when that's active for the live source, it drives the image instead of
   // this single manual upload, so hide the redundant control.
-  const usingPerItemMedia = (st.src === 'rss' || st.src === 'json') && (st.media?.[st.src] || []).some((m) => m);
+  const usingPerItemMedia = usesFeedMedia(st);
   const setStyle = (k, v) => setSt((state) => ({ ...state, style: { ...state.style, [k]: v } }));
   const setHt = (k, v) => setSt((state) => ({ ...state, headingText: { ...state.headingText, [k]: v } }));
   const setBt = (k, v) => setSt((state) => ({ ...state, bodyText: { ...state.bodyText, [k]: v } }));
@@ -46,6 +50,7 @@ export default function WidgetStyleSections({ st, setSt }) {
   const [cropSrc, setCropSrc] = useState(null);
   const [cropFileName, setCropFileName] = useState('');
   const [bgTab, setBgTab] = useState(isVideo ? 'video' : 'animation');
+  const { videos: uploadedVideos, refresh: refreshUploaded } = useUploadedVideos(bgTab === 'video');
   const [showTextureSettings, setShowTextureSettings] = useState(false);
   const textureSettingsRef = useRef(null);
 
@@ -78,15 +83,33 @@ export default function WidgetStyleSections({ st, setSt }) {
     setPendingVideo({ url: URL.createObjectURL(file), file, fileName: baseName(file) });
   };
 
-  // Plays from the local copy at once; the uploaded URL replaces it when the upload ends.
+  // Uploaded through the Slike upload SDK as a Slike media. It plays from the local copy;
+  // the media's id is kept when the upload ends.
   const confirmVideoUpload = (name) => {
     const { url, file } = pendingVideo;
     setPendingVideo(null);
     upload({
       file, label: name, setSt, path: 'style.customVideoUrl', local: url,
-      fields: { 'style.texture': 'video-custom', 'style.customVideoUrl': url, 'style.customVideoName': name },
-    });
+      uploader: uploadVideoWithSdk, resultPath: 'style.customVideoMediaId',
+      fields: { 'style.texture': 'video-custom', 'style.customVideoUrl': url, 'style.customVideoName': name, 'style.customVideoMediaId': null },
+    }).then(refreshUploaded);
   };
+
+  // An earlier upload, picked from the list: the Cleo player plays it from its media id.
+  const pickUploadedVideo = (media) => setSt((state) => ({
+    ...state,
+    style: {
+      ...state.style,
+      texture: 'video-custom',
+      customVideoMediaId: media.id,
+      customVideoUrl: null,
+      customVideoName: media.title || 'Untitled video',
+    },
+  }));
+  const pickedUploaded = (media) => s.texture === 'video-custom' && s.customVideoMediaId === media.id;
+  // The picked video gets its own swatch only while it isn't in the list (a local copy
+  // still uploading, or a video from an older save).
+  const customInList = uploadedVideos.some((m) => m.id === s.customVideoMediaId);
 
   const hasTexture = !!(s.texture && s.texture !== 'none');
   const hasImage = !!s.badgeImage;
@@ -122,7 +145,7 @@ export default function WidgetStyleSections({ st, setSt }) {
           </Field>
         </Row>
         <Row>
-          <Field label="Image" path={['style.badgeImageName', 'style.badgeImage']} off={usingPerItemMedia} offReason="Feed/JSON images are on for these headlines — they drive the image">
+          <Field label="Image" path={['style.badgeImageName', 'style.badgeImage']} off={usingPerItemMedia} offReason="Feed images are on for these headlines — they drive the image">
             <ImageUpload src={s.badgeImage} name={s.badgeImageName} onFile={handleBadgeImage} onRemove={() => setStyle('badgeImage', null)} />
           </Field>
           <Field label="Image position" path="style.badgeImagePos" off={usingPerItemMedia}>
@@ -273,7 +296,7 @@ export default function WidgetStyleSections({ st, setSt }) {
                 <span className="texture-swatch-label">Upload</span>
                 <input type="file" accept="video/*" hidden onChange={handleVideoUpload} />
               </label>
-              {s.customVideoUrl && (
+              {(s.customVideoUrl || s.customVideoMediaId) && !customInList && (
                 <button
                   type="button"
                   className={'texture-swatch' + (s.texture === 'video-custom' ? ' active' : '')}
@@ -281,11 +304,30 @@ export default function WidgetStyleSections({ st, setSt }) {
                   title={s.customVideoName || 'Untitled video'}
                 >
                   <span className="texture-swatch-preview texture-swatch-preview-video">
-                    <video className="texture-swatch-video-thumb" src={s.customVideoUrl} muted />
+                    {s.customVideoUrl && <video className="texture-swatch-video-thumb" src={s.customVideoUrl} muted />}
                   </span>
                   <span className="texture-swatch-label">{s.customVideoName || 'Untitled video'}</span>
                 </button>
               )}
+              {uploadedVideos.map((m) => {
+                const ready = isMediaReady(m);
+                const thumb = mediaThumbUrl(m);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={'texture-swatch' + (pickedUploaded(m) ? ' active' : '')}
+                    onClick={() => pickUploadedVideo(m)}
+                    disabled={!ready}
+                    title={ready ? m.title : `${m.title} — still processing`}
+                  >
+                    <span className="texture-swatch-preview texture-swatch-preview-video">
+                      {thumb && <img className="texture-swatch-video-thumb" src={thumb} alt="" loading="lazy" />}
+                    </span>
+                    <span className="texture-swatch-label">{ready ? m.title : 'Processing…'}</span>
+                  </button>
+                );
+              })}
               {VIDEO_PRESETS.map((v) => (
                 <button
                   key={v.id}

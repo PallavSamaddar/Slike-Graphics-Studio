@@ -14,8 +14,8 @@ export const decodeState = (str) => {
   return JSON.parse(json);
 };
 
-export const playerUrl = (st, kind = 'ticker') => {
+export const playerUrl = (st, kind = 'ticker', id = null) => {
   const url = new URL(window.location.href);
-  url.hash = '/player?kind=' + kind + '&data=' + encodeState(st);
+  url.hash = '/player?kind=' + kind + (id ? '&id=' + encodeURIComponent(id) : '') + '&data=' + encodeState(st);
   return url.toString();
 };

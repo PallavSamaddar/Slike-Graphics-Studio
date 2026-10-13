@@ -1,4 +1,5 @@
 import { TEMPLATE_COUNT } from './graphics.js';
+import { openProfile, logOut } from '../services/user.js';
 
 // The Slike mark: full colour, transparent on the header band at 20px, beside the name set
 // in type. Never recoloured, boxed or set on a fill.
@@ -30,9 +31,9 @@ export const ROOMS = [
   },
 ];
 
-// The signed-in person (static for now) and their profile menu's items.
-export const USER = { name: 'Diya Seth', email: 'diya.seth@timesinternet.in', initials: 'DS' };
+// The signed-in person comes from user.me (hooks/useCurrentUser.js); the profile and log-out
+// live on the Slike accounts site, as in slike-frontend.
 export const PROFILE_MENU = [
-  { label: 'Settings', onClick: () => {} },
-  { label: 'Log out', danger: true, onClick: () => {} },
+  { label: 'View profile', onClick: openProfile },
+  { label: 'Log out', danger: true, onClick: logOut },
 ];

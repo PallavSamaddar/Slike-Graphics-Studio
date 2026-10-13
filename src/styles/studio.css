@@ -4,16 +4,34 @@
 html body { overflow: auto; font-family: var(--font-ui); background: var(--bg); color: var(--ink); font-size: var(--fs-base); }
 html #root { height: auto; min-height: 100vh; display: block; overflow: visible; }
 
-/* the editor page: the form as one surface, the live preview beside it */
-.shell .studio-detail { align-items: flex-start; }
-.studio-preview {
+/* the editor page: the content as one surface on the left; on the right the live preview,
+   and the style sections under it as a second surface that scrolls on its own, so the
+   preview stays in view while styles change */
+/* both columns fill the window down to the same line: the content card is at least as tall
+   as the right column (and grows past it when the content is longer) */
+.shell .studio-detail { align-items: flex-start; --studio-col-h: calc(100vh - var(--size-band) - 88px); }
+.studio-detail > .form.keyform { min-height: var(--studio-col-h); }
+.studio-side {
   flex: 0 0 clamp(420px, 44%, 720px); min-width: 0;
   position: sticky; top: calc(var(--size-band) + 72px);
+  display: flex; flex-direction: column; gap: var(--space-16);
+  height: var(--studio-col-h);
 }
+.studio-preview { flex: none; min-width: 0; }
+.feed-refresh-bar { display: flex; align-items: flex-end; gap: var(--space-12); margin-bottom: var(--space-12); }
+.feed-refresh-bar .field { min-width: 200px; }
+.feed-refresh-status { color: var(--ink-faint); font-size: var(--fs-md); padding-bottom: 9px; }
+.studio-side > .form.keyform.studio-style {
+  flex: 1 1 auto; min-height: 160px; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--card-line); border-radius: var(--r-card); box-shadow: var(--shadow-1);
+}
+.studio-side > .form.keyform.studio-style > .fieldset { background: transparent; border: 0; border-radius: 0; box-shadow: none; margin: 0; padding: var(--sect-pad); }
+.studio-side > .form.keyform.studio-style > .fieldset + .fieldset { border-top: 1px solid var(--card-line); }
 .studio-canvas-card { position: relative; }
 /* the preview stage sizes itself from its box, so the box gets one */
 .studio-canvas-card .broadcast-canvas { aspect-ratio: 16 / 10; }
-.studio-canvas-card .broadcast-canvas.widget-canvas { aspect-ratio: auto; height: clamp(420px, calc(100vh - 220px), 680px); }
+/* the widget stage shares the right column with the style sections, so it is shorter */
+.studio-canvas-card .broadcast-canvas.widget-canvas { aspect-ratio: auto; height: clamp(300px, 46vh, 520px); }
 
 /* a field whose box carries an act beside it (Validate) */
 .rss-row { display: flex; gap: var(--space-8); align-items: center; width: 100%; }
@@ -41,7 +59,7 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 /* the image cropper keeps its glyphs at the size they always had inside a button */
 .cropper-rotate-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 
-/* Your graphics on Home: a saved graphic's card leads with its first headline */
+/* Your graphics on Home: a saved graphic's card (the plain text card, when its template is unknown) */
 .saved-sum { color: var(--ink-faint); font-size: var(--fs-base); font-variant-numeric: tabular-nums; }
 .saved-status { display: flex; align-items: center; gap: var(--space-12); padding: var(--space-16) 0; color: var(--ink-soft); }
 .saved-status.bad { color: var(--accent); }
@@ -49,3 +67,10 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 .saved-src { align-self: flex-start; padding: 1px var(--space-8); border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; }
 .saved-line { flex: 1; color: var(--ink); font-weight: 500; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .saved-time { color: var(--ink-faint); font-size: 12px; }
+.saved-thumb-pic { position: relative; }
+.saved-thumb-pic .tpl-preview-bg { aspect-ratio: 16 / 9; box-sizing: border-box; }
+.saved-thumb-pic .widget-mini-heading { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.saved-thumb-pic .widget-mini-desc { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
+.saved-meta { position: absolute; left: var(--space-8); right: var(--space-8); bottom: var(--space-8); z-index: 2; display: flex; align-items: center; gap: var(--space-8); pointer-events: none; }
+.saved-meta .saved-src, .saved-meta .saved-time { padding: 1px var(--space-8); border-radius: 999px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 11px; font-weight: 600; }
+.saved-meta .saved-time { margin-left: auto; }

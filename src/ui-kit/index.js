@@ -21,5 +21,6 @@ export { ToastHost, useToast } from './components/Toast.jsx';
 export { default as Toggle } from './components/Toggle.jsx';
 export { default as TopBar } from './components/TopBar.jsx';
 export { ChangeScope, useChanged } from './hooks/useChangeMarks.jsx';
+export { FieldErrors, useFieldError } from './hooks/useFieldErrors.jsx';
 export { default as useDismiss } from './hooks/useDismiss.js';
 export { useTheme } from './hooks/useTheme.js';

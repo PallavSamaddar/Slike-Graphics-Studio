@@ -5,8 +5,9 @@ import { GRAPHIC_KIND, SOURCE_TYPE, createGraphic, updateGraphic } from './graph
 
 // Screen state that is never saved.
 const SCREEN_ONLY_KEYS = ['activeTab', 'device'];
-// Saved as `template_id` / `source` rather than inside `config`.
-const SOURCE_KEYS = ['template', 'items', 'src', 'rssUrl'];
+// Saved as `template_id` / `source` rather than inside `config`. The feed URL is saved in
+// `config` as well, so it is kept while Manual is the active source.
+const SOURCE_KEYS = ['template', 'items', 'src'];
 // Must match graphicBlockedURLPrefixes in b2b-cms app/controller/graphic.go.
 const INLINE_MEDIA_PREFIXES = ['data:', 'blob:'];
 
@@ -25,8 +26,6 @@ function toSource(kind, st) {
   }
   const items = (st.items || []).filter((item) => item.trim());
   if (st.src === SOURCE_TYPE.RSS) return { type: SOURCE_TYPE.RSS, url: st.rssUrl, items };
-  // The backend has no JSON source type, so a loaded JSON list is saved as
-  // a manual snapshot of its headlines.
   return { type: SOURCE_TYPE.MANUAL, items };
 }
 
@@ -37,6 +36,7 @@ export function toGraphicPayload(kind, st, title) {
     template_id: st.template,
     source: toSource(kind, st),
     config: omit(st, [...SCREEN_ONLY_KEYS, ...SOURCE_KEYS]),
+    refresh_schedule: 0,
   };
 }
 
@@ -46,7 +46,7 @@ export function fromGraphic(graphic, initialState) {
   const st = { ...initialState, ...graphic.config, template: graphic.template_id ?? initialState.template };
   if (graphic.kind !== GRAPHIC_KIND.JACKET && graphic.source) {
     st.src = graphic.source.type;
-    st.rssUrl = graphic.source.url || '';
+    st.rssUrl = graphic.source.url || st.rssUrl || '';
     st.items = graphic.source.items || [];
   }
   return st;

@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { GRAPHICS, KIND_BY_CATEGORY } from './constants/graphics.js';
-import { BRAND, ROOMS, USER, PROFILE_MENU } from './constants/navigation.jsx';
-import { initialWidgetState } from './constants/initialState.js';
+import { BRAND, ROOMS, PROFILE_MENU } from './constants/navigation.jsx';
 import useGraphic from './hooks/useGraphic.js';
 import useDocument from './hooks/useDocument.js';
+import useCurrentUser from './hooks/useCurrentUser.js';
 import { ToastHost, TopBar, useTheme } from './ui-kit';
 import HomePage from './pages/HomePage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
 import StudioPage from './pages/StudioPage.jsx';
-import { TickerForm, TickerPreview } from './features/ticker';
-import { WidgetForm, WidgetPreview } from './features/widget';
-import { JacketForm, JacketPreview } from './features/jacket';
+import { TickerContent, TickerStyle, TickerPreview } from './features/ticker';
+import { WidgetContent, WidgetStyle, WidgetPreview } from './features/widget';
+import { JacketContent, JacketStyle, JacketPreview } from './features/jacket';
+import LiveFeedPreview from './features/shared-editor/LiveFeedPreview.jsx';
 
 // The app shell: the header band, and which page is showing.
 //   view: 'home' | 'gallery' | 'studio' (with `kind`: 'ticker' | 'widget' | 'jacket')
@@ -19,13 +20,12 @@ export default function App() {
   const [kind, setKind] = useState('ticker');
   const [returnView, setReturnView] = useState('home'); // where the studio's back button goes
   const [galleryCategory, setGalleryCategory] = useState('ticker');
-  const [widgetViewTab, setWidgetViewTab] = useState(initialWidgetState.src);
   const graphics = { ticker: useGraphic(GRAPHICS.ticker), widget: useGraphic(GRAPHICS.widget), jacket: useGraphic(GRAPHICS.jacket) };
   const docs = useDocument(graphics);
   const { pick: themePick, setPick: setThemePick } = useTheme();
+  const user = useCurrentUser();
 
   const showStudio = (k, state, from) => {
-    if (k === 'widget') setWidgetViewTab(state.src);
     setReturnView(from);
     setKind(k);
     setView('studio');
@@ -52,15 +52,25 @@ export default function App() {
     page = <TemplatesPage key={galleryCategory} initialCategory={galleryCategory} onPick={(category, id) => openTemplate(KIND_BY_CATEGORY[category], id, 'gallery')} />;
   } else {
     const g = graphics[kind];
+    // Content fills the left column; the preview and, under it, the style sections the right.
     const parts = {
-      ticker: { form: <TickerForm st={g.cur} setSt={g.setCur} />, preview: <TickerPreview st={g.cur} setSt={g.setCur} /> },
-      widget: {
-        form: <WidgetForm st={g.cur} setSt={g.setCur} viewTab={widgetViewTab} setViewTab={setWidgetViewTab} />,
-        preview: <WidgetPreview st={g.cur} setSt={g.setCur} viewTab={widgetViewTab} />,
+      ticker: {
+        content: <TickerContent st={g.cur} setSt={g.setCur} />,
+        style: <TickerStyle st={g.cur} setSt={g.setCur} />,
+        preview: <LiveFeedPreview kind="ticker" st={g.cur} setSt={g.setCur}>{(st) => <TickerPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
       },
-      jacket: { form: <JacketForm st={g.cur} setSt={g.setCur} />, preview: <JacketPreview st={g.cur} setSt={g.setCur} /> },
+      widget: {
+        content: <WidgetContent st={g.cur} setSt={g.setCur} />,
+        style: <WidgetStyle st={g.cur} setSt={g.setCur} />,
+        preview: <LiveFeedPreview kind="widget" st={g.cur} setSt={g.setCur}>{(st) => <WidgetPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
+      },
+      jacket: {
+        content: <JacketContent st={g.cur} setSt={g.setCur} />,
+        style: <JacketStyle st={g.cur} setSt={g.setCur} />,
+        preview: <JacketPreview st={g.cur} setSt={g.setCur} />,
+      },
     }[kind];
-    page = <StudioPage kind={kind} {...docs.studio(kind)} onBack={back} form={parts.form} preview={parts.preview} />;
+    page = <StudioPage kind={kind} {...docs.studio(kind)} onBack={back} content={parts.content} style={parts.style} preview={parts.preview} />;
   }
 
   return (
@@ -71,7 +81,7 @@ export default function App() {
           rooms={ROOMS}
           room={room}
           onRoom={(id) => setView(id === 'home' ? 'home' : 'gallery')}
-          user={USER}
+          user={user}
           menu={PROFILE_MENU}
           themePick={themePick}
           onThemePick={setThemePick}

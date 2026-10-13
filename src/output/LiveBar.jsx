@@ -1,4 +1,5 @@
 import { SPEEDS } from '../constants/tickerTemplates.js';
+import useTickerScrollDuration from '../hooks/useTickerScrollDuration.js';
 
 function badgeLabel(badge) {
   if (badge.type === 'CUSTOM') return badge.customText || 'CUSTOM';
@@ -10,6 +11,7 @@ export default function LiveBar({ st }) {
   const items = st.items.filter((x) => x.trim());
   const sp = SPEEDS[behavior.speed] || SPEEDS[2];
   const iterCount = behavior.mode === 'loop' ? 'infinite' : 1;
+  const [innerRef, scrollMs] = useTickerScrollDuration(sp.pxPerSec);
 
   const itemStyle = {
     fontFamily: tx.fontFamily,
@@ -28,7 +30,8 @@ export default function LiveBar({ st }) {
       <div
         className="live-inner"
         id="liveInner"
-        style={{ animationDuration: sp.lDur + 'ms', animationIterationCount: iterCount }}
+        ref={innerRef}
+        style={{ animationDuration: scrollMs ? scrollMs + 'ms' : undefined, animationIterationCount: iterCount }}
       >
         {[0, 1].map((rep) => (
           <span key={rep}>

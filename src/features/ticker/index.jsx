@@ -1,15 +1,5 @@
-import TickerContentSection from './TickerContentSection.jsx';
-import TickerStyleSections from './TickerStyleSections.jsx';
-import TickerPreview from './TickerPreview.jsx';
-
-// The ticker editor: its form sections and its live preview.
-export function TickerForm({ st, setSt }) {
-  return (
-    <>
-      <TickerContentSection st={st} setSt={setSt} />
-      <TickerStyleSections st={st} setSt={setSt} />
-    </>
-  );
-}
-
-export { TickerPreview };
+// The ticker editor: its content (left column), its style sections (under the preview,
+// right) and its live preview.
+export { default as TickerContent } from './TickerContentSection.jsx';
+export { default as TickerStyle } from './TickerStyleSections.jsx';
+export { default as TickerPreview } from './TickerPreview.jsx';

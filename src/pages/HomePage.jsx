@@ -1,6 +1,6 @@
 import { GRAPHICS } from '../constants/graphics.js';
 import { FEATURED } from '../constants/featured.js';
-import { ChooserCard, ChooserGrid, PageHead, RowMenu } from '../ui-kit';
+import { ChooserCard, ChooserGrid, PageHead } from '../ui-kit';
 import { THUMBS } from '../features/templates/TemplateThumbs.jsx';
 import SavedGraphics from '../features/home/SavedGraphics.jsx';
 
@@ -43,7 +43,6 @@ export default function HomePage({ onPick, onSeeAll, onOpenGraphic }) {
                 name={t.name}
                 reach={f.badge}
                 onOpen={() => onPick(kind, t.id)}
-                menu={<RowMenu label={`More for “${t.name}”`} items={[{ label: 'Duplicate', onClick: () => onPick(kind, t.id) }]} />}
               >
                 <Thumb t={t} />
               </ChooserCard>

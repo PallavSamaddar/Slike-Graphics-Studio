@@ -1,4 +1,6 @@
 import { decodeState } from '../utils/playerUrl.js';
+import useLiveFeed from '../hooks/useLiveFeed.js';
+import { fetchGraphicFeed, titledItems } from '../services/feed.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
 import JacketView from './JacketView.jsx';
@@ -11,6 +13,7 @@ export default function PlayerView({ hash }) {
   const params = new URLSearchParams(query);
   const data = params.get('data');
   const kind = params.get('kind') || 'ticker';
+  const id = params.get('id');
 
   let st = null;
   let error = null;
@@ -30,7 +33,16 @@ export default function PlayerView({ hash }) {
 
   return (
     <div className="player-page">
-      {kind === 'widget' ? <WidgetView st={st} /> : kind === 'jacket' ? <JacketView st={st} /> : <TickerView st={st} />}
+      {kind === 'jacket' ? <JacketView st={st} /> : <LiveGraphic kind={kind} st={st} id={id} />}
     </div>
   );
+}
+
+function LiveGraphic({ kind, st, id }) {
+  const live = useLiveFeed(kind, st, {
+    feedKey: id,
+    load: () => fetchGraphicFeed(id).then(titledItems),
+    immediate: true,
+  });
+  return kind === 'widget' ? <WidgetView st={live.st} /> : <TickerView st={live.st} />;
 }

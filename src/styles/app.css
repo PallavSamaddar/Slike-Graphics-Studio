@@ -1336,13 +1336,14 @@ input, select, textarea { font-family: inherit; }
 /* ============================================================
    ITEMS EDITOR (single textarea, one item per line)
    ============================================================ */
-#manualSec, #rssSec, #jsonSec {
+#rssSec {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 .items-editor {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -1383,6 +1384,24 @@ input, select, textarea { font-family: inherit; }
   min-height: 126px;
 }
 .items-editor-textarea::placeholder { color: var(--text-muted); }
+/* A hidden copy of the text, wrapped as the textarea wraps it, to measure each item's
+   height for its line number (ItemsEditor.jsx). Same font, line height and side padding. */
+.items-editor-mirror {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 0; /* its rows are still laid out; it just adds no scroll to the editor box */
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  box-sizing: border-box;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 21px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
 
 .items-editor-readonly .items-editor-gutter { background: var(--bg-panel-alt); }
 .items-editor-readonly { resize: none; background: var(--bg-panel-alt); }
@@ -1827,6 +1846,8 @@ input, select, textarea { font-family: inherit; }
   flex: 0 0 128px;
   width: 128px;
 }
+/* An uploaded video still being transcoded. */
+.texture-swatch:disabled { cursor: default; opacity: 0.55; }
 
 /* Single-line scrollable row with left/right nav arrows below it — used for
    texture and video pickers, which used to wrap onto multiple lines. */
@@ -2025,11 +2046,21 @@ input, select, textarea { font-family: inherit; }
 .widget-video-bg {
   position: absolute;
   inset: 0;
+  /* Its own stacking layer under .widget-card-content (z-index 1): the Cleo player gives
+     its inner layers z-indexes of their own, which would otherwise rise over the card. */
+  z-index: 0;
+  isolation: isolate;
   width: 100%;
   height: 100%;
   object-fit: cover;
   pointer-events: none;
 }
+/* The Cleo player draws its own <video> (and poster, loader, docks) inside the box; it fills
+   it the same way, and none of it takes clicks meant for the card. */
+.widget-cleo-bg { overflow: hidden; }
+.widget-cleo-bg * { pointer-events: none !important; }
+.widget-cleo-bg .cpl-player { position: absolute !important; inset: 0; width: 100% !important; height: 100% !important; }
+.widget-cleo-bg video { width: 100%; height: 100%; object-fit: cover; }
 .texture-swatch-preview-video {
   background: linear-gradient(135deg, #3B4A6B 0%, #1E2438 100%);
   display: flex;

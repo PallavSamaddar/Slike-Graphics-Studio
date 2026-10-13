@@ -1,15 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
-import { previewGraphics, getGraphicStats, duplicateGraphic, archiveGraphic, GRAPHIC_KIND } from '../../services/graphics.js';
+import { previewGraphics, getGraphicStats, duplicateGraphic, archiveGraphic, GRAPHIC_KIND, SOURCE_LABEL } from '../../services/graphics.js';
 import { ChooserCard, ChooserGrid, RowMenu, useToast } from '../../ui-kit';
+import { THUMBS } from '../templates/TemplateThumbs.jsx';
+import { savedThumb } from './savedThumb.js';
 
-// "Your graphics" on Home: the most recently edited saved graphics (graphic.preview) as
-// chooser cards, and totals per kind (graphic.stats).
 const RECENT_COUNT = 6;
 const KIND_LABEL = { [GRAPHIC_KIND.TICKER]: 'Ticker', [GRAPHIC_KIND.WIDGET]: 'Widget', [GRAPHIC_KIND.JACKET]: 'Jacket' };
-const SOURCE_LABEL = { manual: 'Manual', rss: 'Feed' };
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
+const INDEX_REFRESH_MS = 1500;
+
+const toCard = (g) => ({
+  ...g,
+  source_type: g.source_type ?? g.source?.type,
+  items: g.items ?? g.source?.items ?? [],
+  mt: g.mt ?? Date.now(),
+});
 
 const editedAgo = (mt) => {
   const diff = Date.now() - mt;
@@ -46,16 +53,26 @@ export default function SavedGraphics({ onOpen }) {
 
   useEffect(() => { load(); }, [load]);
 
-  // Runs a card action, then refreshes the row so counts and order stay right.
-  const runAction = (action, id, receipt) => action(id)
-    .then(() => { toast(receipt); return load(); })
+  // Runs a card action and shows its result in the row at once — the copy first, the archived
+  // card gone — since graphic.preview can miss a write for a moment (the search index
+  // refreshes about once a second); then asks again after that, so counts and order catch up.
+  const runAction = (action, id, receipt, apply) => action(id)
+    .then((result) => {
+      setGraphics((list) => apply(list, result));
+      toast(receipt);
+      setTimeout(load, INDEX_REFRESH_MS);
+    })
     .catch((err) => toast(err.message, 'bad'));
+  const duplicate = (id) => runAction(duplicateGraphic, id, 'Duplicated', (list, copy) => (
+    copy?.id ? [toCard(copy), ...list.filter((g) => g.id !== copy.id)].slice(0, RECENT_COUNT) : list
+  ));
+  const archive = (id) => runAction(archiveGraphic, id, 'Archived', (list) => list.filter((g) => g.id !== id));
   const open = (id) => onOpen(id).catch((err) => toast(`Couldn't open that graphic: ${err.message}`, 'bad'));
 
   return (
     <section className="home-sec">
       <div className="home-sec-head">
-        <h2 className="type-card-title">Your graphics</h2>
+        <h2 className="type-card-title">My graphics</h2>
         {stats && <span className="saved-sum">{statsSummary(stats)}</span>}
       </div>
 
@@ -82,21 +99,39 @@ export default function SavedGraphics({ onOpen }) {
                 <RowMenu
                   label={`More for “${g.title}”`}
                   items={[
-                    { label: 'Duplicate', onClick: () => runAction(duplicateGraphic, g.id, 'Duplicated') },
-                    { label: 'Archive', onClick: () => runAction(archiveGraphic, g.id, 'Archived') },
+                    { label: 'Duplicate', onClick: () => duplicate(g.id) },
+                    { label: 'Archive', onClick: () => archive(g.id) },
                   ]}
                 />
               )}
             >
-              <div className="saved-thumb">
-                {g.source_type && <span className="saved-src">{SOURCE_LABEL[g.source_type] || g.source_type}</span>}
-                <span className="saved-line">{g.items?.[0] || 'No headlines yet'}</span>
-                <span className="saved-time">{editedAgo(g.mt)}</span>
-              </div>
+              <SavedThumb g={g} />
             </ChooserCard>
           ))}
         </ChooserGrid>
       )}
     </section>
+  );
+}
+
+function SavedThumb({ g }) {
+  const Thumb = THUMBS[g.kind];
+  const thumb = Thumb && savedThumb(g);
+  const source = g.source_type && <span className="saved-src">{SOURCE_LABEL[g.source_type] || g.source_type}</span>;
+  const time = <span className="saved-time">{editedAgo(g.mt)}</span>;
+  if (!thumb) {
+    return (
+      <div className="saved-thumb">
+        {source}
+        <span className="saved-line">{g.items?.[0] || 'No headlines yet'}</span>
+        {time}
+      </div>
+    );
+  }
+  return (
+    <div className="saved-thumb-pic">
+      <Thumb t={thumb.t} {...thumb.text} />
+      <div className="saved-meta">{source}{time}</div>
+    </div>
   );
 }

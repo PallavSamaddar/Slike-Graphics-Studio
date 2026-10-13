@@ -1,15 +1,5 @@
-import JacketContentSections from './JacketContentSections.jsx';
-import JacketStyleSection from './JacketStyleSection.jsx';
-import JacketPreview from './JacketPreview.jsx';
-
-// The jacket editor: its form sections and its live preview.
-export function JacketForm({ st, setSt }) {
-  return (
-    <>
-      <JacketContentSections st={st} setSt={setSt} />
-      <JacketStyleSection st={st} setSt={setSt} />
-    </>
-  );
-}
-
-export { JacketPreview };
+// The jacket editor: its content (left column), its style section (under the preview,
+// right) and its live preview.
+export { default as JacketContent } from './JacketContentSections.jsx';
+export { default as JacketStyle } from './JacketStyleSection.jsx';
+export { default as JacketPreview } from './JacketPreview.jsx';

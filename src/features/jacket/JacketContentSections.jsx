@@ -121,9 +121,9 @@ export default function JacketContentSections({ st, setSt }) {
       </Section>
 
       <Section title="Main video">
-        <Field label="Upload or choose a preset" grow path="mainVideoName">
+        <Field label="Choose a preset" grow path="mainVideoName">
           <ScrollRow hideNav>
-            {st.mainVideoUrl && !st.mainVideoPreset ? (
+            {st.mainVideoUrl && !st.mainVideoPreset && (
               <div className="badge-img-thumb-wrap">
                 <video className="badge-img-thumb" src={st.mainVideoUrl} muted />
                 <span className="badge-img-name">{st.mainVideoName || 'Untitled video'}</span>
@@ -131,17 +131,18 @@ export default function JacketContentSections({ st, setSt }) {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                 </button>
               </div>
-            ) : (
-              <label className="texture-swatch texture-swatch-upload texture-swatch-upload-empty" title="Upload video">
-                <span className="texture-swatch-preview">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                </span>
-                <span className="texture-swatch-label">Upload</span>
-                <input type="file" accept="video/*" hidden onChange={handleMainVideoUpload} />
-              </label>
             )}
+            {/* TEMP: video upload hidden for now — restore this tile (shown when no uploaded video is set) to bring it back.
+            <label className="texture-swatch texture-swatch-upload texture-swatch-upload-empty" title="Upload video">
+              <span className="texture-swatch-preview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </span>
+              <span className="texture-swatch-label">Upload</span>
+              <input type="file" accept="video/*" hidden onChange={handleMainVideoUpload} />
+            </label>
+            */}
             {VIDEO_PRESETS.map((v) => (
               <button
                 key={v.id}

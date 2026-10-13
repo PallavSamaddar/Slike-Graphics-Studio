@@ -1,9 +1,6 @@
 import { autoTextColor } from '../../utils/color.js';
 
-// The template thumbnails, as the gallery and home have always drawn them: pictures of the
-// output, set inside the UI kit's ChooserCard.
-
-export function TickerThumb({ t }) {
+export function TickerThumb({ t, lines = ['Breaking news from India', 'Markets hit record high'] }) {
   const m = t.mini;
   return (
     <div className="tpl-preview-bg gallery-preview-bg">
@@ -15,24 +12,29 @@ export function TickerThumb({ t }) {
           </div>
         )}
         <div className="mini-text" style={{ color: m.tc, fontFamily: t.text.fontFamily, fontWeight: t.text.fontWeight }}>
-          Breaking news from India <span className="mini-sep" style={{ color: m.tc }}>◆</span> Markets hit record high
+          {lines.map((line, i) => (
+            <span key={i}>
+              {i > 0 && <span className="mini-sep" style={{ color: m.tc }}> ◆ </span>}
+              {line}
+            </span>
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-export function WidgetThumb({ t }) {
+export function WidgetThumb({ t, heading = 'News Heading', line = 'Enter description here' }) {
   const bodyTextColor = autoTextColor(t.style.bg);
   const headingTextColor = autoTextColor(t.style.headingBg);
   return (
     <div className="widget-mini" style={{ background: t.style.bgGradient || t.style.bg }}>
       <div className={'widget-texture-' + (t.style.texture || 'none')} style={{ opacity: t.style.textureOpacity ?? 1 }} />
       <div className="widget-mini-heading" style={{ background: t.style.headingBgGradient || t.style.headingBg, color: headingTextColor }}>
-        News Heading
+        {heading}
       </div>
       <div className={'widget-mini-body' + (t.style.badgeImagePos ? ' widget-mini-body-badge-' + t.style.badgeImagePos : '')}>
-        <span className="widget-mini-desc" style={{ color: bodyTextColor }}>Enter description here</span>
+        <span className="widget-mini-desc" style={{ color: bodyTextColor }}>{line}</span>
         {t.style.badgeImagePos && (
           <div className={'widget-mini-badge-img widget-mini-badge-img-placeholder widget-mini-badge-img-' + t.style.badgeImagePos}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="3.2" /><path d="M6 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /></svg>

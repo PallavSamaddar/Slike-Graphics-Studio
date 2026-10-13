@@ -1,4 +1,5 @@
 import { SPEEDS } from '../constants/tickerTemplates.js';
+import useTickerScrollDuration from '../hooks/useTickerScrollDuration.js';
 import SingleItemTicker from './SingleItemTicker.jsx';
 import { autoTextColor } from '../utils/color.js';
 
@@ -19,6 +20,10 @@ export default function TickerView({ st, scaled = false }) {
   const items = st.items.filter((x) => x.trim());
   const sp = SPEEDS[behavior.speed] || SPEEDS[2];
   const iterCount = behavior.mode === 'loop' ? 'infinite' : 1;
+  const [innerRef, scrollMs] = useTickerScrollDuration(sp.pxPerSec, {
+    scaledTo: scaled ? '.broadcast-canvas' : undefined,
+    active: behavior.mode !== 'single',
+  });
 
   const autoColor = autoTextColor(s.bgColor);
   const badgeAutoColor = autoTextColor(b.bgColor);
@@ -65,7 +70,8 @@ export default function TickerView({ st, scaled = false }) {
       ) : (
         <div
           className="p-inner"
-          style={{ animationDuration: sp.pDur + 'ms', animationIterationCount: iterCount }}
+          ref={innerRef}
+          style={{ animationDuration: scrollMs ? scrollMs + 'ms' : undefined, animationIterationCount: iterCount }}
         >
           {[0, 1].map((rep) => (
             <span key={rep}>

@@ -63,6 +63,7 @@ export default function useDocument(graphics) {
         },
       },
       doc: {
+        id: doc.id,
         title: doc.title,
         savedTitle: doc.savedTitle,
         isNew: !doc.id,

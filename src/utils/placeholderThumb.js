@@ -1,4 +1,4 @@
-// Deterministic gradient placeholder for a feed/JSON headline's dummy media
+// Deterministic gradient placeholder for a feed headline's dummy media
 // thumbnail — same headline always renders the same placeholder art.
 const THUMB_PALETTES = [
   ['#E8432B', '#6E140D'],

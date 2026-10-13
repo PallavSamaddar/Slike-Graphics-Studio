@@ -5,6 +5,8 @@ import { TPLS } from '../constants/tickerTemplates.js';
 import { WIDGET_TPLS } from '../constants/widgetTemplates.js';
 import { JACKET_TPLS } from '../constants/jacketTemplates.js';
 import { FONT_NAME } from '../constants/fonts.js';
+import { REFRESH_OPTIONS } from '../services/feed.js';
+import { SOURCE_LABEL } from '../services/graphics.js';
 
 const HEIGHTS = { '36px': 'Compact — 36px', '44px': 'Small — 44px', '48px': 'Standard — 48px', '56px': 'Tall — 56px', '64px': 'Large — 64px' };
 const BANNER = { chevron: 'Chevron — angled banner + tag', split: 'Split block — solid + angled', stripes: 'Diagonal stripes accent', pill: 'Rounded pill tag' };
@@ -12,7 +14,7 @@ const SCALE = { 0.8: 'Small', 1: 'Standard', 1.3: 'Large', 1.6: 'Extra large' };
 const SPEED = { 1: 'Slow', 2: 'Medium', 3: 'Fast' };
 const ANIM = { fade: 'Fade', flip: 'Flip', slide: 'Slide', typewriter: 'Typewriter' };
 const CASE = { none: 'As typed', uppercase: 'UPPERCASE', lowercase: 'lowercase', capitalize: 'Title Case' };
-const SRC = { manual: 'Manual', rss: 'Feed', json: 'JSON' };
+const SRC = SOURCE_LABEL;
 const ALIGN = { left: 'Left', center: 'Centre', right: 'Right', top: 'Top', middle: 'Middle', bottom: 'Bottom' };
 const POS = { left: 'Left', right: 'Right', top: 'Top', 'top-left': 'Top left', 'top-right': 'Top right', 'bottom-left': 'Bottom left', 'bottom-right': 'Bottom right' };
 const TEXTURE = {
@@ -40,6 +42,8 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // [section, label, format?] per path. Paths left out are not reviewed (view state, timestamps,
 // the per-source drafts that the live content already carries).
+const refreshLabel = (v) => REFRESH_OPTIONS.find((o) => o.value === v)?.label ?? `Every ${v}s`;
+
 const MAPS = {
   ticker: {
     order: ['Content source', 'Style', 'Badge', 'Behaviour'],
@@ -48,7 +52,7 @@ const MAPS = {
       template: ['Style', 'Template', tplName(TPLS)],
       src: ['Content source', 'Source', (v) => SRC[v] ?? v],
       rssUrl: ['Content source', 'Feed URL'],
-      jsonUrl: ['Content source', 'JSON URL or raw array'],
+      rssRefreshSec: ['Content source', 'Feed refresh', refreshLabel],
       items: ['Content source', 'Line'],
       'style.bgColor': ['Style', 'Background colour'],
       'style.bgGradient': ['Style', 'Background gradient'],
@@ -77,12 +81,12 @@ const MAPS = {
   },
   widget: {
     order: ['Content', 'Style', 'Details', 'Background'],
-    skip: ['drafts', 'publishedAt', 'style.customVideoUrl', 'style.badgeImage'],
+    skip: ['drafts', 'headings', 'publishedAt', 'style.customVideoUrl', 'style.badgeImage'],
     keys: {
       template: ['Style', 'Template', tplName(WIDGET_TPLS)],
       src: ['Content', 'Source', (v) => SRC[v] ?? v],
       rssUrl: ['Content', 'Feed URL'],
-      jsonUrl: ['Content', 'JSON URL or raw array'],
+      rssRefreshSec: ['Content', 'Feed refresh', refreshLabel],
       heading: ['Content', 'Heading'],
       items: ['Content', 'Description line'],
       media: ['Content', 'Images/videos with headlines', (v) => (v && v.length ? 'Included' : 'Off')],

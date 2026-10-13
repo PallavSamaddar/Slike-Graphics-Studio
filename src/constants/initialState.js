@@ -15,7 +15,6 @@ export const initialState = {
   device: 'desktop',
   src: 'manual',
   rssUrl: '',
-  jsonUrl: '',
   // Per-source drafts — each Content Source tab edits its own, independent of the
   // others, so switching tabs never silently wipes what was typed elsewhere.
   drafts: {
@@ -27,7 +26,6 @@ export const initialState = {
       'Delhi weather: Heavy rains expected this week, IMD issues orange alert',
     ],
     rss: [],
-    json: [],
   },
 };
 
@@ -42,18 +40,15 @@ export const initialWidgetState = {
   showProduct: true,
   src: 'manual',
   rssUrl: '',
-  jsonUrl: '',
   drafts: {
     manual: [''],
     rss: [],
-    json: [],
   },
-  // Per-headline media picks for the Feed/JSON sources — parallel arrays to
-  // drafts.rss/drafts.json, each entry `{ included, pos }` or null if the
+  // Per-headline media picks for the Feed source — a parallel array to
+  // drafts.rss, each entry `{ included, pos }` or null if the
   // user hasn't ticked media for that line yet.
   media: {
     rss: [],
-    json: [],
   },
   style: {
     bg: '#8A1B12',
@@ -91,7 +86,7 @@ export const initialWidgetState = {
 // elements: a bottom-left logo + scrolling ticker headline, a bottom-right
 // time/weather box, and an optional vertical image panel on the left or
 // right edge. Unlike the widget, it has no content-source machinery
-// (Feed/JSON/media) — just a headline string and branding fields.
+// (Feed/media) — just a headline string and branding fields.
 export const initialJacketState = {
   template: 'crimson-global',
   logoText: 'TOI',

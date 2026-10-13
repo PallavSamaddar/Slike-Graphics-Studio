@@ -12,7 +12,7 @@ export default function ChooserCard({ name, reach, onOpen, menu, disabled, child
     >
       <div className={'tpl-thumb' + (children ? '' : ' tpl-thumb-blank')}>{children}</div>
       <div className="dc-top">
-        <span className="dc-title">{name}</span>
+        <span className="dc-title" title={typeof name === 'string' ? name : undefined}>{name}</span>
         {reach && <span className="dc-reach">{reach}</span>}
         {menu}
       </div>

@@ -55,8 +55,11 @@ export const TPLS = [
   },
 ];
 
+// Scroll rate in px per second on a 1080p canvas. The animation duration is
+// derived from the feed's width (see useTickerScrollDuration), so a longer
+// feed takes longer to go round instead of scrolling faster.
 export const SPEEDS = {
-  1: { label: 'Slow',   pDur: 42000, lDur: 60000 },
-  2: { label: 'Medium', pDur: 25000, lDur: 36000 },
-  3: { label: 'Fast',   pDur: 13000, lDur: 18000 },
+  1: { label: 'Slow',   pxPerSec: 90 },
+  2: { label: 'Medium', pxPerSec: 150 },
+  3: { label: 'Fast',   pxPerSec: 240 },
 };
