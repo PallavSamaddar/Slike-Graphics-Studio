@@ -63,3 +63,13 @@ export const getGraphicStats = () => callRpc(METHOD.STATS);
 // Render-ready cards, feed and manual alike:
 // { list: [{ id, title, kind, template_id, source_type, items, config, mt }], count }.
 export const previewGraphics = (filters) => callRpc(METHOD.PREVIEW, buildQuery(filters));
+
+const PREVIEW_MAX_PAGE = 100;
+export async function previewAllGraphics(filters) {
+  const all = [];
+  for (;;) {
+    const { list = [], count = 0 } = await previewGraphics({ ...filters, size: PREVIEW_MAX_PAGE, from: all.length });
+    all.push(...list);
+    if (!list.length || all.length >= count) return all;
+  }
+}

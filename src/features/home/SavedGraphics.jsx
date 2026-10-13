@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { previewGraphics, getGraphicStats, duplicateGraphic, archiveGraphic, GRAPHIC_KIND, SOURCE_LABEL } from '../../services/graphics.js';
+import { previewAllGraphics, getGraphicStats, duplicateGraphic, archiveGraphic, GRAPHIC_KIND, SOURCE_LABEL } from '../../services/graphics.js';
 import { ChooserCard, ChooserGrid, RowMenu, useToast } from '../../ui-kit';
 import { THUMBS } from '../templates/TemplateThumbs.jsx';
 import { savedThumb } from './savedThumb.js';
 
-const RECENT_COUNT = 6;
 const KIND_LABEL = { [GRAPHIC_KIND.TICKER]: 'Ticker', [GRAPHIC_KIND.WIDGET]: 'Widget', [GRAPHIC_KIND.JACKET]: 'Jacket' };
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -40,8 +39,8 @@ export default function SavedGraphics({ onOpen }) {
 
   const load = useCallback(async () => {
     try {
-      const [preview, nextStats] = await Promise.all([previewGraphics({ size: RECENT_COUNT }), getGraphicStats()]);
-      setGraphics(preview.list);
+      const [list, nextStats] = await Promise.all([previewAllGraphics(), getGraphicStats()]);
+      setGraphics(list);
       setStats(nextStats);
       setError('');
       setStatus('ready');
@@ -64,7 +63,7 @@ export default function SavedGraphics({ onOpen }) {
     })
     .catch((err) => toast(err.message, 'bad'));
   const duplicate = (id) => runAction(duplicateGraphic, id, 'Duplicated', (list, copy) => (
-    copy?.id ? [toCard(copy), ...list.filter((g) => g.id !== copy.id)].slice(0, RECENT_COUNT) : list
+    copy?.id ? [toCard(copy), ...list.filter((g) => g.id !== copy.id)] : list
   ));
   const archive = (id) => runAction(archiveGraphic, id, 'Archived', (list) => list.filter((g) => g.id !== id));
   const open = (id) => onOpen(id).catch((err) => toast(`Couldn't open that graphic: ${err.message}`, 'bad'));
