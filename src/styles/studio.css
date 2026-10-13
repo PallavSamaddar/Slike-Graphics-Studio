@@ -4,16 +4,17 @@
 html body { overflow: auto; font-family: var(--font-ui); background: var(--bg); color: var(--ink); font-size: var(--fs-base); }
 html #root { height: auto; min-height: 100vh; display: block; overflow: visible; }
 
-/* the editor page: the content as one surface on the left; on the right the live preview,
-   and the style sections under it as a second surface that scrolls on its own, so the
-   preview stays in view while styles change */
-/* both columns fill the window down to the same line: the content card is at least as tall
-   as the right column (and grows past it when the content is longer) */
-.shell .studio-detail { align-items: flex-start; --studio-col-h: calc(100vh - var(--size-band) - 88px); }
+.shell main:has(> .studio-detail) { padding-bottom: var(--main-pad-top); }
+.shell .studio-detail {
+  align-items: flex-start;
+  --studio-top: 72px;
+  --studio-col-h: calc(100vh - var(--size-band) - var(--studio-top) - var(--main-pad-top));
+}
+#main .studio-detail { margin-bottom: 0; }
 .studio-detail > .form.keyform { min-height: var(--studio-col-h); }
 .studio-side {
   flex: 0 0 clamp(420px, 44%, 720px); min-width: 0;
-  position: sticky; top: calc(var(--size-band) + 72px);
+  position: sticky; top: calc(var(--size-band) + var(--studio-top));
   display: flex; flex-direction: column; gap: var(--space-16);
   height: var(--studio-col-h);
 }

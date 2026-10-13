@@ -1,3 +1,5 @@
+export const DEFAULT_FEED_REFRESH_SEC = 30 * 60;
+
 export const initialState = {
   template: 'classic',
   items: [
@@ -15,6 +17,7 @@ export const initialState = {
   device: 'desktop',
   src: 'manual',
   rssUrl: '',
+  rssRefreshSec: DEFAULT_FEED_REFRESH_SEC,
   // Per-source drafts — each Content Source tab edits its own, independent of the
   // others, so switching tabs never silently wipes what was typed elsewhere.
   drafts: {
@@ -40,6 +43,7 @@ export const initialWidgetState = {
   showProduct: true,
   src: 'manual',
   rssUrl: '',
+  rssRefreshSec: DEFAULT_FEED_REFRESH_SEC,
   drafts: {
     manual: [''],
     rss: [],

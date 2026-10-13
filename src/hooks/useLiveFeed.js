@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { withFeedItems } from '../services/feed.js';
+import { DEFAULT_FEED_REFRESH_SEC } from '../constants/initialState.js';
 
 export default function useLiveFeed(kind, st, { feedKey, load, immediate = false }) {
   const [live, setLive] = useState(null); // { items?, at?, error? } for feedKey
   const loadRef = useRef(load);
   loadRef.current = load;
 
-  const secs = st.src === 'rss' ? Number(st.rssRefreshSec) || 0 : 0;
+  const secs = st.src === 'rss' ? Number(st.rssRefreshSec ?? DEFAULT_FEED_REFRESH_SEC) || 0 : 0;
   const on = secs > 0 && !!feedKey;
 
   useEffect(() => {
