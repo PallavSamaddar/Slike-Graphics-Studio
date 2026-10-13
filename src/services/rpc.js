@@ -27,13 +27,22 @@ export class RpcError extends Error {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const UNREACHABLE = 0;
+const unreachableMessage = () => `Can't reach the backend at ${new URL(API_BASE).host} — is it running?`;
+
 async function send(method, params) {
-  const response = await fetch(API_BASE + RPC_PATH, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: ++requestId, method, params }),
-  });
+  let response;
+  try {
+    response = await fetch(API_BASE + RPC_PATH, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: ++requestId, method, params }),
+    });
+  } catch {
+    // The browser's bare "Failed to fetch": nothing answered (down, wrong host, CORS refused).
+    throw new RpcError(unreachableMessage(), UNREACHABLE);
+  }
   // Arise answers 200 with { result, error, code }; auth/gateway failures can
   // come back as a bare HTTP status with no JSON body.
   const body = await response.json().catch(() => ({}));

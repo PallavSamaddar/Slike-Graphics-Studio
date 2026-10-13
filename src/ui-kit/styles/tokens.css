@@ -38,6 +38,10 @@
   --bad: #a8241b;
   --bad-soft: #fcecea;
   --danger-ink: #a8241b;
+  --onair: #d7282f;
+  --onair-ink: #8f1a1f;
+  --onair-soft: #fdecec;
+  --onair-line: #f3c4c6;
   --band: #10182b;
   --band-ink: #aeb8cc;
   --band-faint: #8b96ad;
@@ -153,6 +157,10 @@
   --bad: #f7766b;
   --bad-soft: #451e1b;
   --danger-ink: #fb8276;
+  --onair: #ff5a5f;
+  --onair-ink: #ffb3b5;
+  --onair-soft: #3d1618;
+  --onair-line: #6b2528;
   --band: #10182b;
   --band-ink: #aeb8cc;
   --band-faint: #8b96ad;

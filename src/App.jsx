@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { GRAPHICS, KIND_BY_CATEGORY } from './constants/graphics.js';
 import { BRAND, ROOMS, PROFILE_MENU } from './constants/navigation.jsx';
 import useGraphic from './hooks/useGraphic.js';
 import useDocument from './hooks/useDocument.js';
 import useCurrentUser from './hooks/useCurrentUser.js';
-import { ToastHost, TopBar, useTheme } from './ui-kit';
+import useRoute, { navigate, routes } from './hooks/useRoute.js';
+import { EmptyState, ToastHost, TopBar, useTheme } from './ui-kit';
 import HomePage from './pages/HomePage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
 import StudioPage from './pages/StudioPage.jsx';
@@ -13,44 +14,92 @@ import { WidgetContent, WidgetStyle, WidgetPreview } from './features/widget';
 import { JacketContent, JacketStyle, JacketPreview } from './features/jacket';
 import LiveFeedPreview from './features/shared-editor/LiveFeedPreview.jsx';
 
-// The app shell: the header band, and which page is showing.
-//   view: 'home' | 'gallery' | 'studio' (with `kind`: 'ticker' | 'widget' | 'jacket')
+// The app shell: the header band, and which page the route (hooks/useRoute.js) shows.
 export default function App() {
-  const [view, setView] = useState('home');
-  const [kind, setKind] = useState('ticker');
-  const [returnView, setReturnView] = useState('home'); // where the studio's back button goes
-  const [galleryCategory, setGalleryCategory] = useState('ticker');
+  const route = useRoute();
   const graphics = { ticker: useGraphic(GRAPHICS.ticker), widget: useGraphic(GRAPHICS.widget), jacket: useGraphic(GRAPHICS.jacket) };
-  const docs = useDocument(graphics);
   const { pick: themePick, setPick: setThemePick } = useTheme();
   const user = useCurrentUser();
 
-  const showStudio = (k, state, from) => {
-    setReturnView(from);
-    setKind(k);
-    setView('studio');
-  };
-  // A template starts a new, unsaved graphic.
-  const openTemplate = (k, id, from) => {
-    docs.startNew();
-    showStudio(k, graphics[k].applyTemplate(id), from);
-  };
-  // A saved graphic opens from Home.
-  const openGraphic = async (id) => {
-    const { kind: k, state } = await docs.open(id);
-    showStudio(k, state, 'home');
-  };
-  const seeAll = (category) => { setGalleryCategory(category); setView('gallery'); };
-  const back = () => { if (returnView === 'gallery') setGalleryCategory(GRAPHICS[kind].category); setView(returnView); };
+  // The studio once its graphic is loaded: { kind }; while it loads, null; or the failure.
+  const [studio, setStudio] = useState(null);
+  const [openError, setOpenError] = useState('');
+  const loadedRef = useRef(''); // the studio route last loaded, so a re-render never reloads it
+  const fromRef = useRef(routes.home()); // where the studio's back goes: the room it was opened from
 
-  const room = view === 'home' ? 'home' : view === 'gallery' ? 'templates' : returnView === 'gallery' ? 'templates' : 'home';
+  // A new graphic's first save gives it an id: the address becomes its own, without a reload.
+  const docs = useDocument(graphics, {
+    onCreated: (id) => {
+      loadedRef.current = `edit:${id}`;
+      navigate(routes.edit(id), { replace: true });
+    },
+  });
+
+  useEffect(() => {
+    if (route.view === 'new') {
+      const key = `new:${route.kind}:${route.template}`;
+      if (loadedRef.current === key) return;
+      if (!GRAPHICS[route.kind]) { navigate(routes.home(), { replace: true }); return; }
+      loadedRef.current = key;
+      docs.startNew();
+      graphics[route.kind].applyTemplate(route.template);
+      setOpenError('');
+      setStudio({ kind: route.kind });
+    } else if (route.view === 'edit') {
+      const key = `edit:${route.id}`;
+      if (loadedRef.current === key) return;
+      loadedRef.current = key;
+      setStudio(null);
+      setOpenError('');
+      docs.open(route.id)
+        .then(({ kind }) => {
+          if (loadedRef.current !== key) return;
+          setStudio({ kind });
+          // Opened by Slike Live for a stream: record that the stream is using it (or stopped).
+          if (route.stream) {
+            const acts = docs.studio(kind).graphic;
+            (route.stream.off ? acts.clearLive() : acts.markLive(route.stream)).catch(() => {});
+          }
+        })
+        .catch((err) => { if (loadedRef.current === key) setOpenError(err.message); });
+    } else {
+      loadedRef.current = '';
+      setStudio(null);
+      fromRef.current = route.view === 'gallery' ? routes.gallery(route.category) : routes.home();
+    }
+  }, [route]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const inStudio = route.view === 'new' || route.view === 'edit';
+  const room = route.view === 'gallery' || (inStudio && fromRef.current.startsWith('#/templates')) ? 'templates' : 'home';
+  const back = () => navigate(fromRef.current);
 
   let page;
-  if (view === 'home') {
-    page = <HomePage onPick={(k, id) => openTemplate(k, id, 'home')} onSeeAll={seeAll} onOpenGraphic={openGraphic} />;
-  } else if (view === 'gallery') {
-    page = <TemplatesPage key={galleryCategory} initialCategory={galleryCategory} onPick={(category, id) => openTemplate(KIND_BY_CATEGORY[category], id, 'gallery')} />;
+  if (route.view === 'home') {
+    page = (
+      <HomePage
+        onSeeAll={(category) => navigate(routes.gallery(category))}
+        onOpenGraphic={(id) => navigate(routes.edit(id))}
+      />
+    );
+  } else if (route.view === 'gallery') {
+    page = (
+      <TemplatesPage
+        category={route.category}
+        onCategory={(category) => navigate(routes.gallery(category), { replace: true })}
+        onPick={(category, id) => navigate(routes.newGraphic(KIND_BY_CATEGORY[category], id))}
+      />
+    );
+  } else if (openError) {
+    page = (
+      <EmptyState title="Couldn't open this graphic">
+        {openError} <button type="button" className="zlink" onClick={() => { loadedRef.current = ''; navigate(route.id ? routes.edit(route.id, route.stream) : routes.home(), { replace: true }); }}>Try again</button>
+        {' · '}<button type="button" className="zlink" onClick={() => navigate(routes.home())}>Home</button>
+      </EmptyState>
+    );
+  } else if (!studio) {
+    page = <div className="saved-status" role="status">Opening the graphic…</div>;
   } else {
+    const kind = studio.kind;
     const g = graphics[kind];
     // Content fills the left column; the preview and, under it, the style sections the right.
     const parts = {
@@ -70,8 +119,20 @@ export default function App() {
         preview: <JacketPreview st={g.cur} setSt={g.setCur} />,
       },
     }[kind];
-    page = <StudioPage kind={kind} {...docs.studio(kind)} onBack={back} content={parts.content} style={parts.style} preview={parts.preview} />;
+    page = (
+      <StudioPage
+        kind={kind}
+        {...docs.studio(kind)}
+        stream={route.view === 'edit' && route.stream && !route.stream.off ? route.stream : null}
+        onBack={back}
+        content={parts.content}
+        style={parts.style}
+        preview={parts.preview}
+      />
+    );
   }
+
+  const pageKey = inStudio ? `studio-${studio?.kind || 'loading'}-${route.id || route.template}` : route.view;
 
   return (
     <ToastHost>
@@ -80,13 +141,14 @@ export default function App() {
           brand={BRAND}
           rooms={ROOMS}
           room={room}
-          onRoom={(id) => setView(id === 'home' ? 'home' : 'gallery')}
+          onRoom={(id) => navigate(id === 'home' ? routes.home() : routes.gallery('ticker'))}
+          onBrand={() => navigate(routes.home())}
           user={user}
           menu={PROFILE_MENU}
           themePick={themePick}
           onThemePick={setThemePick}
         />
-        <main id="main" className="view-in" key={view === 'studio' ? `studio-${kind}` : view}>{page}</main>
+        <main id="main" className="view-in" key={pageKey}>{page}</main>
       </div>
     </ToastHost>
   );

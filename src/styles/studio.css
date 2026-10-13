@@ -34,6 +34,50 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 /* the widget stage shares the right column with the style sections, so it is shorter */
 .studio-canvas-card .broadcast-canvas.widget-canvas { aspect-ratio: auto; height: clamp(300px, 46vh, 520px); }
 
+/* ---------- the control panel: where the graphic stands, in the editor header ---------- */
+/* on air: the red mark broadcast knows, pulsing while a stream is carrying the graphic */
+.ehead .stat.onair {
+  color: var(--onair-ink); background: var(--onair-soft); border: 1px solid var(--onair-line);
+  border-radius: var(--r-xs); padding: 2px 9px 2px 8px;
+  font-size: var(--fs-sm); font-weight: var(--fw-heavy); letter-spacing: .5px; text-transform: uppercase; cursor: default;
+}
+.ehead .stat.onair::before { background: var(--onair); box-shadow: 0 0 0 0 var(--onair); animation: onair-pulse 1.6s ease-out infinite; }
+.ehead .stat.onair .stream { text-transform: none; letter-spacing: 0; font-weight: var(--fw-medium); }
+.ehead .stat.onair .vno { color: inherit; }
+@keyframes onair-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(215, 40, 47, .45); }
+  70% { box-shadow: 0 0 0 6px rgba(215, 40, 47, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(215, 40, 47, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .ehead .stat.onair::before { animation: none; } }
+/* published: the plain green dot, with who and when in a quieter ink after it */
+.ehead .stat .eh-sub { color: var(--ink-faint); font-weight: var(--fw-medium); }
+
+/* someone else saved: the line between the header and the editor, with its one act */
+.remote-bar {
+  display: flex; align-items: center; gap: var(--space-12);
+  margin: calc(var(--space-10) - var(--main-pad-top)) 0 var(--space-14);
+  padding: var(--space-9) var(--space-14);
+  background: var(--pending-soft); border: 1px solid var(--pending-line); border-radius: var(--r-card);
+  color: var(--pending-ink); font-size: var(--fs-md); line-height: 1.45;
+}
+.remote-bar > span:not(.remote-dot) { flex: 1; min-width: 0; }
+.remote-bar b { font-weight: var(--fw-semibold); }
+.remote-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--pending-dot); }
+.remote-bar .btn { flex: none; }
+
+/* version history: one row per push, the one on air marked */
+.vh-off { margin-bottom: var(--space-12); padding: var(--space-8) var(--space-12); border-radius: var(--r-card); background: var(--surface-soft); color: var(--ink-soft); font-size: var(--fs-md); }
+.vh-list { list-style: none; margin: 0; padding: 0; }
+.vh-row { display: flex; align-items: center; gap: var(--space-14); padding: var(--space-9) 0; border-top: 1px solid var(--line-soft); }
+.vh-row:first-child { border-top: 0; }
+.vh-row.on { background: var(--row-selected); margin: 0 calc(-1 * var(--space-12)); padding-left: var(--space-12); padding-right: var(--space-12); border-radius: var(--r-sm); }
+.vh-v { flex: 0 0 44px; font-family: var(--font-mono); font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--ink); }
+.vh-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.vh-note { color: var(--ink); font-size: var(--fs-base); overflow-wrap: anywhere; }
+.vh-meta { color: var(--ink-faint); font-size: var(--fs-sm); }
+.vh-row .pill.live { flex: none; }
+
 /* a field whose box carries an act beside it (Validate) */
 .rss-row { display: flex; gap: var(--space-8); align-items: center; width: 100%; }
 .rss-row input[type=text] { flex: 1; width: auto; min-width: 0; }
@@ -51,11 +95,50 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 /* the badge text box counts its letters where a number box keeps its unit */
 .num-wrap.badge-text input { width: 100%; }
 
-/* home: a section per kind of graphic */
+/* home: start new, published, then the library */
 .home-sec { margin-bottom: var(--space-28); }
 .home-sec-head { display: flex; align-items: baseline; gap: var(--space-14); margin-bottom: var(--space-12); }
 /* template thumbnails sit flush in their chooser card */
 .tpl-choice .tpl-thumb .widget-mini, .tpl-choice .tpl-thumb .jacket-mini { border-radius: 0; box-shadow: none; }
+
+/* start new: one short card per kind, its first template as the picture */
+.start-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-12); }
+.start-grid .tpl-thumb { height: 104px; overflow: hidden; }
+.start-grid .tpl-thumb > :first-child { height: 100%; }
+.start-grid .tpl-thumb .tpl-preview-bg { aspect-ratio: auto; height: 100%; }
+.start-grid .tpl-thumb-blank { aspect-ratio: auto; }
+
+/* published: a row per graphic on players, the latest push first. The picture is the library
+   card's, drawn at card width and scaled to half, so its type keeps its proportions. */
+.air-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: var(--space-12); }
+.air-card { display: flex; align-items: center; gap: var(--space-12); padding: var(--space-10); }
+.air-thumb { flex: 0 0 132px; height: 74px; overflow: hidden; border-radius: var(--r-sm); border: 1px solid var(--line-soft); background: var(--surface-soft); }
+.air-thumb-in { width: 264px; height: 148px; transform: scale(.5); transform-origin: 0 0; }
+.air-thumb-in > * { height: 100%; }
+.air-thumb-in .tpl-preview-bg { aspect-ratio: auto; height: 100%; box-sizing: border-box; }
+.air-thumb-in .saved-thumb { aspect-ratio: auto; height: 100%; }
+.air-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.air-title { font-size: var(--fs-base); font-weight: var(--fw-semibold); color: var(--ink); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.air-meta { color: var(--ink-faint); font-size: var(--fs-md); }
+.air-note { color: var(--ink-soft); font-size: var(--fs-md); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.air-pills { display: flex; gap: var(--space-6); margin-top: 3px; }
+.pill.draft { background: var(--pending-soft); color: var(--pending-ink); }
+.pill.onair { background: var(--onair-soft); color: var(--onair-ink); border: 1px solid var(--onair-line); text-transform: uppercase; letter-spacing: .4px; font-size: var(--fs-xs); }
+.air-card.is-live { border-color: var(--onair-line); }
+.saved-meta .saved-onair { padding: 1px var(--space-8); border-radius: 999px; background: var(--onair); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; white-space: nowrap; }
+.air-manage { flex: none; align-self: center; }
+
+/* the library's search, filters and sort, under its kind tabs */
+.lib .scope-tabs { margin-bottom: var(--space-10); }
+.lib-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-10); margin-bottom: var(--space-14); }
+.lib-bar .search { width: var(--size-search); }
+.lib-gap { flex: 1; }
+.lib-sort { display: inline-flex; align-items: center; gap: var(--space-8); color: var(--ink-faint); font-size: var(--fs-md); }
+/* the pages under the grid: the range on the left, Prev · 1 2 … 9 · Next on the right */
+.lib-pages { display: flex; align-items: center; gap: var(--space-6); padding: var(--space-16) 0 0; }
+.lib-pages .btn.small { min-width: var(--ctl-h-sm); padding: 0 8px; font-variant-numeric: tabular-nums; }
+.lib-page-gap { padding: 0 2px; color: var(--ink-faint); }
+.saved-meta .saved-pub { padding: 1px var(--space-8); border-radius: 999px; background: var(--good); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }
 
 /* the image cropper keeps its glyphs at the size they always had inside a button */
 .cropper-rotate-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
@@ -72,6 +155,6 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 .saved-thumb-pic .tpl-preview-bg { aspect-ratio: 16 / 9; box-sizing: border-box; }
 .saved-thumb-pic .widget-mini-heading { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .saved-thumb-pic .widget-mini-desc { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
-.saved-meta { position: absolute; left: var(--space-8); right: var(--space-8); bottom: var(--space-8); z-index: 2; display: flex; align-items: center; gap: var(--space-8); pointer-events: none; }
-.saved-meta .saved-src, .saved-meta .saved-time { padding: 1px var(--space-8); border-radius: 999px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 11px; font-weight: 600; }
+.saved-meta { position: absolute; left: var(--space-8); right: var(--space-8); bottom: var(--space-8); z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); pointer-events: none; }
+.saved-meta .saved-src, .saved-meta .saved-time { padding: 1px var(--space-8); border-radius: 999px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .saved-meta .saved-time { margin-left: auto; }

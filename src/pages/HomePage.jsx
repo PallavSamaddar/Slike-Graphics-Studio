@@ -1,59 +1,23 @@
-import { GRAPHICS } from '../constants/graphics.js';
-import { FEATURED } from '../constants/featured.js';
-import { ChooserCard, ChooserGrid, PageHead } from '../ui-kit';
-import { THUMBS } from '../features/templates/TemplateThumbs.jsx';
-import SavedGraphics from '../features/home/SavedGraphics.jsx';
+import useGraphicsIndex from '../features/home/useGraphicsIndex.js';
+import StartNew from '../features/home/StartNew.jsx';
+import PublishedStrip from '../features/home/PublishedStrip.jsx';
+import GraphicsLibrary from '../features/home/GraphicsLibrary.jsx';
 
-const SECTIONS = [
-  { kind: 'ticker', title: 'Ticker' },
-  { kind: 'widget', title: 'Widgets' },
-  { kind: 'jacket', title: 'Jackets' },
-];
+// Home, for the person running graphics: where to start, what is published, and every
+// saved graphic to search and open. Templates live in their own room.
+//   onSeeAll(galleryCategory) · onOpenGraphic(id)
+export default function HomePage({ onSeeAll, onOpenGraphic }) {
+  const index = useGraphicsIndex();
+  // On air first (the latest seen), then published by the latest push.
+  const published = index.graphics
+    .filter((g) => g.live || g.published)
+    .sort((a, b) => (!!b.live - !!a.live) || (b.live?.at || 0) - (a.live?.at || 0) || (b.air?.at || 0) - (a.air?.at || 0));
 
-function Section({ title, onSeeAll, children }) {
-  return (
-    <section className="home-sec">
-      <div className="home-sec-head">
-        <h2 className="type-card-title">{title}</h2>
-        {onSeeAll && <button type="button" className="zlink" onClick={onSeeAll}>See all templates →</button>}
-      </div>
-      <ChooserGrid>{children}</ChooserGrid>
-    </section>
-  );
-}
-
-// Home: your saved graphics, the featured templates of each kind, then what is coming.
-//   onPick(kind, templateId) · onSeeAll(galleryCategory) · onOpenGraphic(id) → Promise
-export default function HomePage({ onPick, onSeeAll, onOpenGraphic }) {
   return (
     <>
-      <PageHead title="What are you creating today?" />
-      <SavedGraphics onOpen={onOpenGraphic} />
-
-      {SECTIONS.map(({ kind, title }) => {
-        const { templates, category } = GRAPHICS[kind];
-        const { items, limit } = FEATURED[kind];
-        const Thumb = THUMBS[kind];
-        const cards = items.map((f) => ({ f, t: templates.find((tpl) => tpl.id === f.id) })).filter((x) => x.t).slice(0, limit);
-        return (
-          <Section key={kind} title={title} onSeeAll={() => onSeeAll(category)}>
-            {cards.map(({ f, t }) => (
-              <ChooserCard
-                key={t.id}
-                name={t.name}
-                reach={f.badge}
-                onOpen={() => onPick(kind, t.id)}
-              >
-                <Thumb t={t} />
-              </ChooserCard>
-            ))}
-          </Section>
-        );
-      })}
-
-      <Section title="More coming soon">
-        <ChooserCard name="Captions" reach="Coming soon" disabled />
-      </Section>
+      <StartNew onSeeAll={onSeeAll} />
+      <PublishedStrip graphics={published} onOpen={onOpenGraphic} />
+      <GraphicsLibrary index={index} onOpen={onOpenGraphic} />
     </>
   );
 }

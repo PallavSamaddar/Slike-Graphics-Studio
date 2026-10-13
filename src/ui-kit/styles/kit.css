@@ -680,6 +680,10 @@ tbody tr.pinned:hover td { background: var(--accent-soft); }
   font-size: var(--fs-lg); font-weight: var(--fw-bold); letter-spacing: -.2px; color: var(--band-strong);
 }
 .topbar .brand-mark { width: 20px; height: 20px; flex: 0 0 20px; }
+/* the brand is the way home: a link that looks like the words, with the focus ring from the keyboard */
+.topbar a.brand { text-decoration: none; cursor: pointer; border-radius: var(--r-sm); padding: 4px 6px; margin-left: -6px; }
+.topbar a.brand:hover { background: var(--band-hover); }
+.topbar a.brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .topbar #nav { display: flex; flex-direction: row; align-self: stretch; gap: 2px; padding: 0; }
 .topbar #nav a {
   display: flex; align-items: center; gap: 8px; height: 100%; margin: 0; padding: 0 12px;

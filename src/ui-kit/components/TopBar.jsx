@@ -6,13 +6,16 @@ const THEMES = [['light', 'Light'], ['dark', 'Dark'], ['device', 'Match device']
 
 // TopBar — the header band: the mark and the product's name, the rooms with their icons and
 // counts, and the profile with its Theme choice. The band is the same navy in both themes.
-//   brand: { mark: <svg className="brand-mark" …/>, name }
+//   brand: { mark: <svg className="brand-mark" …/>, name, href? } — the mark and name go home
 //   rooms: [{ id, label, icon, count? }]   room: the id you are in
 //   user:  { name, email, initials }       menu: [{ label, onClick, danger? }]
-export default function TopBar({ brand, rooms, room, onRoom, user, menu = [], themePick, onThemePick }) {
+//   onBrand(): the brand was pressed (home)
+export default function TopBar({ brand, rooms, room, onRoom, onBrand, user, menu = [], themePick, onThemePick }) {
   return (
     <header className="topbar"><div className="tb-in">
-      <div className="brand">{brand.mark}{brand.name}</div>
+      {onBrand
+        ? <a className="brand" href={brand.href || '#/'} aria-label={`${brand.name} — home`} onClick={(e) => { e.preventDefault(); onBrand(); }}>{brand.mark}{brand.name}</a>
+        : <div className="brand">{brand.mark}{brand.name}</div>}
       <nav id="nav" aria-label="Rooms">
         {rooms.map((r) => (
           <a

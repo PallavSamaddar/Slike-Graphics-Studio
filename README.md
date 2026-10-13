@@ -11,6 +11,27 @@ npm run build
 Saving talks to the b2b-cms backend (`VITE_API_BACKEND`, JSON-RPC `graphic.*`) and uploads media
 through `VITE_UPLOAD`; both are set in `.env` / `.env.production`.
 
+## Routes
+
+Everything is in the hash, so one entry serves the studio and the player.
+
+| Route | Shows |
+| --- | --- |
+| `#/` | Home |
+| `#/templates/<ticker\|widgets\|jackets\|captions>` | the Templates room on that tab |
+| `#/new/<kind>/<template>` | a new graphic from that template; its first save moves it to `#/edit/<id>` |
+| `#/edit/<id>` | the saved graphic's editor and control panel |
+| `#/edit/<id>?stream=<streamId>&name=<stream name>` | the same, opened by Slike Live for a graphic a running stream is using: the panel records the stream on the graphic (`config.air.live`), so the header here and Home everywhere show **ON AIR · name** and Publish reads *Push to air*. The claim lapses 6 h after Live last opened the panel; `&off=1` clears it at once, as does *Take off air* |
+| `#/player?id=<id>&kind=…&data=…` | the output only: what is on air for that id, re-read every 10 s so a push reaches the screen; `data` is the state as copied, used when the backend can't be read (no login) |
+
+## Publishing
+
+The backend stores a graphic, not a publish, so the publish record travels inside the graphic's `config.air`
+(`services/air.js`): the version, who pushed it, when, the note, the pushed state (`snap`) and the version
+history. The editor keeps it apart from the editable state (`graphicMapper.js`); Save keeps it, Publish writes
+the next version, *Take off air* clears `snap`. Players read `snap`. The studio also watches the open graphic
+(`hooks/useRemoteWatch.js`) and shows a reload bar when someone else saves it.
+
 ## Folder structure
 
 ```
@@ -26,13 +47,16 @@ src/
 │   ├── shared-editor/   parts every editor uses: ContentSource, FormattingToolbar, ColorField,
 │   │                    ImageUpload, ImageCropperModal, VideoNameModal, PreviewCanvas, …
 │   ├── templates/       template thumbnails, coming-soon panel
-│   └── home/            SavedGraphics — "Your graphics" on Home
+│   └── home/            Home's parts: StartNew, PublishedStrip, GraphicsLibrary + GraphicCard, on
+│                        useGraphicsIndex (every saved graphic as a card, with its publish record)
 ├── output/              what goes on air: TickerView, WidgetView, JacketView, PlayerView, …
-├── hooks/               useGraphic (one kind's edit / saved / on-air state), useDocument (the open
-│                        graphic's backend identity: open, save, publish), useMediaUpload (file uploads)
-├── services/            backend calls: rpc, graphics (graphic.* methods), graphicMapper, upload
+├── hooks/               useRoute (the hash routes), useGraphic (one kind's edit / saved / on-air state),
+│                        useDocument (the open graphic's backend identity: open, save, publish, take off
+│                        air), useRemoteWatch (someone else's save), useMediaUpload (file uploads)
+├── services/            backend calls: rpc, graphics (graphic.* methods), graphicMapper, air (the publish
+│                        record), upload
 ├── constants/           templates, initial state, graphics, navigation, fonts, animations, video presets
-├── utils/               changeDiff (review rows), playerUrl, color, files, placeholderThumb
+├── utils/               changeDiff (review rows), playerUrl, time, color, files, placeholderThumb
 ├── styles/              app.css (output + editor parts), studio.css (page layout), legacy-tokens.css
 └── assets/              videos and texture images
 ```
