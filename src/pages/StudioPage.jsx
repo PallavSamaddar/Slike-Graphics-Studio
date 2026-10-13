@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { playerUrl } from '../utils/playerUrl.js';
+import { embedUrl } from '../utils/playerUrl.js';
 import { ago } from '../utils/time.js';
 import { ChangeReview, ChangeScope, Dialog, EditorHeader, FieldErrors, Status, Version, useToast } from '../ui-kit';
 import { GRAPHICS } from '../constants/graphics.js';
@@ -10,13 +10,6 @@ import { missingFields, missingFieldsMessage, requiredMessage } from '../utils/r
 import RemoteChangeBar from '../features/shared-editor/RemoteChangeBar.jsx';
 import VersionHistory from '../features/shared-editor/VersionHistory.jsx';
 
-// The studio as an editor and, once published, the graphic's control panel: the sticky
-// editor header (what is this, where it stands, Save · Publish · ⋯), the content as one
-// surface on the left, and on the right the live preview with the style sections under it.
-// Every write reads back in the change review from the right.
-//   graphic: the useGraphic() state of the graphic being edited (cur, saved, pub, air, base and its acts)
-//   doc:     its saved identity: { id, title, savedTitle, isNew, onTitleChange, remote, reload }
-//   stream:  { id, name } when Slike Live opened this panel for a graphic on a running stream
 export default function StudioPage({ kind, graphic, doc, stream, onBack, content, style, preview }) {
   const { cur, saved, base, pub, air, save: onSave, publish: onPublish, takeOffAir, discard: onDiscard } = graphic;
   const { id, title, savedTitle, isNew, onTitleChange, remote, reload } = doc;
@@ -24,27 +17,22 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
   const [review, setReview] = useState(null); // 'save' | 'publish'
   const [confirm, setConfirm] = useState(null); // 'discard' | 'offair' | 'reload'
   const [history, setHistory] = useState(false);
-  // Required fields show their error once a Save or Publish has been tried, until filled.
   const [showRequired, setShowRequired] = useState(false);
   const name = GRAPHICS[kind].name;
   const q = `“${name}”`;
 
-  // The graphic's name is saved with it, so a renamed graphic has a change to save too.
   const edits = diffGraphic(kind, saved, cur);
   const renamed = title.trim() !== savedTitle.trim();
   const unsaved = !renamed ? edits : {
     count: edits.count + 1,
     sections: [{ title: 'Details', rows: [{ what: 'Name', was: savedTitle.trim() || 'Untitled', now: title.trim() || 'Untitled' }] }, ...edits.sections],
   };
-  // A graphic the backend has never seen can be saved as the template left it.
   const canSave = isNew || unsaved.count > 0;
-  const waiting = pub ? diffGraphic(kind, pub.snap, saved) : null; // saved, not on air
+  const waiting = pub ? diffGraphic(kind, pub.snap, saved) : null; 
   const toAir = diffGraphic(kind, pub ? pub.snap : base, cur);
   const hasAir = !!pub;
-  // The stream using the graphic: the one that opened this panel, else the one recorded on
-  // the graphic (by whoever's panel Live opened) while its claim is fresh.
   const live = stream || liveStream(air);
-  const carried = hasAir && !!live; // a running stream is showing it right now
+  const carried = hasAir && !!live; 
   const somethingToPublish = !hasAir || toAir.count > 0;
   const streamName = live?.name || live?.id;
   const pushWord = carried ? 'Push to air' : 'Publish';
@@ -63,7 +51,6 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
       )
       : <Status kind="off">{live ? `On ${streamName} · nothing published yet` : 'Unpublished'}</Status>;
 
-  // Files still uploading show their progress beside the status.
   const uploads = useUploads();
   const uploading = uploads.length > 0 && (
     <Status kind="pending" role="status">
@@ -79,7 +66,8 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     {uploading}
   </>;
 
-  const airUrl = hasAir ? playerUrl(pub.snap, kind, id) : null;
+  const airUrl = hasAir && id ? embedUrl(id) : null;
+  const notOnAir = 'Not on air — publish it first';
   const copy = async (text, receipt) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -98,14 +86,14 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     },
     {
       label: 'Copy URL',
-      dim: !hasAir,
-      title: hasAir ? `Copy URL — ${airUrl}` : 'Not on air — publish it first',
+      dim: !airUrl,
+      title: airUrl ? `Copy URL — ${airUrl}` : notOnAir,
       onClick: () => copy(airUrl, 'URL copied'),
     },
     {
       label: 'Open URL',
-      dim: !hasAir,
-      title: hasAir ? `Open URL — ${airUrl}` : 'Not on air — publish it first',
+      dim: !airUrl,
+      title: airUrl ? `Open URL — ${airUrl}` : notOnAir,
       onClick: () => window.open(airUrl, '_blank', 'noopener'),
     },
     {
@@ -128,8 +116,6 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
   const missing = missingFields(kind, cur);
   const fieldErrors = showRequired ? Object.fromEntries(missing.map((f) => [f.path, requiredMessage(f.label)])) : {};
 
-  // Save and Publish open their review only when every required field is filled;
-  // otherwise the empty fields show their error and the first one scrolls into view.
   const openReview = (which) => {
     if (missing.length) {
       setShowRequired(true);
@@ -139,8 +125,6 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     }
     setReview(which);
   };
-
-  // Runs a backend write; the review stays open on a failure so it can be tried again.
   const write = async (act, done) => {
     try {
       done(await act());
@@ -150,7 +134,6 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     }
   };
 
-  // Someone else's version replaces this one; unsaved edits ask first.
   const doReload = () => reload()
     .then(() => { setConfirm(null); toast('Reloaded'); })
     .catch((err) => toast(`Couldn't reload: ${err.message}`, 'bad'));

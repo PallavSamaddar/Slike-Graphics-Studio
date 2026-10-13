@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
-import { previewAllGraphics, getGraphicStats, duplicateGraphic, archiveGraphic } from '../../services/graphics.js';
-import { airOf, isOnAir, liveStream } from '../../services/air.js';
-import { useToast } from '../../ui-kit';
+import { useEffect, useState } from 'react';
+import { previewGraphics, getGraphic, getGraphicStats } from '../../services/graphics.js';
+import { isAbort } from '../../services/rpc.js';
+import { airFromPublished, isOnAir, liveStream } from '../../services/air.js';
 
-const INDEX_REFRESH_MS = 1500;
-// A save that lands this long after a push counts as a draft edited since (clocks differ a little).
+export const PAGE = 12;
+export const INDEX_REFRESH_MS = 1500;
+const SEARCH_DEBOUNCE_MS = 300;
+const STRIP_SIZE = 24;
+const ID_LIKE = /^[A-Za-z0-9_-]{6,40}$/;
 const PUSH_SLACK_MS = 5 * 1000;
 
-// A card's view of a graphic: the preview row plus what its publish record says.
 export const toCard = (g) => {
-  const air = airOf(g.config);
+  const air = airFromPublished(g.kind, g.published);
   const published = isOnAir(air);
   const mt = g.mt ?? Date.now();
   return {
@@ -24,48 +26,79 @@ export const toCard = (g) => {
   };
 };
 
-// Every graphic of the business, as cards, with the acts a card offers. graphic.preview can
-// miss a write for a moment (the search index refreshes about once a second), so an act shows
-// its result in the list at once and asks again after that, so counts and order catch up.
-export default function useGraphicsIndex() {
-  const toast = useToast();
-  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
+function useDebounced(value, ms) {
+  const [settled, setSettled] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(value), ms);
+    return () => clearTimeout(timer);
+  }, [value, ms]);
+  return settled;
+}
+
+const toFilters = ({ kind, source, state, sort }, search, page) => ({
+  kind: kind === 'all' ? undefined : kind,
+  sourceType: source === 'all' ? undefined : source,
+  state: state === 'all' ? undefined : state,
+  search,
+  sort,
+  size: PAGE,
+  from: (page - 1) * PAGE,
+});
+
+const fits = (card, f) => (!f.kind || card.kind === f.kind)
+  && (!f.sourceType || card.source_type === f.sourceType)
+  && (!f.state || (f.state === 'published') === card.published);
+
+export function useGraphicsPage(view, page, refresh) {
+  const search = useDebounced(view.query.trim(), SEARCH_DEBOUNCE_MS);
+  const [result, setResult] = useState({ status: 'loading', loading: true, graphics: [], count: 0, error: '' });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    setResult((r) => ({ ...r, loading: true }));
+    const filters = toFilters(view, search, page);
+    const byId = page === 1 && ID_LIKE.test(search)
+      ? getGraphic(search, { signal }).catch((err) => { if (isAbort(err)) throw err; return null; })
+      : Promise.resolve(null);
+    Promise.all([previewGraphics(filters, { signal }), byId])
+      .then(([{ list = [], count = 0 }, exact]) => {
+        if (signal.aborted) return;
+        let graphics = list.map(toCard);
+        const found = exact && toCard(exact);
+        if (found && !found.archive && fits(found, filters) && !graphics.some((g) => g.id === found.id)) {
+          graphics = [found, ...graphics];
+          count += 1;
+        }
+        setResult({ status: 'ready', loading: false, graphics, count, error: '' });
+      })
+      .catch((err) => {
+        if (isAbort(err) || signal.aborted) return; // replaced by a newer request
+        setResult((r) => ({ ...r, status: 'error', loading: false, error: err.message }));
+      });
+    return () => controller.abort();
+  }, [view.kind, view.source, view.state, view.sort, search, page, refresh]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { ...result, patch: (fn) => setResult((r) => ({ ...r, graphics: fn(r.graphics) })) };
+}
+export function usePublishedGraphics(refresh) {
   const [graphics, setGraphics] = useState([]);
+  useEffect(() => {
+    const controller = new AbortController();
+    previewGraphics({ state: 'published', sort: 'published', size: STRIP_SIZE }, { signal: controller.signal })
+      .then(({ list = [] }) => setGraphics(list.map(toCard)))
+      .catch((err) => { if (!isAbort(err)) setGraphics([]); });
+    return () => controller.abort();
+  }, [refresh]);
+  return graphics;
+}
+
+export function useGraphicStats(refresh) {
   const [stats, setStats] = useState(null);
-  const [error, setError] = useState('');
-
-  const load = useCallback(async () => {
-    try {
-      const [list, nextStats] = await Promise.all([previewAllGraphics(), getGraphicStats()]);
-      setGraphics(list.map(toCard));
-      setStats(nextStats);
-      setError('');
-      setStatus('ready');
-    } catch (err) {
-      setError(err.message);
-      setStatus('error');
-    }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const runAction = (action, id, receipt, apply) => action(id)
-    .then((result) => {
-      setGraphics((list) => apply(list, result));
-      toast(receipt);
-      setTimeout(load, INDEX_REFRESH_MS);
-    })
-    .catch((err) => toast(err.message, 'bad'));
-
-  return {
-    status,
-    graphics,
-    stats,
-    error,
-    reload: load,
-    duplicate: (id) => runAction(duplicateGraphic, id, 'Duplicated', (list, copy) => (
-      copy?.id ? [toCard(copy), ...list.filter((g) => g.id !== copy.id)] : list
-    )),
-    archive: (id) => runAction(archiveGraphic, id, 'Archived', (list) => list.filter((g) => g.id !== id)),
-  };
+  useEffect(() => {
+    const controller = new AbortController();
+    getGraphicStats({ signal: controller.signal }).then(setStats).catch(() => {});
+    return () => controller.abort();
+  }, [refresh]);
+  return stats;
 }

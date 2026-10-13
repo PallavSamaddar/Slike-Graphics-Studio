@@ -55,11 +55,6 @@ export default function App() {
         .then(({ kind }) => {
           if (loadedRef.current !== key) return;
           setStudio({ kind });
-          // Opened by Slike Live for a stream: record that the stream is using it (or stopped).
-          if (route.stream) {
-            const acts = docs.studio(kind).graphic;
-            (route.stream.off ? acts.clearLive() : acts.markLive(route.stream)).catch(() => {});
-          }
         })
         .catch((err) => { if (loadedRef.current === key) setOpenError(err.message); });
     } else {
@@ -123,7 +118,7 @@ export default function App() {
       <StudioPage
         kind={kind}
         {...docs.studio(kind)}
-        stream={route.view === 'edit' && route.stream && !route.stream.off ? route.stream : null}
+        stream={null}
         onBack={back}
         content={parts.content}
         style={parts.style}

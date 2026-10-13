@@ -1,6 +1,5 @@
 import { callRpc } from './rpc.js';
 
-const API_BASE = import.meta.env.VITE_API_BACKEND;
 const MRSS = 'http://search.yahoo.com/mrss/';
 const CONTENT = 'http://purl.org/rss/1.0/modules/content/';
 const MEDIA_TYPES = /^(image|video)\//;
@@ -9,7 +8,6 @@ export class FeedError extends Error {}
 
 const text = (el) => (el?.textContent || '').trim();
 
-// An element's first child by local name, in a namespace or by its prefixed name.
 function child(item, name, ns) {
   const byNs = ns ? item.getElementsByTagNameNS(ns, name)[0] : null;
   return byNs || item.getElementsByTagName(name)[0] || null;
@@ -25,7 +23,6 @@ function mediaUrl(item) {
   return enclosure?.getAttribute('url') || null;
 }
 
-// → [{ title, description, media }] — empty strings / null where an item lacks the field.
 function parseFeed(xml) {
   const doc = new DOMParser().parseFromString(xml, 'application/xml');
   if (doc.getElementsByTagName('parsererror').length) throw new FeedError("This isn't a valid RSS or Atom feed.");
@@ -44,24 +41,12 @@ async function fetchFeed(url) {
   try {
     res = await callRpc('graphic.feed', { url });
   } catch (err) {
-    // 502: the feed was unreachable or answered with an error (404 and the like).
     throw new FeedError(err.code === 502 ? 'Invalid feed URL.' : err.message);
   }
   return parseFeed(res?.body || '');
 }
 
-// The player's read: the headlines the backend's refresh cron last saved on the graphic,
-// as [{ title, media }] (the cron doesn't keep descriptions).
-export async function fetchGraphicFeed(graphicId) {
-  const res = await fetch(`${API_BASE}/graphicfeed?id=${encodeURIComponent(graphicId)}`);
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new FeedError(json.msg || `the feed answered HTTP ${res.status}`);
-  return (json.data?.items || []).map((i) => ({ title: i.title, description: '', media: i.media || null }));
-}
-
-// The feed's items checked against what the graphic needs: every headline comes from an
-// item's title, so items without one are left out, and a feed with none is an error.
-export function titledItems(items) {
+function titledItems(items) {
   const titled = items.filter((i) => i.title);
   if (!titled.length) throw new FeedError('No item in this feed has a title.');
   return titled;

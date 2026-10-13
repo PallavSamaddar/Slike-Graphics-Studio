@@ -97,6 +97,8 @@ body.player-body {
 .player-page .p-ticker {
   border-radius: 0;
 }
+.player-fit { position: relative; margin: 0 auto; }
+.player-fit-inner { position: absolute; top: 0; left: 0; transform-origin: top left; }
 #root {
   height: 100vh;
   display: flex;
@@ -2342,13 +2344,13 @@ input, select, textarea { font-family: inherit; }
    paused by default inside a gallery card and only runs on hover. */
 .widget-mini > [class^="widget-texture-"] { animation-play-state: paused; }
 .tpl-choice:hover .widget-mini > [class^="widget-texture-"] { animation-play-state: running; }
-.tpl-choice:hover .widget-mini > [class^="widget-texture-"]:not(.widget-texture-none):not(.widget-texture-wave-flow):not(.widget-texture-light-trails):not(.widget-texture-circular-sweep):not(.widget-texture-arrow-motion):not(.widget-texture-radar-sweep):not(.widget-texture-grid-pulse):not(.widget-texture-data-stream):not(.widget-texture-bokeh-glow) {
-  transform: scale(1.15);
-  animation-name: widgetTextureDrift;
-  animation-duration: 14s;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
+.widget-mini > [class^="widget-texture-"]:not(.widget-texture-none):not(.widget-texture-wave-flow):not(.widget-texture-light-trails):not(.widget-texture-circular-sweep):not(.widget-texture-arrow-motion):not(.widget-texture-radar-sweep):not(.widget-texture-grid-pulse):not(.widget-texture-data-stream):not(.widget-texture-bokeh-glow) {
+  animation: widgetTextureDrift 14s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+.tpl-choice:hover .widget-mini > [class^="widget-texture-"]:not(.widget-texture-none):not(.widget-texture-wave-flow):not(.widget-texture-light-trails):not(.widget-texture-circular-sweep):not(.widget-texture-arrow-motion):not(.widget-texture-radar-sweep):not(.widget-texture-grid-pulse):not(.widget-texture-data-stream):not(.widget-texture-bokeh-glow) { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) {
+  .widget-mini > [class^="widget-texture-"]:not(.widget-texture-none):not(.widget-texture-wave-flow):not(.widget-texture-light-trails):not(.widget-texture-circular-sweep):not(.widget-texture-arrow-motion):not(.widget-texture-radar-sweep):not(.widget-texture-grid-pulse):not(.widget-texture-data-stream):not(.widget-texture-bokeh-glow) { animation: none; }
 }
 .widget-mini-badge-img {
   position: absolute;

@@ -1,13 +1,12 @@
 import { ChooserCard, RowMenu, useToast } from '../../ui-kit';
 import { GRAPHIC_KIND, SOURCE_LABEL } from '../../services/graphics.js';
-import { playerUrl } from '../../utils/playerUrl.js';
+import { embedUrl } from '../../utils/playerUrl.js';
 import { ago } from '../../utils/time.js';
 import { THUMBS } from '../templates/TemplateThumbs.jsx';
 import { savedThumb } from './savedThumb.js';
 
 export const KIND_LABEL = { [GRAPHIC_KIND.TICKER]: 'Ticker', [GRAPHIC_KIND.WIDGET]: 'Widget', [GRAPHIC_KIND.JACKET]: 'Jacket' };
 
-// Copies `text`; the receipt is the toast.
 export const useCopy = () => {
   const toast = useToast();
   return async (text, receipt) => {
@@ -20,12 +19,9 @@ export const useCopy = () => {
   };
 };
 
-// A saved graphic in the library: its picture with where it stands over it, its name, its
-// kind, and the ⋯ with Open · Copy ID · Copy player URL · Duplicate · Archive.
-//   g: a card from useGraphicsIndex
 export default function GraphicCard({ g, onOpen, onDuplicate, onArchive }) {
   const copy = useCopy();
-  const url = g.published ? playerUrl(g.air.snap, g.kind, g.id) : null;
+  const url = g.published ? embedUrl(g.id) : null;
   return (
     <ChooserCard
       name={g.title || `Untitled ${g.kind}`}
@@ -49,8 +45,6 @@ export default function GraphicCard({ g, onOpen, onDuplicate, onArchive }) {
   );
 }
 
-// The card's picture: the graphic drawn small in its own template, or its first line when the
-// template is unknown; over it, where it stands (published, its source) and when it was edited.
 export function Thumb({ g, compact = false }) {
   const ThumbOf = THUMBS[g.kind];
   const thumb = ThumbOf && savedThumb(g);

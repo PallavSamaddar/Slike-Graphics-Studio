@@ -1,24 +1,13 @@
 import { useState } from 'react';
-import { ChooserGrid, EmptyState, SegmentedControl, Tabs } from '../../ui-kit';
-import { GRAPHIC_KIND, SOURCE_TYPE } from '../../services/graphics.js';
+import { ChooserGrid, EmptyState, SegmentedControl, Tabs, useToast } from '../../ui-kit';
+import { GRAPHIC_KIND, SOURCE_TYPE, duplicateGraphic, archiveGraphic } from '../../services/graphics.js';
 import GraphicCard, { KIND_LABEL } from './GraphicCard.jsx';
+import { useGraphicsPage, toCard, PAGE } from './useGraphicsIndex.js';
 
-const PAGE = 24;
 const SOURCES = [{ value: 'all', label: 'All sources' }, { value: SOURCE_TYPE.MANUAL, label: 'Manual' }, { value: SOURCE_TYPE.RSS, label: 'Feed' }];
 const STATES = [{ value: 'all', label: 'Any state' }, { value: 'published', label: 'Published' }, { value: 'draft', label: 'Draft only' }];
 const SORTS = [{ value: 'edited', label: 'Recently edited' }, { value: 'published', label: 'Recently published' }, { value: 'name', label: 'Name' }];
 const FILTERS_OFF = { query: '', kind: 'all', source: 'all', state: 'all' };
-
-const matches = (g, q) => !q
-  || (g.title || '').toLowerCase().includes(q)
-  || g.id === q
-  || (g.items || []).some((line) => typeof line === 'string' && line.toLowerCase().includes(q));
-
-const SORT_BY = {
-  edited: (a, b) => b.mt - a.mt,
-  published: (a, b) => (b.air?.at || 0) - (a.air?.at || 0) || b.mt - a.mt,
-  name: (a, b) => (a.title || '').localeCompare(b.title || '') || b.mt - a.mt,
-};
 
 // The page numbers to show: the first, the last, and the ones around the current, with … between.
 function pageNumbers(page, pages) {
@@ -31,32 +20,36 @@ function pageNumbers(page, pages) {
   return out;
 }
 
-// My Graphics: every saved graphic, searched and narrowed (kind, source, state), sorted, a
-// page at a time.
-//   index: useGraphicsIndex() · onOpen(id)
-export default function GraphicsLibrary({ index, onOpen }) {
-  const { status, graphics, error, reload, duplicate, archive } = index;
+// My Graphics: every saved graphic, searched and narrowed (kind, source, state) and sorted by
+// the backend (graphic.preview), a page at a time; the tab counts come from graphic.stats.
+//   stats: useGraphicStats() · refresh: moves after a Duplicate/Archive · onChanged() · onOpen(id)
+export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
+  const toast = useToast();
   const [filters, setFilters] = useState(FILTERS_OFF);
   const [sort, setSort] = useState('edited');
   const [page, setPage] = useState(1);
+  const [retry, setRetry] = useState(0);
   const set = (patch) => { setFilters((f) => ({ ...f, ...patch })); setPage(1); };
+  const changeSort = (next) => { setSort(next); setPage(1); };
+  const { status, loading, graphics, count, error, patch } = useGraphicsPage({ ...filters, sort }, page, `${refresh}:${retry}`);
 
-  const counts = Object.values(GRAPHIC_KIND).reduce((n, k) => ({ ...n, [k]: graphics.filter((g) => g.kind === k).length }), {});
+  const act = (action, id, receipt, apply) => action(id)
+    .then((result) => { patch((list) => apply(list, result)); toast(receipt); onChanged(); })
+    .catch((err) => toast(err.message, 'bad'));
+  const duplicate = (id) => act(duplicateGraphic, id, 'Duplicated', (list, copy) => (copy?.id ? [toCard(copy), ...list.filter((g) => g.id !== copy.id)] : list));
+  const archive = (id) => act(archiveGraphic, id, 'Archived', (list) => list.filter((g) => g.id !== id));
+  const reload = () => setRetry((n) => n + 1);
+
+  const total = stats?.total ?? 0;
   const tabs = [
-    { id: 'all', label: `All · ${graphics.length}` },
-    ...Object.values(GRAPHIC_KIND).map((k) => ({ id: k, label: `${KIND_LABEL[k]}s · ${counts[k]}` })),
+    { id: 'all', label: stats ? `All · ${total}` : 'All' },
+    ...Object.values(GRAPHIC_KIND).map((k) => ({ id: k, label: stats ? `${KIND_LABEL[k]}s · ${stats.kind?.[k] ?? 0}` : `${KIND_LABEL[k]}s` })),
   ];
 
-  const q = filters.query.trim().toLowerCase();
-  const list = graphics
-    .filter((g) => filters.kind === 'all' || g.kind === filters.kind)
-    .filter((g) => filters.source === 'all' || g.source_type === filters.source)
-    .filter((g) => filters.state === 'all' || (filters.state === 'published' ? g.published : !g.published))
-    .filter((g) => matches(g, q))
-    .sort(SORT_BY[sort]);
+  const list = graphics;
   const narrowed = JSON.stringify(filters) !== JSON.stringify(FILTERS_OFF);
-  const pages = Math.max(1, Math.ceil(list.length / PAGE));
-  const at = Math.min(page, pages); // an archive on the last page can leave it empty
+  const pages = Math.max(1, Math.ceil(count / PAGE));
+  const at = Math.min(page, pages);
   const from = (at - 1) * PAGE;
   const goTo = (n) => {
     setPage(n);
@@ -64,15 +57,15 @@ export default function GraphicsLibrary({ index, onOpen }) {
   };
 
   let body;
-  if (status === 'error') {
+  if (loading) {
+    body = <SkeletonCards count={Math.min(PAGE, graphics.length || 8)} />;
+  } else if (status === 'error') {
     body = (
       <EmptyState title="Couldn't load your graphics">
         {error} <button type="button" className="zlink" onClick={reload}>Try again</button>
       </EmptyState>
     );
-  } else if (status === 'loading') {
-    body = <div className="saved-status" role="status">Loading your graphics…</div>;
-  } else if (graphics.length === 0) {
+  } else if (!narrowed && count === 0) {
     body = <EmptyState title="Nothing saved yet">Start a ticker, widget or jacket above; it shows up here once saved.</EmptyState>;
   } else if (list.length === 0) {
     body = (
@@ -84,13 +77,13 @@ export default function GraphicsLibrary({ index, onOpen }) {
     body = (
       <>
         <ChooserGrid>
-          {list.slice(from, from + PAGE).map((g) => (
+          {list.map((g) => (
             <GraphicCard key={g.id} g={g} onOpen={onOpen} onDuplicate={duplicate} onArchive={archive} />
           ))}
         </ChooserGrid>
         {pages > 1 && (
           <nav className="lib-pages" aria-label="Pages of graphics">
-            <span className="saved-sum">{from + 1}–{Math.min(from + PAGE, list.length)} of {list.length}</span>
+            <span className="saved-sum">{from + 1}–{Math.min(from + PAGE, count)} of {count}</span>
             <span className="lib-gap" />
             <button type="button" className="btn ghost small" disabled={at === 1} onClick={() => goTo(at - 1)}>‹ Prev</button>
             {pageNumbers(at, pages).map((n, i) => (
@@ -109,9 +102,9 @@ export default function GraphicsLibrary({ index, onOpen }) {
     <section className="home-sec lib" aria-label="My Graphics">
       <div className="home-sec-head">
         <h2 className="type-card-title">My Graphics</h2>
-        {status === 'ready' && narrowed && <span className="saved-sum">{list.length} of {graphics.length}</span>}
+        {status === 'ready' && narrowed && <span className="saved-sum">{count} of {total}</span>}
       </div>
-      {status === 'ready' && graphics.length > 0 && (
+      {(narrowed || total > 0 || count > 0) && (
         <>
           <Tabs tabs={tabs} value={filters.kind} onChange={(kind) => set({ kind })} ariaLabel="Kind of graphic" />
           <div className="lib-bar">
@@ -126,11 +119,27 @@ export default function GraphicsLibrary({ index, onOpen }) {
             <SegmentedControl value={filters.source} options={SOURCES} onChange={(source) => set({ source })} ariaLabel="Content source" />
             <SegmentedControl value={filters.state} options={STATES} onChange={(state) => set({ state })} ariaLabel="Published or draft" />
             <span className="lib-gap" />
-            <label className="lib-sort"><span>Sort</span><SegmentedControl value={sort} options={SORTS} onChange={setSort} ariaLabel="Sort by" /></label>
+            <label className="lib-sort"><span>Sort</span><SegmentedControl value={sort} options={SORTS} onChange={changeSort} ariaLabel="Sort by" /></label>
           </div>
         </>
       )}
       {body}
     </section>
+  );
+}
+
+function SkeletonCards({ count }) {
+  return (
+    <div className="tpl-grid" role="status" aria-label="Loading your graphics">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="dlg-card tpl-choice skel-card" aria-hidden="true">
+          <div className="tpl-thumb skel skel-thumb" />
+          <div className="dc-top">
+            <span className="skel skel-line skel-title" />
+            <span className="skel skel-line skel-chip" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

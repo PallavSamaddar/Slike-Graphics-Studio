@@ -109,9 +109,11 @@ input[type=checkbox] { accent-color: var(--accent-fill); width: 15px; height: 15
 .dlg.sheet .dlg-body { flex: 0 1 auto; max-height: calc(100vh - 210px); overflow-y: auto; }
 .dlg-card {
   border: 1.5px solid var(--line); border-radius: var(--r-card); padding: 14px 16px 13px; cursor: pointer;
-  background: var(--panel); transition: border-color .12s, box-shadow .12s, transform .08s;
+  background: var(--panel);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s cubic-bezier(.2, .7, .3, 1);
 }
-.dlg-card:hover { border-color: var(--accent); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.dlg-card:hover { border-color: var(--accent); box-shadow: var(--shadow-2); transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .dlg-card, .dlg-card:hover { transition: none; transform: none; } }
 .dc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; }
 .dc-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); letter-spacing: -.1px; }
 .dc-reach {
@@ -857,7 +859,7 @@ input[type=checkbox] { accent-color: var(--accent-fill); }
 .frow + .grp-label { margin-top: var(--space-22); }
 /* ChooserCard / CreateCard / ChooserGrid: a grid of chooser cards, each led by its picture */
 .tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-12); align-items: stretch; }
-.tpl-choice { position: relative; padding: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.tpl-choice { position: relative; padding: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; isolation: isolate; }
 .tpl-choice:has(.rmenu.open) { z-index: 2; }
 .tpl-choice .dc-top { padding: var(--space-10) var(--space-12); margin: 0; align-items: center; }
 .tpl-choice .dc-top .dc-title { margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
