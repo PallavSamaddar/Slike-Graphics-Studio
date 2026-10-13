@@ -19,8 +19,8 @@ const METHOD = {
 };
 
 const LIST_FIELDS = ['id', 'title', 'kind', 'template_id', 'source', 'mt', 'ctby'];
-const SEARCH_FIELDS = [{ field: 'title', boost: 3 }, { field: 'title.sat', boost: 3 }, { field: 'source.items' }];
 const DEFAULT_PAGE_SIZE = 24;
+const SEARCH_FIELDS = [{ field: 'title', boost: 3 }, { field: 'source.items' }];
 
 export const SORT = {
   edited: { sort: { mt: 'desc' } },

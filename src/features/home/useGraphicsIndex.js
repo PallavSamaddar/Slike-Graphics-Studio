@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { previewGraphics, getGraphic, getGraphicStats } from '../../services/graphics.js';
+import { previewGraphics, getGraphicStats } from '../../services/graphics.js';
 import { isAbort } from '../../services/rpc.js';
 import { airFromPublished, isOnAir, liveStream } from '../../services/air.js';
 
@@ -7,7 +7,6 @@ export const PAGE = 12;
 export const INDEX_REFRESH_MS = 1500;
 const SEARCH_DEBOUNCE_MS = 300;
 const STRIP_SIZE = 24;
-const ID_LIKE = /^[A-Za-z0-9_-]{6,40}$/;
 const PUSH_SLACK_MS = 5 * 1000;
 
 export const toCard = (g) => {
@@ -45,10 +44,6 @@ const toFilters = ({ kind, source, state, sort }, search, page) => ({
   from: (page - 1) * PAGE,
 });
 
-const fits = (card, f) => (!f.kind || card.kind === f.kind)
-  && (!f.sourceType || card.source_type === f.sourceType)
-  && (!f.state || (f.state === 'published') === card.published);
-
 export function useGraphicsPage(view, page, refresh) {
   const search = useDebounced(view.query.trim(), SEARCH_DEBOUNCE_MS);
   const [result, setResult] = useState({ status: 'loading', loading: true, graphics: [], count: 0, error: '' });
@@ -57,20 +52,10 @@ export function useGraphicsPage(view, page, refresh) {
     const controller = new AbortController();
     const { signal } = controller;
     setResult((r) => ({ ...r, loading: true }));
-    const filters = toFilters(view, search, page);
-    const byId = page === 1 && ID_LIKE.test(search)
-      ? getGraphic(search, { signal }).catch((err) => { if (isAbort(err)) throw err; return null; })
-      : Promise.resolve(null);
-    Promise.all([previewGraphics(filters, { signal }), byId])
-      .then(([{ list = [], count = 0 }, exact]) => {
+    previewGraphics(toFilters(view, search, page), { signal })
+      .then(({ list = [], count = 0 }) => {
         if (signal.aborted) return;
-        let graphics = list.map(toCard);
-        const found = exact && toCard(exact);
-        if (found && !found.archive && fits(found, filters) && !graphics.some((g) => g.id === found.id)) {
-          graphics = [found, ...graphics];
-          count += 1;
-        }
-        setResult({ status: 'ready', loading: false, graphics, count, error: '' });
+        setResult({ status: 'ready', loading: false, graphics: list.map(toCard), count, error: '' });
       })
       .catch((err) => {
         if (isAbort(err) || signal.aborted) return; // replaced by a newer request
