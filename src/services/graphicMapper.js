@@ -2,6 +2,7 @@
 // and the graphic document the backend stores:
 //   { title, kind, template_id, source: { type, url, items }, config }
 import { GRAPHIC_KIND, SOURCE_TYPE, createGraphic, updateGraphic } from './graphics.js';
+import { getMe } from './user.js';
 
 // Screen state that is never saved.
 const SCREEN_ONLY_KEYS = ['activeTab', 'device'];
@@ -65,7 +66,8 @@ export function hasInlineMedia(value) {
 export async function saveGraphic({ id, mt, kind, title, st }) {
   const payload = toGraphicPayload(kind, st, title);
   if (!id) {
-    const created = await createGraphic(payload);
+    const me = await getMe();
+    const created = await createGraphic({ ...payload, business: me.default_business, team: me.default_team });
     return { id: created.id, mt: created.mt };
   }
   const updated = await updateGraphic(id, mt, payload);
