@@ -6,7 +6,7 @@ import ScrollRow from '../shared-editor/ScrollRow.jsx';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
 import ImageCropperModal from '../shared-editor/ImageCropperModal.jsx';
 import ImageUpload from '../shared-editor/ImageUpload.jsx';
-import { TEXT_ANIMATIONS } from '../../constants/textAnimations.js';
+import { WIDGET_TRANSITIONS, widgetTransition } from '../../constants/textAnimations.js';
 import { VIDEO_PRESETS } from '../../constants/videoPresets.js';
 import { usesFeedMedia } from '../../constants/widgetTemplates.js';
 import { baseName, readAsDataUrl, takeFile } from '../../utils/files.js';
@@ -112,11 +112,24 @@ export default function WidgetStyleSections({ st, setSt }) {
   const customInList = uploadedVideos.some((m) => m.id === s.customVideoMediaId);
 
   const hasTexture = !!(s.texture && s.texture !== 'none');
-  const hasImage = !!s.badgeImage;
+  const hasImage = !!s.badgeImage || (st.src === 'manual' && (st.media?.manual || []).some((m) => m?.url));
 
   return (
     <>
       <Section title="Style">
+        <GroupLabel>Card</GroupLabel>
+        <Row>
+          <Field label="Background colour" path={['style.bg', 'style.bgGradient']} off={isVideo} offReason="A background video fills the widget — pick an animation to set a colour">
+            <ColorField value={s.bg} fallback="#8A1B12" onChange={setSolidBg} />
+          </Field>
+          <Field label="Transition" path="behavior.transition">
+            <Select value={widgetTransition(behavior.transition)} options={WIDGET_TRANSITIONS} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" />
+          </Field>
+          <Field label="Duration" path="behavior.itemDuration">
+            <NumberBox value={behavior.itemDuration || 4} unit="sec" min={1} max={30} onChange={(n) => setBehavior('itemDuration', Math.round(n))} ariaLabel="Duration" />
+          </Field>
+        </Row>
+
         <GroupLabel>Heading</GroupLabel>
         <Row>
           <Field label="Heading background" path={['style.headingBg', 'style.headingBgGradient']}>
@@ -129,21 +142,15 @@ export default function WidgetStyleSections({ st, setSt }) {
               onChangeGradient={(css) => setStyle('headingBgGradient', css)}
             />
           </Field>
-          <FormattingToolbar tx={ht} setTx={setHt} path="headingText" />
+          <FormattingToolbar tx={ht} setTx={setHt} path="headingText" withSize={false} withStyle={false} />
         </Row>
 
         <GroupLabel>Description</GroupLabel>
         <Row>
-          <Field label="Background colour" path={['style.bg', 'style.bgGradient']} off={isVideo} offReason="A background video fills the widget — pick an animation to set a colour">
-            <ColorField value={s.bg} fallback="#8A1B12" onChange={setSolidBg} />
-          </Field>
-          <Field label="Text animation" path="behavior.animation">
-            <Select value={behavior.animation || 'fade'} options={TEXT_ANIMATIONS} onChange={(v) => setBehavior('animation', v)} ariaLabel="Text animation" />
-          </Field>
-          <Field label="Duration" path="behavior.itemDuration">
-            <NumberBox value={behavior.itemDuration || 4} unit="sec" min={1} max={30} onChange={(n) => setBehavior('itemDuration', Math.round(n))} ariaLabel="Duration" />
-          </Field>
+          <FormattingToolbar tx={bt} setTx={setBt} path="bodyText" withSize={false} withStyle={false} />
         </Row>
+
+        <GroupLabel>Image</GroupLabel>
         <Row>
           <Field label="Image" path={['style.badgeImageName', 'style.badgeImage']} off={usingPerItemMedia} offReason="Feed images are on for these headlines — they drive the image">
             <ImageUpload src={s.badgeImage} name={s.badgeImageName} onFile={handleBadgeImage} onRemove={() => setStyle('badgeImage', null)} />
@@ -158,35 +165,13 @@ export default function WidgetStyleSections({ st, setSt }) {
               options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]}
             />
           </Field>
-          <Field label="Description vertical align" path="bodyText.verticalAlign">
-            <SegmentedControl
-              value={bt.verticalAlign || 'middle'}
-              onChange={(v) => setBt('verticalAlign', v)}
-              ariaLabel="Description vertical align"
-              options={[{ value: 'top', label: 'Top' }, { value: 'middle', label: 'Middle' }, { value: 'bottom', label: 'Bottom' }]}
-            />
+          <Field label="Slow zoom" path="style.imageSlowZoom">
+            <Toggle on={!!s.imageSlowZoom} onChange={(v) => setStyle('imageSlowZoom', v)}>Zoom in slowly while shown</Toggle>
           </Field>
         </Row>
-        <Row>
-          <FormattingToolbar tx={bt} setTx={setBt} path="bodyText" />
-        </Row>
-      </Section>
 
-      <Section title="Details">
+        <GroupLabel>Details</GroupLabel>
         <Row>
-          <Field label="Category text" path="category">
-            <input
-              type="text"
-              placeholder="e.g. News, Sports"
-              value={st.category}
-              onChange={(e) => setSt((state) => ({ ...state, category: e.target.value }))}
-            />
-          </Field>
-        </Row>
-        <Row>
-          <Field path="showCategory">
-            <Toggle on={!!st.showCategory} onChange={(v) => setSt((state) => ({ ...state, showCategory: v }))}>Show category</Toggle>
-          </Field>
           <Field path="showTime">
             <Toggle
               on={!!st.showTime}

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { isHex, isSafeColor } from '../../utils/color.js';
+import { isHex, isSafeColor, parseColor } from '../../utils/color.js';
 import ColorPickerPopover from './ColorPickerPopover.jsx';
 
 export default function ColorField({ value, fallback, onChange, allowGradient = false, gradientValue, onChangeGradient, allowEyedropper = false, allowNone = false }) {
   const isNone = allowNone && value === 'none';
+  const isTransparent = !gradientValue && isSafeColor(value || '') && parseColor(value).a === 0;
   const swatchColor = gradientValue || (isSafeColor(value) ? value : fallback);
   const [text, setText] = useState(value);
   const [open, setOpen] = useState(false);
@@ -49,8 +50,8 @@ export default function ColorField({ value, fallback, onChange, allowGradient = 
       <input
         className="hex-inp"
         maxLength={7}
-        value={gradientValue ? 'Gradient' : (isNone ? 'None' : text)}
-        disabled={!!gradientValue || isNone}
+        value={gradientValue ? 'Gradient' : isNone ? 'None' : isTransparent ? 'Transparent' : text}
+        disabled={!!gradientValue || isNone || isTransparent}
         onChange={(e) => {
           const v = e.target.value;
           setText(v);

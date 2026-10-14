@@ -90,6 +90,12 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
     if (m === 'solid') onChangeGradient(null);
   };
 
+  // Clear: the same colour at 0% opacity, so picking a colour again brings it straight back.
+  const makeTransparent = () => {
+    if (mode !== 'solid') chooseMode('solid');
+    setAlpha(0);
+  };
+
   // Switching which stop is being edited re-syncs the canvas/hue state from
   // that stop's current color, so the picker always reflects the stop
   // actually selected instead of staying stuck on whatever was first shown.
@@ -186,9 +192,13 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
         <div className="cp-mode-tabs">
           <button type="button" className={'cp-mode-tab' + (mode === 'solid' ? ' active' : '')} onClick={() => chooseMode('solid')}>Solid</button>
           <button type="button" className={'cp-mode-tab' + (mode === 'gradient' ? ' active' : '')} onClick={() => chooseMode('gradient')}>Gradient</button>
+          <button type="button" className={'cp-mode-tab' + (mode === 'solid' && alpha === 0 ? ' active' : '')} onClick={makeTransparent}>Transparent</button>
         </div>
       ) : (
-        <div className="cp-title">Solid colour</div>
+        <div className="cp-mode-tabs">
+          <button type="button" className={'cp-mode-tab' + (alpha > 0 ? ' active' : '')} onClick={() => { if (alpha === 0) setAlpha(1); }}>Solid</button>
+          <button type="button" className={'cp-mode-tab' + (alpha === 0 ? ' active' : '')} onClick={makeTransparent}>Transparent</button>
+        </div>
       )}
 
       {mode === 'gradient' && (

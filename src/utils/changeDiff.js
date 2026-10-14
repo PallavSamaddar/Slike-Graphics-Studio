@@ -5,6 +5,7 @@ import { TPLS } from '../constants/tickerTemplates.js';
 import { WIDGET_TPLS } from '../constants/widgetTemplates.js';
 import { JACKET_TPLS } from '../constants/jacketTemplates.js';
 import { FONT_NAME } from '../constants/fonts.js';
+import { WIDGET_TRANSITIONS } from '../constants/textAnimations.js';
 import { REFRESH_OPTIONS } from '../services/feed.js';
 import { SOURCE_LABEL } from '../services/graphics.js';
 
@@ -13,6 +14,7 @@ const BANNER = { chevron: 'Chevron — angled banner + tag', split: 'Split block
 const SCALE = { 0.8: 'Small', 1: 'Standard', 1.3: 'Large', 1.6: 'Extra large' };
 const SPEED = { 1: 'Slow', 2: 'Medium', 3: 'Fast' };
 const ANIM = { fade: 'Fade', flip: 'Flip', slide: 'Slide', typewriter: 'Typewriter' };
+const WIDGET_TRANSITION = Object.fromEntries(WIDGET_TRANSITIONS.map((a) => [a.value, a.label]));
 const CASE = { none: 'As typed', uppercase: 'UPPERCASE', lowercase: 'lowercase', capitalize: 'Title Case' };
 const SRC = SOURCE_LABEL;
 const ALIGN = { left: 'Left', center: 'Centre', right: 'Right', top: 'Top', middle: 'Middle', bottom: 'Bottom' };
@@ -80,26 +82,26 @@ const MAPS = {
     },
   },
   widget: {
-    order: ['Content', 'Style', 'Details', 'Background'],
-    skip: ['drafts', 'headings', 'publishedAt', 'style.customVideoUrl', 'style.badgeImage'],
+    order: ['Content', 'Style', 'Background'],
+    skip: ['drafts', 'headings', 'descriptions', 'publishedAt', 'style.customVideoUrl', 'style.badgeImage'],
     keys: {
       template: ['Style', 'Template', tplName(WIDGET_TPLS)],
       src: ['Content', 'Source', (v) => SRC[v] ?? v],
       rssUrl: ['Content', 'Feed URL'],
       rssRefreshSec: ['Content', 'Feed refresh', refreshLabel],
       heading: ['Content', 'Heading'],
-      items: ['Content', 'Description line'],
+      items: ['Content', 'Item title'],
       media: ['Content', 'Images/videos with headlines', (v) => (v && v.length ? 'Included' : 'Off')],
-      category: ['Details', 'Category text'],
-      showCategory: ['Details', 'Show category', onOff],
-      showTime: ['Details', 'Show time posted', onOff],
-      showProduct: ['Details', 'Show publisher', onOff],
+      category: ['Content', 'Heading'],
+      showTime: ['Style', 'Show time posted', onOff],
+      showProduct: ['Style', 'Show publisher', onOff],
       'style.bg': ['Style', 'Background colour'],
       'style.bgGradient': ['Style', 'Background gradient'],
       'style.headingBg': ['Style', 'Heading background'],
       'style.headingBgGradient': ['Style', 'Heading background gradient'],
       'style.badgeImageName': ['Style', 'Image'],
       'style.badgeImagePos': ['Style', 'Image position', (v) => POS[v] ?? v],
+      'style.imageSlowZoom': ['Style', 'Image slow zoom', onOff],
       'style.fontFamily': ['Style', 'Font', (v) => FONT_NAME[v] ?? v],
       'style.texture': ['Background', 'Background', (v) => TEXTURE[v] ?? v],
       'style.textureOpacity': ['Background', 'Texture opacity', (v) => `${Math.round(v * 100)}%`],
@@ -108,7 +110,7 @@ const MAPS = {
       'style.customVideoName': ['Background', 'Uploaded video'],
       ...Object.fromEntries(Object.entries(fmt('heading ')).map(([k, [l, f]]) => [`headingText.${k}`, ['Style', cap(l), f]])),
       ...Object.fromEntries(Object.entries(fmt('description ')).map(([k, [l, f]]) => [`bodyText.${k}`, ['Style', cap(l), f]])),
-      'behavior.animation': ['Style', 'Text animation', (v) => ANIM[v] ?? v],
+      'behavior.transition': ['Style', 'Transition', (v) => WIDGET_TRANSITION[v] ?? 'Fade in / out'],
       'behavior.itemDuration': ['Style', 'Duration', (v) => `${v}s`],
     },
   },

@@ -37,7 +37,6 @@ export const initialWidgetState = {
   heading: '',
   items: [''],
   category: 'News',
-  showCategory: true,
   showTime: true,
   publishedAt: null,
   showProduct: true,
@@ -48,10 +47,12 @@ export const initialWidgetState = {
     manual: [''],
     rss: [],
   },
-  // Per-headline media picks for the Feed source — a parallel array to
-  // drafts.rss, each entry `{ included, pos }` or null if the
-  // user hasn't ticked media for that line yet.
   media: {
+    manual: [null],
+    rss: [],
+  },
+  descriptions: {
+    manual: [''],
     rss: [],
   },
   style: {

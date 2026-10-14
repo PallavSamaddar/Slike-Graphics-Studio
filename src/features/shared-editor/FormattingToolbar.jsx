@@ -12,7 +12,7 @@ const CASES = [
 // and the bold / italic / underline / alignment icon strip (not a kit component: kept
 // as it was). Renders fields for a .frow; `path` is the state key it edits, for the change mark.
 //   fonts: 'all' or a list of labels to offer (the ticker offers no Playfair Display)
-export default function FormattingToolbar({ tx, setTx, path, fonts = 'all', withCase = false, maxSize = 96, alignDisabled = false, alignReason }) {
+export default function FormattingToolbar({ tx, setTx, path, fonts = 'all', withCase = false, withSize = true, withStyle = true, maxSize = 96, alignDisabled = false, alignReason }) {
   const fontOpts = fonts === 'all' ? FONTS : FONTS.filter((f) => fonts.includes(f.label));
   const size = parseInt(tx.fontSize, 10) || 14;
   const bold = parseInt(tx.fontWeight, 10) >= 700;
@@ -29,9 +29,12 @@ export default function FormattingToolbar({ tx, setTx, path, fonts = 'all', with
       <Field label="Font" path={`${path}.fontFamily`}>
         <Select value={tx.fontFamily} options={fontOpts} onChange={(v) => setTx('fontFamily', v)} ariaLabel="Font" />
       </Field>
-      <Field label="Font size" path={`${path}.fontSize`}>
-        <NumberBox value={size} unit="px" min={8} max={maxSize} onChange={(n) => setTx('fontSize', Math.round(n) + 'px')} ariaLabel="Font size" />
-      </Field>
+      {withSize && (
+        <Field label="Font size" path={`${path}.fontSize`}>
+          <NumberBox value={size} unit="px" min={8} max={maxSize} onChange={(n) => setTx('fontSize', Math.round(n) + 'px')} ariaLabel="Font size" />
+        </Field>
+      )}
+      {withStyle && (
       <Field label="Text style" path={[`${path}.fontWeight`, `${path}.fontStyle`, `${path}.textDecoration`, `${path}.textAlign`]}>
         <div className="fmt-toolbar">
           <button
@@ -89,6 +92,7 @@ export default function FormattingToolbar({ tx, setTx, path, fonts = 'all', with
           </button>
         </div>
       </Field>
+      )}
     </>
   );
 }

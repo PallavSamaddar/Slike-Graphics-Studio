@@ -21,6 +21,7 @@ const METHOD = {
 const LIST_FIELDS = ['id', 'title', 'kind', 'template_id', 'source', 'mt', 'ctby'];
 const DEFAULT_PAGE_SIZE = 24;
 const SEARCH_FIELDS = [{ field: 'title', boost: 3 }, { field: 'source.items' }];
+const ID_PATTERN = /^[a-z0-9]{10}$/i;
 
 export const SORT = {
   edited: { sort: { mt: 'desc' } },
@@ -37,7 +38,9 @@ function buildQuery({ kind, sourceType, state, search, sort = 'edited', size = D
   if (state === 'draft') mustNot.on_air = 1;
   const query = { must, ...SORT[sort] || SORT.edited, size, from };
   if (Object.keys(mustNot).length) query.must_not = mustNot;
-  if (search?.trim()) query.search = { query: search.trim(), fields: SEARCH_FIELDS };
+  const text = search?.trim();
+  if (text && ID_PATTERN.test(text)) must.id = text;
+  else if (text) query.search = { query: text, fields: SEARCH_FIELDS };
   return query;
 }
 

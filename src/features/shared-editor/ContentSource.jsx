@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ItemsEditor from './ItemsEditor.jsx';
-import { loadFeed } from '../../services/feed.js';
+import { loadFeed, withFeedItems, REFRESH_OPTIONS } from '../../services/feed.js';
+import { DEFAULT_FEED_REFRESH_SEC } from '../../constants/initialState.js';
+import { useFeedStatus } from '../../hooks/useLiveFeed.js';
 import { templateHasImage } from '../../constants/widgetTemplates.js';
 import { SOURCE_LABEL } from '../../services/graphics.js';
-import { Field, Row, Section, SegmentedControl, Toggle } from '../../ui-kit';
+import { Field, Row, Section, SegmentedControl, Select, Toggle } from '../../ui-kit';
 
 const SOURCE_OPTIONS = Object.entries(SOURCE_LABEL).map(([value, label]) => ({ value, label }));
+
+const time = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 const isValidFeedUrl = (v) => {
   try {
@@ -16,22 +20,16 @@ const isValidFeedUrl = (v) => {
   }
 };
 
-function activateSource(s, key, kind) {
+function activateSource(s, key) {
   if (s.src === key) return s;
-  const drafts = s.drafts || {};
-  if (kind !== 'widget') return { ...s, src: key, items: drafts[key] || [] };
-  // A feed's first line is its heading; the rest are the description lines.
-  const headings = { ...s.headings, [s.src]: s.heading };
-  const lines = drafts[key] || [];
-  const heading = headings[key] ?? (key === 'rss' ? lines[0] || '' : '');
-  return { ...s, src: key, headings, heading, items: key === 'rss' ? lines.slice(1) : lines };
+  return { ...s, src: key, items: (s.drafts || {})[key] || [] };
 }
-export function ContentSourceSwitch({ st, setSt, kind = 'ticker' }) {
+export function ContentSourceSwitch({ st, setSt }) {
   return (
     <SegmentedControl
       value={st.src}
       options={SOURCE_OPTIONS}
-      onChange={(key) => setSt((s) => activateSource(s, key, kind))}
+      onChange={(key) => setSt((s) => activateSource(s, key))}
       ariaLabel="Content source"
     />
   );
@@ -47,20 +45,23 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
   const media = st.media || { rss: [] };
   const [mediaEnabled, setMediaEnabled] = useState(() => (st.media?.rss || []).some(Boolean));
 
-  // Editing a source's content (typing, or validating a Feed URL) makes it the live content
-  // at once; the widget keeps a feed's first line as that feed's heading.
-  const setDraft = (key, items) =>
-    setSt((s) => {
-      const next = { ...s, drafts: { ...(s.drafts || {}), [key]: items }, src: key, items };
-      if (kind === 'widget' && key !== 'manual' && items.length) {
-        next.heading = items[0];
-        next.headings = { ...s.headings, [key]: items[0] };
-        next.items = items.slice(1);
-        const mediaList = (s.media || media)[key] || [];
-        next.media = { ...(s.media || media), [key]: mediaList.slice(1) };
-      }
-      return next;
-    });
+  useEffect(() => {
+    const url = (st.rssUrl || '').trim();
+    const missing = kind === 'widget' && st.src === 'rss' && url && drafts.rss?.length && !(st.descriptions?.rss || []).some(Boolean);
+    if (!missing) return undefined;
+    let stopped = false;
+    loadFeed(url)
+      .then((items) => {
+        if (stopped) return;
+        setRssItems(items);
+        setSt((s) => withFeedItems(kind, s, items));
+      })
+      .catch(() => {});
+    return () => { stopped = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Editing a source's content (typing, or validating a Feed URL) makes it the live content at once.
+  const setDraft = (key, items) => setSt((s) => ({ ...s, drafts: { ...(s.drafts || {}), [key]: items }, src: key, items }));
 
   const mediaPos = media.rss?.find(Boolean)?.pos || 'left';
 
@@ -100,8 +101,7 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
       const items = await loadFeed(url);
       setRssItems(items);
       setMediaEnabled(false);
-      setSt((s) => ({ ...s, media: { ...(s.media || media), rss: [] } }));
-      setDraft('rss', items.map((i) => i.title));
+      setSt((s) => withFeedItems(kind, { ...s, src: 'rss', media: { ...(s.media || media), rss: [] } }, items));
       setRssLoaded(true);
     } catch (err) {
       setRssError(err.message);
@@ -109,6 +109,12 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
       setRssLoading(false);
     }
   };
+
+  const validated = rssLoaded && !rssError && !rssLoading;
+  const feedStatus = useFeedStatus((st.rssUrl || '').trim());
+  const refreshNote = !feedStatus ? ''
+    : feedStatus.error ? 'last refresh failed'
+      : feedStatus.at ? `last refreshed ${time(feedStatus.at)}` : 'waiting for the first refresh';
 
   const body = (
     <>
@@ -119,19 +125,42 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
       )}
 
       {st.src === 'rss' && (
-        <Field label="Feed URL" grow path="rssUrl" err={rssError || null}>
-          <div className="rss-row">
-            <input
-              type="text"
-              placeholder="Paste any RSS/Atom feed URL — e.g. https://feeds.timesofindia.com/..."
-              value={st.rssUrl}
-              onChange={(e) => { setRssLoaded(false); setSt((s) => ({ ...s, rssUrl: e.target.value })); }}
+        <Row className="rss-url-row">
+          <Field label="Feed URL" grow path="rssUrl" err={rssError || null}>
+            <div className="rss-row">
+              <div className="rss-input">
+                <input
+                  type="text"
+                  placeholder="Paste any RSS/Atom feed URL — e.g. https://feeds.timesofindia.com/..."
+                  value={st.rssUrl}
+                  onChange={(e) => { setRssLoaded(false); setSt((s) => ({ ...s, rssUrl: e.target.value })); }}
+                />
+                {validated ? (
+                  <svg className="rss-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Validated">
+                    <title>Validated</title>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  <button type="button" className="rss-validate" onClick={loadRss} disabled={rssLoading}>
+                    {rssLoading ? 'Validating…' : 'Validate'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </Field>
+          <Field
+            label={<>Refresh feed {refreshNote && <span className={'field-note' + (feedStatus.error ? ' bad' : '')}>({refreshNote})</span>}</>}
+            path="rssRefreshSec"
+            err={feedStatus?.error ? `Last refresh failed: ${feedStatus.error}` : null}
+          >
+            <Select
+              value={Number(st.rssRefreshSec ?? DEFAULT_FEED_REFRESH_SEC) || 0}
+              onChange={(v) => setSt((s) => ({ ...s, rssRefreshSec: v }))}
+              ariaLabel="Refresh feed"
+              options={REFRESH_OPTIONS}
             />
-            <button type="button" className="btn ghost" onClick={loadRss} disabled={rssLoading}>
-              {rssLoading ? 'Validating…' : rssLoaded && !rssError ? 'Validated' : 'Validate'}
-            </button>
-          </div>
-        </Field>
+          </Field>
+        </Row>
       )}
 
       {st.src === 'rss' && afterUrl}
@@ -141,7 +170,11 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
           {rssLoaded && !rssError && (
             <>
               <Field grow className="items-field">
-                <ItemsEditor items={drafts.rss} onChange={() => {}} readOnly />
+                {kind === 'widget' ? (
+                  <FeedItemsList titles={drafts.rss} descriptions={st.descriptions?.rss || []} />
+                ) : (
+                  <ItemsEditor items={drafts.rss} onChange={() => {}} readOnly />
+                )}
               </Field>
               {kind === 'widget' && templateHasImage(st.template) && (
                 <MediaPicker
@@ -165,9 +198,26 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
   if (bare) return body;
 
   return (
-    <Section title={title} action={<ContentSourceSwitch st={st} setSt={setSt} kind={kind} />}>
+    <Section title={title} action={<ContentSourceSwitch st={st} setSt={setSt} />}>
       {body}
     </Section>
+  );
+}
+
+// The widget's validated feed, read-only: each item's title in bold, its description below.
+function FeedItemsList({ titles, descriptions }) {
+  return (
+    <ol className="items-editor items-editor-readonly feed-items-list" title="Fetched from source — edit not allowed. Change the URL and re-validate to update.">
+      {titles.map((title, i) => (
+        <li className="feed-item" key={i}>
+          <span className="feed-item-num">{i + 1}</span>
+          <div className="feed-item-text">
+            <strong className="feed-item-title">{title}</strong>
+            {descriptions[i] && <div className="feed-item-desc">{descriptions[i]}</div>}
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 

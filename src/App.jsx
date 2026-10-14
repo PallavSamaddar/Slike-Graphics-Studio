@@ -101,12 +101,12 @@ export default function App() {
       ticker: {
         content: <TickerContent st={g.cur} setSt={g.setCur} />,
         style: <TickerStyle st={g.cur} setSt={g.setCur} />,
-        preview: <LiveFeedPreview kind="ticker" st={g.cur} setSt={g.setCur}>{(st) => <TickerPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
+        preview: <LiveFeedPreview kind="ticker" st={g.cur}>{(st) => <TickerPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
       },
       widget: {
         content: <WidgetContent st={g.cur} setSt={g.setCur} />,
         style: <WidgetStyle st={g.cur} setSt={g.setCur} />,
-        preview: <LiveFeedPreview kind="widget" st={g.cur} setSt={g.setCur}>{(st) => <WidgetPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
+        preview: <LiveFeedPreview kind="widget" st={g.cur}>{(st) => <WidgetPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
       },
       jacket: {
         content: <JacketContent st={g.cur} setSt={g.setCur} />,

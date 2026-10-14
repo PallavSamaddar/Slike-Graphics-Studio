@@ -19,9 +19,8 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
   height: var(--studio-col-h);
 }
 .studio-preview { flex: none; min-width: 0; }
-.feed-refresh-bar { display: flex; align-items: flex-end; gap: var(--space-12); margin-bottom: var(--space-12); }
-.feed-refresh-bar .field { min-width: 200px; }
-.feed-refresh-status { color: var(--ink-faint); font-size: var(--fs-md); padding-bottom: 9px; }
+.field-note { margin-left: 2px; font-size: var(--fs-xs); font-weight: 400; color: var(--ink-faint); }
+.field-note.bad { color: var(--bad); }
 .studio-side > .form.keyform.studio-style {
   flex: 1 1 auto; min-height: 160px; overflow-y: auto;
   background: var(--panel); border: 1px solid var(--card-line); border-radius: var(--r-card); box-shadow: var(--shadow-1);
@@ -32,7 +31,8 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 /* the preview stage sizes itself from its box, so the box gets one */
 .studio-canvas-card .broadcast-canvas { aspect-ratio: 16 / 10; }
 /* the widget stage shares the right column with the style sections, so it is shorter */
-.studio-canvas-card .broadcast-canvas.widget-canvas { aspect-ratio: auto; height: clamp(300px, 46vh, 520px); }
+.studio-canvas-card .broadcast-canvas.widget-canvas { aspect-ratio: auto; height: auto; max-height: clamp(300px, 46vh, 520px); container-type: normal; padding: var(--space-16) var(--space-24); }
+.studio-canvas-card .broadcast-canvas.widget-canvas:fullscreen { height: 100%; max-height: none; padding: 0; align-items: center; overflow: hidden; }
 
 /* ---------- the control panel: where the graphic stands, in the editor header ---------- */
 /* on air: the red mark broadcast knows, pulsing while a stream is carrying the graphic */
@@ -80,17 +80,28 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 
 /* a field whose box carries an act beside it (Validate) */
 .rss-row { display: flex; gap: var(--space-8); align-items: center; width: 100%; }
-.rss-row input[type=text] { flex: 1; width: auto; min-width: 0; }
+.rss-input { position: relative; flex: 1; min-width: 0; }
+.rss-row .rss-input input[type=text] { width: 100%; padding-right: 92px; }
+.rss-tick { position: absolute; right: 10px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--good); pointer-events: none; }
+.rss-validate {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  height: calc(100% - 8px); padding: 0 10px; border: 0; border-radius: calc(var(--r-control) - 2px);
+  background: var(--accent-soft); color: var(--accent); font: inherit; font-size: var(--fs-sm); font-weight: 600;
+  cursor: pointer; transition: background .12s;
+}
+.rss-validate:hover:not(:disabled) { background: var(--menu-hover); }
+.rss-validate:disabled { color: var(--ink-faint); cursor: default; }
+.rss-url-row .field:not(.grow) { min-width: 160px; }
 
 /* the Headline box is a textarea: it takes the field's own box */
-.field textarea.jk-headline {
+.field textarea.jk-headline, .field textarea.manual-item-desc {
   min-height: 70px; resize: vertical; padding: 7px 11px; font: inherit; font-size: var(--fs-md); color: var(--ink);
   background: var(--panel); border: 1px solid var(--ctl-line); border-radius: var(--r-control); outline: none;
   transition: border-color .12s, box-shadow .12s;
 }
-.field textarea.jk-headline:hover { border-color: var(--line-strong); }
-.field textarea.jk-headline:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
-.field textarea.jk-headline::placeholder { color: var(--placeholder); }
+.field textarea.jk-headline:hover, .field textarea.manual-item-desc:hover { border-color: var(--line-strong); }
+.field textarea.jk-headline:focus, .field textarea.manual-item-desc:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+.field textarea.jk-headline::placeholder, .field textarea.manual-item-desc::placeholder { color: var(--placeholder); }
 
 /* the badge text box counts its letters where a number box keeps its unit */
 .num-wrap.badge-text input { width: 100%; }
@@ -171,3 +182,14 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 .saved-meta { position: absolute; left: var(--space-8); right: var(--space-8); bottom: var(--space-8); z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); pointer-events: none; }
 .saved-meta .saved-src, .saved-meta .saved-time { padding: 1px var(--space-8); border-radius: 999px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .saved-meta .saved-time { margin-left: auto; }
+.frow.off { opacity: .38; pointer-events: none; }
+.manual-items { display: flex; flex-direction: column; gap: var(--space-12); }
+.manual-item { display: flex; flex-direction: column; gap: var(--space-12); padding: var(--space-12) var(--space-14); border: 1px solid var(--card-line); border-radius: var(--r-card); background: var(--panel); }
+.manual-item-hd { display: flex; align-items: center; justify-content: space-between; }
+.manual-item-num { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--ink-faint); text-transform: uppercase; letter-spacing: .04em; }
+.manual-item-remove { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--r-control); background: transparent; color: var(--ink-faint); cursor: pointer; }
+.manual-item-remove:hover { background: var(--menu-hover); color: var(--bad); }
+.manual-item-remove svg { width: 14px; height: 14px; }
+.manual-item .field textarea.manual-item-desc { width: 100%; }
+.manual-items-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; }
+.manual-items-add svg { width: 14px; height: 14px; }

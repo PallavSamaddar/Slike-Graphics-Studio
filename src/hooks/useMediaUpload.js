@@ -26,11 +26,18 @@ const subscribe = (fn) => {
 // The uploads in flight, for a progress readout.
 export const useUploads = () => useSyncExternalStore(subscribe, () => uploads);
 
-// A field's value at a dotted path ('mainVideoUrl', 'style.customVideoUrl').
+// A field's value at a dotted path ('mainVideoUrl', 'style.customVideoUrl', 'media.manual.0.url'
+// — a number steps into an array).
 const get = (obj, path) => path.split('.').reduce((o, k) => o?.[k], obj);
 const set = (obj, path, value) => {
   const [k, ...rest] = path.split('.');
-  return { ...obj, [k]: rest.length ? set(obj[k] || {}, rest.join('.'), value) : value };
+  const child = rest.length ? set(obj?.[k] ?? (/^\d+$/.test(rest[0]) ? [] : {}), rest.join('.'), value) : value;
+  if (Array.isArray(obj)) {
+    const next = [...obj];
+    next[k] = child;
+    return next;
+  }
+  return { ...obj, [k]: child };
 };
 const setAll = (obj, fields) => Object.entries(fields).reduce((o, [path, v]) => set(o, path, v), obj);
 

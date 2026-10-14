@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { autoTextColor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
 import { usesFeedMedia } from '../constants/widgetTemplates.js';
+import { widgetTransition } from '../constants/textAnimations.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
 import VideoBackground from './VideoBackground.jsx';
 import CleoVideoBackground from './CleoVideoBackground.jsx';
-import ImageCropperModal from '../features/shared-editor/ImageCropperModal.jsx';
-import { useMediaUpload } from '../hooks/useMediaUpload.js';
 import newsBackgroundVideo from '../assets/news-background.mp4';
 import redeBgVideo from '../assets/rede-bg.mp4';
 import redBackgroundVideo from '../assets/red-background.mp4';
+
+const TRANSITION_MS = 200;
 
 const VIDEO_TEXTURES = {
   'video-news': newsBackgroundVideo,
@@ -18,80 +19,40 @@ const VIDEO_TEXTURES = {
   'video-red': redBackgroundVideo,
 };
 
-// Renders the news-card widget: a category pill, headline, divider, summary
-// text, and a time/product footer over a solid/gradient/textured background.
-// Shared by the in-editor preview.
-export default function WidgetView({ st, setSt }) {
+// Each item — a feed's, or a manual one typed in — is a title, an optional description and an
+// optional image; they cycle together.
+export default function WidgetView({ st }) {
   const { style: s, headingText: ht, bodyText: bt } = st;
-
-  // The active source's content (the Manual | Feed switch), drafts included, so edits show
-  // up here at once — same live-preview feel as every other control.
-  const previewItems = st.drafts?.[st.src] || st.items;
-  const rawItems = previewItems.filter((x) => x.trim());
-  // Feed drafts always keep their first line as the headline (it's
-  // sliced out of `st.items` on commit, but the raw draft list still has it
-  // at index 0) — description lines start at index 1. Manual has no
-  // separate headline line; its drafts are all description.
   const fromFeed = st.src !== 'manual';
-  const descStart = fromFeed ? 1 : 0;
-  const items = rawItems.slice(descStart);
-  const [cropSrc, setCropSrc] = useState(null);
-  const upload = useMediaUpload();
-  const [cropFileName, setCropFileName] = useState('');
+  const previewItems = st.drafts?.[st.src] || st.items;
+  const descriptions = st.descriptions?.[st.src] || [];
+  const itemMedia = fromFeed ? (usesFeedMedia(st) ? st.media.rss : null) : st.media?.manual || [];
+  const lines = previewItems
+    .map((title, i) => ({ title, description: descriptions[i] || '', media: itemMedia?.[i] || null }))
+    .filter((line) => line.title.trim());
+  const items = lines.map((line) => line.title);
 
-  // Cycle through description lines every `itemDuration` seconds, per the
-  // chosen Text Animation — otherwise those controls would have nothing to
-  // animate/duration since the card only ever showed one static line. Loops
-  // continuously (unlike the ticker's SingleItemTicker, which stops at the
-  // last item) since a widget has no natural "end".
-  const animation = st.behavior?.animation || 'fade';
+  const transition = widgetTransition(st.behavior?.transition);
   const durationSec = Math.max(1, st.behavior?.itemDuration || 4);
+  // One item at a time: the current one goes out, then the next comes in.
   const [activeIndex, setActiveIndex] = useState(0);
-  const [animPhase, setAnimPhase] = useState('in');
+  const [phase, setPhase] = useState('in');
   const itemsKey = items.join('|');
-  useEffect(() => { setActiveIndex(0); setAnimPhase('in'); }, [itemsKey]);
+  useEffect(() => { setActiveIndex(0); setPhase('in'); }, [itemsKey]);
   useEffect(() => {
-    const holdMs = durationSec * 1000;
-    const transMs = 420;
-    const inMs = animation === 'typewriter' ? 620 : 30;
-    setAnimPhase('in');
-    const t1 = setTimeout(() => setAnimPhase('hold'), inMs);
-    // Nothing to cycle to with 0-1 items — hold there instead of scheduling
-    // the out/rotate timers, which would otherwise fade it back out forever.
-    if (items.length < 2) return () => clearTimeout(t1);
-    const t2 = setTimeout(() => setAnimPhase('out'), holdMs);
-    const t3 = setTimeout(() => {
-      setActiveIndex((i) => (i + 1) % items.length);
-      setAnimPhase('in');
-    }, holdMs + transMs);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [activeIndex, items.length, itemsKey, durationSec, animation]);
+    const timers = [setTimeout(() => setPhase('hold'), 30)];
+    if (items.length > 1) {
+      const holdMs = durationSec * 1000;
+      timers.push(setTimeout(() => setPhase('out'), holdMs));
+      timers.push(setTimeout(() => {
+        setActiveIndex((i) => (i + 1) % items.length);
+        setPhase('in');
+      }, holdMs + TRANSITION_MS));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [activeIndex, items.length, itemsKey, durationSec]);
   const summaryIndex = items.length ? Math.min(activeIndex, items.length - 1) : 0;
 
-  // Per-item media (the Feed source can attach a different image to each
-  // headline, on templates with an image) — resolves to whichever line is showing.
-  const itemMedia = usesFeedMedia(st) ? st.media.rss : null;
-  const activeMedia = itemMedia ? itemMedia[descStart + summaryIndex] : null;
-
-  const handleBadgeUpload = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setCropSrc(reader.result);
-    reader.readAsDataURL(file);
-    setCropFileName(file.name.replace(/\.[^.]+$/, ''));
-    e.target.value = '';
-  };
-
-  const handleCropConfirm = (croppedDataUrl, name) => {
-    setCropSrc(null);
-    upload({ file: croppedDataUrl, label: name, setSt, path: 'style.badgeImage', local: croppedDataUrl, fields: { 'style.badgeImage': croppedDataUrl, 'style.badgeImageName': name } });
-  };
-
-  // Body and heading text both auto-contrast against their background
-  // instead of being separately configured, so they always stay legible.
-  // For a gradient heading there's no single color to test — fall back to
-  // the solid headingBg, which is always kept in sync alongside it.
   const bodyTextColor = autoTextColor(s.bg);
   const headingTextColor = autoTextColor(s.headingBg);
   const bodyStyle = {
@@ -102,7 +63,6 @@ export default function WidgetView({ st, setSt }) {
   const itemStyle = {
     color: bodyTextColor,
     fontFamily: bt.fontFamily,
-    fontSize: bt.fontSize,
     fontWeight: bt.fontWeight,
     fontStyle: bt.fontStyle,
     textDecoration: bt.textDecoration,
@@ -111,20 +71,13 @@ export default function WidgetView({ st, setSt }) {
     background: s.headingBgGradient || s.headingBg,
     color: headingTextColor,
     fontFamily: ht.fontFamily,
-    fontSize: ht.fontSize,
     fontWeight: ht.fontWeight,
     fontStyle: ht.fontStyle,
     textDecoration: ht.textDecoration,
-    textAlign: ht.textAlign,
   };
 
-  // With the feed's images on, every line has one, so the slot never comes and goes: a line
-  // whose item has no media (or whose image fails to load) shows the widget's own image,
-  // else a placeholder made from the line.
-  const standInImage = s.badgeImage || placeholderThumb(items[summaryIndex] || rawItems[0] || '');
-  const effectiveBadgeImage = itemMedia ? (activeMedia?.url || standInImage) : s.badgeImage;
-  const badgePos = (itemMedia ? itemMedia.find(Boolean)?.pos : s.badgeImagePos) || 'left';
-  const showBadgeSlot = !!(effectiveBadgeImage || (!itemMedia && s.badgeImagePos));
+  const feedMedia = fromFeed && itemMedia;
+  const badgePos = (feedMedia ? itemMedia.find(Boolean)?.pos : s.badgeImagePos) || 'left';
 
   const relativeTime = (ts) => {
     if (!ts) return 'Just now';
@@ -136,25 +89,42 @@ export default function WidgetView({ st, setSt }) {
     const days = Math.round(hrs / 24);
     return `${days} day${days === 1 ? '' : 's'} ago`;
   };
-  const headline = (fromFeed ? rawItems[0] : st.heading) || 'News Heading';
-  // Shows one line at a time (never joined), cycling on a timer through every
-  // description line, per the Text Animation/Duration controls.
-  const summary = items[summaryIndex] || 'Enter description here';
+  const renderItem = (index, phase) => {
+    const line = lines[index];
+    const headline = line?.title || (fromFeed ? 'Validate a feed to show its items here' : 'Enter title here');
+    const summary = line?.description || '';
+    const hasDescription = !!summary.trim();
+    const standIn = s.badgeImage || placeholderThumb(line?.title || '');
+    const image = feedMedia ? line?.media?.url || standIn : line?.media?.url || s.badgeImage;
+    return (
+      <div key={index} className={`widget-card-main anim-${transition} phase-${phase}`} aria-hidden={phase === 'out' || undefined}>
+        <div className="widget-card-headline" style={headingStyle}>{headline}</div>
+        {(hasDescription || image) && (
+          <>
+            <div className="widget-card-divider" />
+            <div className={'widget-card-body widget-card-body-' + badgePos}>
+              {image && (
+                <div className="widget-card-thumb-wrap">
+                  <img
+                    key={image}
+                    className={'widget-card-thumb' + (s.imageSlowZoom ? ' slow-zoom' : '')}
+                    style={s.imageSlowZoom ? { animationDuration: `${durationSec}s` } : undefined}
+                    src={image}
+                    alt=""
+                    onError={(e) => { if (feedMedia && e.currentTarget.src !== standIn) e.currentTarget.src = standIn; }}
+                  />
+                </div>
+              )}
+              {hasDescription && <div className="widget-card-summary" style={itemStyle}>{summary}</div>}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="widget-frame widget-frame-card" style={bodyStyle}>
-      {/* Texture rendered as its own layer so it never gets clobbered by
-          the `background` shorthand above (color/gradient can change
-          independently of which texture is layered on top). Textures are
-          drawn in white by default; textureColor tints them via a
-          color-mode overlay (or, for real DOM particles, directly), and
-          textureOpacity controls the layer's intensity — applied inline
-          per-element rather than via a wrapper, so it doesn't disturb the
-          `.widget-body > [class^="widget-texture-"]` drift-animation
-          selector, which relies on the texture div being a direct child. */}
-      {/* An uploaded video is played by the Cleo player from its Slike media id (from the
-          upload, or picked from the uploaded list); only while its upload is still running
-          does it play from the local copy. */}
       {s.texture === 'video-custom' && s.customVideoMediaId ? (
         <CleoVideoBackground mediaId={s.customVideoMediaId} opacity={s.textureOpacity ?? 1} />
       ) : s.texture === 'video-custom' && s.customVideoUrl ? (
@@ -180,36 +150,14 @@ export default function WidgetView({ st, setSt }) {
       )}
 
       <div className="widget-card-content">
-        <div className="widget-card-top">
-          <div className="widget-card-headline-col">
-            {st.showCategory && st.category && (
-              <span className="widget-card-category">
-                <span className="widget-card-category-dot" />
-                {st.category}
-              </span>
-            )}
-            <div className="widget-card-headline" style={headingStyle}>{headline}</div>
-          </div>
-        </div>
-        <div className="widget-card-divider" />
-        <div className={'widget-card-body' + (showBadgeSlot ? ' widget-card-body-' + badgePos : '')}>
-          {showBadgeSlot && (
-            effectiveBadgeImage ? (
-              <img
-                key={effectiveBadgeImage}
-                className="widget-card-thumb"
-                src={effectiveBadgeImage}
-                alt=""
-                onError={(e) => { if (e.currentTarget.src !== standInImage) e.currentTarget.src = standInImage; }}
-              />
-            ) : (
-              <label className="widget-card-thumb widget-card-thumb-placeholder">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                <input type="file" accept="image/*" hidden onChange={handleBadgeUpload} />
-              </label>
-            )
-          )}
-          <div key={summaryIndex} className={`widget-card-summary anim-${animation} phase-${animPhase}`} style={itemStyle}>{summary}</div>
+        {fromFeed && st.category?.trim() && (
+          <span className="widget-card-category">
+            <span className="widget-card-category-dot" />
+            {st.category}
+          </span>
+        )}
+        <div className="widget-card-stage">
+          {renderItem(summaryIndex, phase)}
         </div>
         <div className="widget-card-footer">
           {st.showTime && (
@@ -222,10 +170,6 @@ export default function WidgetView({ st, setSt }) {
           {st.showProduct && <span className="widget-card-product" style={{ color: bodyTextColor }}>Times of India</span>}
         </div>
       </div>
-
-      {cropSrc && (
-        <ImageCropperModal src={cropSrc} fileName={cropFileName} onCancel={() => setCropSrc(null)} onConfirm={handleCropConfirm} />
-      )}
     </div>
   );
 }

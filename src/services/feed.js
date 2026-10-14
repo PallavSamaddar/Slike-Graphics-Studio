@@ -7,6 +7,7 @@ const MEDIA_TYPES = /^(image|video)\//;
 export class FeedError extends Error {}
 
 const text = (el) => (el?.textContent || '').trim();
+const plain = (html) => (html ? (new DOMParser().parseFromString(html, 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim() : '');
 
 function child(item, name, ns) {
   const byNs = ns ? item.getElementsByTagNameNS(ns, name)[0] : null;
@@ -31,7 +32,7 @@ function parseFeed(xml) {
   if (!rss.length && !atom.length) throw new FeedError('This feed has no items.');
   return (rss.length ? rss : atom).map((item) => ({
     title: text(child(item, 'title')),
-    description: text(child(item, 'description')) || text(child(item, 'encoded', CONTENT)) || text(child(item, 'summary')) || text(child(item, 'content')),
+    description: plain(text(child(item, 'description')) || text(child(item, 'encoded', CONTENT)) || text(child(item, 'summary')) || text(child(item, 'content')) || text(item.getElementsByTagNameNS(MRSS, 'description')[0])),
     media: mediaUrl(item),
   }));
 }
@@ -59,10 +60,7 @@ export async function loadFeed(url) {
 export function withFeedItems(kind, st, items) {
   const titles = items.map((i) => i.title);
   const next = { ...st, drafts: { ...(st.drafts || {}), rss: titles }, items: titles };
-  if (kind === 'widget') {
-    next.heading = titles[0] || '';
-    next.items = titles.slice(1);
-  }
+  if (kind === 'widget') next.descriptions = { ...st.descriptions, rss: items.map((i) => i.description || '') };
   const mediaList = st.media?.rss || [];
   if (mediaList.length) {
     const pos = mediaList.find(Boolean)?.pos || 'left';

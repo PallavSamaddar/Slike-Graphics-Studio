@@ -22,8 +22,7 @@ function toSource(kind, st) {
   }
   const clean = (list) => list.filter((item) => item?.trim());
   if (st.src !== SOURCE_TYPE.RSS) return { type: SOURCE_TYPE.MANUAL, items: clean(st.items || []) };
-  const titles = kind === GRAPHIC_KIND.WIDGET ? [st.heading, ...(st.items || [])] : st.items || [];
-  return { type: SOURCE_TYPE.RSS, url: st.rssUrl, items: clean(titles) };
+  return { type: SOURCE_TYPE.RSS, url: st.rssUrl, items: clean(st.items || []) };
 }
 
 export function toGraphicPayload(kind, st, title) {
@@ -45,9 +44,29 @@ export function fromGraphic(graphic, initialState) {
   st.rssUrl = src.url || st.rssUrl || '';
   if (src.type !== SOURCE_TYPE.RSS) {
     st.items = src.items || [];
-    return st;
+    return graphic.kind === GRAPHIC_KIND.WIDGET ? withManualItems(st, graphic.config || {}) : st;
   }
-  return withFeedItems(graphic.kind, st, (src.items || []).map((title, i) => ({ title, media: src.media?.[i] || null })));
+  const descriptions = st.descriptions?.rss || [];
+  const feedSt = graphic.kind === GRAPHIC_KIND.WIDGET ? withManualItems(st, graphic.config || {}) : st;
+  return withFeedItems(graphic.kind, feedSt, (src.items || []).map((title, i) => ({ title, description: descriptions[i] || '', media: src.media?.[i] || null })));
+}
+
+// A manual widget saved before it had items (one heading over description lines) becomes
+// one item per line, each titled with that heading — so it looks as it did.
+function withManualItems(st, config) {
+  if (Array.isArray(config.descriptions?.manual)) return st;
+  const heading = (st.src === 'manual' ? st.heading : st.headings?.manual ?? st.heading) || '';
+  const lines = ((st.src === 'manual' ? st.items : st.drafts?.manual) || []).filter((line) => line?.trim());
+  const descriptions = lines.length ? lines : [''];
+  const titles = descriptions.map(() => heading);
+  const next = {
+    ...st,
+    drafts: { ...st.drafts, manual: titles },
+    descriptions: { ...st.descriptions, manual: descriptions },
+    media: { ...st.media, manual: titles.map(() => null) },
+  };
+  if (st.src === 'manual') next.items = titles;
+  return next;
 }
 
 // True if the editor still holds an uploaded image/video as a data:/blob: URL.

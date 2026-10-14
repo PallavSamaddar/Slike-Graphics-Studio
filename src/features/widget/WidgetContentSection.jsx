@@ -1,42 +1,23 @@
 import ContentSource, { ContentSourceSwitch } from '../shared-editor/ContentSource.jsx';
 import { Field, Row, Section } from '../../ui-kit';
+import WidgetManualItems from './WidgetManualItems.jsx';
 
-// The Heading + List widget's Content section: the Manual | Feed switch at the title's right
-// (the side it is on drives both the Heading and the Description lines, and is the source
-// the widget is saved with), then the fields themselves — mirroring the ticker's Content
-// source model on `st`. Each source keeps its own heading and lines, so switching back and
-// forth loses neither.
 export default function WidgetContentSection({ st, setSt }) {
-  const setHeading = (v) => setSt((s) => ({ ...s, heading: v, headings: { ...s.headings, [s.src]: v } }));
-
-  const headingField = (
+  const feedHeadingField = (
     <Row>
-      <Field label={<>Heading <span className="req-mark">*</span></>} grow path="heading">
-        <input type="text" placeholder="Enter title here" value={st.heading} onChange={(e) => setHeading(e.target.value)} />
+      <Field label="Heading" grow path="category">
+        <input type="text" placeholder="e.g. News (optional)" value={st.category || ''} onChange={(e) => setSt((s) => ({ ...s, category: e.target.value }))} />
       </Field>
     </Row>
   );
 
   return (
-    <Section title="Content" action={<ContentSourceSwitch st={st} setSt={setSt} kind="widget" />}>
-      {st.src === 'manual' && (
-        <>
-          {headingField}
-          <Row className="widget-desc-items">
-            <ContentSource
-              st={st}
-              setSt={setSt}
-              bare
-              kind="widget"
-              itemsLabel={<>Description lines <span className="req-mark">*</span></>}
-            />
-          </Row>
-        </>
-      )}
+    <Section title="Content" action={<ContentSourceSwitch st={st} setSt={setSt} />}>
+      {st.src === 'manual' && <WidgetManualItems st={st} setSt={setSt} />}
 
       {st.src !== 'manual' && (
         <div className="widget-desc-items">
-          <ContentSource st={st} setSt={setSt} bare kind="widget" afterUrl={headingField} />
+          <ContentSource st={st} setSt={setSt} bare kind="widget" afterUrl={feedHeadingField} />
         </div>
       )}
     </Section>
