@@ -7,6 +7,7 @@ import { baseName, readAsDataUrl, takeFile } from '../../utils/files.js';
 import ImageUpload from '../shared-editor/ImageUpload.jsx';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { Field, Row, Section, SegmentedControl, Select, Toggle } from '../../ui-kit';
+import ContentTitle from '../shared-editor/ContentTitle.jsx';
 
 // Left-panel form for the Jacket: logo/brand text, a scrolling headline,
 // time/weather, a main-video upload (or stock preset pick), and an
@@ -43,7 +44,7 @@ export default function JacketContentSections({ st, setSt }) {
 
   return (
     <>
-      <Section title="Content">
+      <Section title={<ContentTitle />}>
         <Row>
           <Field label="Logo text" path="logoText">
             <input type="text" placeholder="e.g. TOI" value={st.logoText} onChange={(e) => setField('logoText', e.target.value)} />

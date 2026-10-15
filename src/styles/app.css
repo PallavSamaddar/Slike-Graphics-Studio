@@ -635,7 +635,7 @@ input, select, textarea { font-family: inherit; }
 .cp-popover {
   position: fixed;
   z-index: 1000;
-  width: 210px;
+  width: 232px;
   max-height: calc(100vh - 16px);
   overflow-y: auto;
   background: var(--bg-panel);
@@ -736,7 +736,10 @@ input, select, textarea { font-family: inherit; }
 .cp-opacity-row { margin-bottom: 5px; }
 .cp-lbl { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
 .cp-lbl-val { font-size: 11px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.cp-hex-row { display: flex; align-items: center; gap: 6px; margin: 10px 0 8px; }
+.cp-format-tabs { display: flex; gap: 2px; width: max-content; margin-top: 10px; padding: 2px; background: var(--bg-panel-alt); border-radius: 6px; }
+.cp-format-tab { padding: 3px 9px; border: none; border-radius: 4px; background: transparent; color: var(--text-muted); font-size: 10.5px; font-weight: 700; letter-spacing: .3px; cursor: pointer; }
+.cp-format-tab.active { background: var(--bg-panel); color: var(--text-primary); box-shadow: var(--shadow-xs); }
+.cp-hex-row { display: flex; align-items: center; gap: 6px; margin: 6px 0 8px; }
 .cp-hex-swatch {
   width: 28px;
   height: 28px;
@@ -767,6 +770,7 @@ input, select, textarea { font-family: inherit; }
   min-width: 0;
   text-transform: uppercase;
 }
+.cp-rgba-inp { text-transform: none; font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .cp-eyedrop-btn {
   display: flex;
   align-items: center;
@@ -1541,6 +1545,9 @@ input, select, textarea { font-family: inherit; }
   text-align: center;
   padding: 0.35em 0.6em;
   border-radius: var(--radius-sm);
+}
+/* Clamped inside the padding, so a 4th line can't show in it under the ellipsis. */
+.widget-card-headline-text {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -1566,6 +1573,7 @@ input, select, textarea { font-family: inherit; }
 }
 .widget-card-stage { flex: 1; min-height: 0; display: grid; }
 .widget-card-stage > .widget-card-main { grid-area: 1 / 1; }
+.widget-card-main.widget-card-ghost { visibility: hidden; pointer-events: none; }
 .widget-card-main { transition: opacity 0.2s ease, transform 0.2s ease, clip-path 0.2s ease, filter 0.2s ease; }
 .widget-card-main.phase-out { pointer-events: none; }
 .widget-card-main.phase-in,
@@ -2032,6 +2040,20 @@ input, select, textarea { font-family: inherit; }
   cursor: pointer;
 }
 .scroll-row-arrow svg { width: 14px; height: 14px; }
+.scroll-row { position: relative; }
+/* Over the row's ends, level with the swatch images (the label under each image is ~20px). */
+.scroll-row-arrow-side {
+  position: absolute;
+  top: calc(50% - 10px);
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  box-shadow: var(--shadow-md);
+}
+.scroll-row-arrow-side[hidden] { display: none; }
+.scroll-row-arrow-left { left: 4px; }
+.scroll-row-arrow-right { right: 4px; }
 .scroll-row-arrow:hover { background: var(--hover); color: var(--text-primary); border-color: var(--text-muted); }
 .texture-swatch:hover { border-color: var(--text-muted); }
 .texture-swatch.active { border-color: var(--toi-red); background: var(--selected-bg); }

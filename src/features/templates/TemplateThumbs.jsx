@@ -34,7 +34,7 @@ export function WidgetThumb({ t, heading = 'News Heading', line = t.layout?.desc
     <div className={'widget-mini' + (titleOnly ? ' widget-mini-title-only' : '')} style={{ background: t.style.bgGradient || t.style.bg }}>
       <div className={'widget-texture-' + (t.style.texture || 'none')} style={{ opacity: t.style.textureOpacity ?? 1 }} />
       <div className="widget-mini-heading" style={{ background: t.style.headingBgGradient || t.style.headingBg, color: headingTextColor }}>
-        {heading}
+        <span className="widget-mini-heading-text">{heading}</span>
       </div>
       {!titleOnly && <div className={'widget-mini-body' + (imgPos && !imgOnly ? ' widget-mini-body-badge-' + imgPos : '')}>
         {line && <span className="widget-mini-desc" style={{ color: bodyTextColor }}>{line}</span>}

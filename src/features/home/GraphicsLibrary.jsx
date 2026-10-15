@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { ChooserGrid, EmptyState, SegmentedControl, Tabs, useToast } from '../../ui-kit';
+import { ChooserGrid, EmptyState, Tabs, useToast } from '../../ui-kit';
+import { FilterChip, SortMenu, ViewToggle } from './LibControls.jsx';
 import { GRAPHIC_KIND, SOURCE_TYPE, duplicateGraphic, archiveGraphic } from '../../services/graphics.js';
-import GraphicCard, { KIND_LABEL } from './GraphicCard.jsx';
+import GraphicCard, { GraphicRow, KIND_LABEL } from './GraphicCard.jsx';
 import { useGraphicsPage, toCard, PAGE } from './useGraphicsIndex.js';
 
-const SOURCES = [{ value: 'all', label: 'All sources' }, { value: SOURCE_TYPE.MANUAL, label: 'Manual' }, { value: SOURCE_TYPE.RSS, label: 'Feed' }];
-const STATES = [{ value: 'all', label: 'Any state' }, { value: 'published', label: 'Published' }, { value: 'draft', label: 'Draft only' }];
-const SORTS = [{ value: 'edited', label: 'Recently edited' }, { value: 'published', label: 'Recently published' }, { value: 'name', label: 'Name' }];
+const SOURCES = [{ value: 'all', label: 'Any source' }, { value: SOURCE_TYPE.MANUAL, label: 'Manual' }, { value: SOURCE_TYPE.RSS, label: 'Feed' }];
+const STATES = [{ value: 'all', label: 'Any status' }, { value: 'published', label: 'Published' }, { value: 'draft', label: 'Draft' }];
+const SORTS = [{ value: 'edited', label: 'Last edited' }, { value: 'published', label: 'Last published' }, { value: 'name', label: 'Name' }];
 const FILTERS_OFF = { query: '', kind: 'all', source: 'all', state: 'all' };
 
-// The page numbers to show: the first, the last, and the ones around the current, with … between.
 function pageNumbers(page, pages) {
   const want = new Set([1, pages, page - 1, page, page + 1].filter((n) => n >= 1 && n <= pages));
   const out = [];
@@ -20,15 +20,13 @@ function pageNumbers(page, pages) {
   return out;
 }
 
-// My Graphics: every saved graphic, searched and narrowed (kind, source, state) and sorted by
-// the backend (graphic.preview), a page at a time; the tab counts come from graphic.stats.
-//   stats: useGraphicStats() · refresh: moves after a Duplicate/Archive · onChanged() · onOpen(id)
 export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
   const toast = useToast();
   const [filters, setFilters] = useState(FILTERS_OFF);
   const [sort, setSort] = useState('edited');
   const [page, setPage] = useState(1);
   const [retry, setRetry] = useState(0);
+  const [view, setView] = useState('grid');
   const set = (patch) => { setFilters((f) => ({ ...f, ...patch })); setPage(1); };
   const changeSort = (next) => { setSort(next); setPage(1); };
   const { status, loading, graphics, count, error, patch } = useGraphicsPage({ ...filters, sort }, page, `${refresh}:${retry}`);
@@ -53,12 +51,15 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
   const from = (at - 1) * PAGE;
   const goTo = (n) => {
     setPage(n);
-    document.querySelector('.lib')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelector('.lib')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.querySelector('.lib .glist, .lib .tpl-grid')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   let body;
   if (loading) {
-    body = <SkeletonCards count={Math.min(PAGE, graphics.length || 8)} />;
+    body = view === 'list'
+      ? <SkeletonRows count={Math.min(PAGE, graphics.length || 8)} />
+      : <SkeletonCards count={Math.min(PAGE, graphics.length || 8)} />;
   } else if (status === 'error') {
     body = (
       <EmptyState title="Couldn't load your graphics">
@@ -76,11 +77,30 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
   } else {
     body = (
       <>
-        <ChooserGrid>
-          {list.map((g) => (
-            <GraphicCard key={g.id} g={g} onOpen={onOpen} onDuplicate={duplicate} onArchive={archive} />
-          ))}
-        </ChooserGrid>
+        {view === 'list' ? (
+          <div className="glist" role="list">
+            <div className="glist-head" aria-hidden="true">
+              <span />
+              <span>Name</span>
+              <span>Kind</span>
+              <span>Status</span>
+              <span>Source</span>
+              <span>Edited</span>
+              <span />
+            </div>
+            {list.map((g) => (
+              <div role="listitem" key={g.id}>
+                <GraphicRow g={g} onOpen={onOpen} onDuplicate={duplicate} onArchive={archive} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ChooserGrid>
+            {list.map((g) => (
+              <GraphicCard key={g.id} g={g} onOpen={onOpen} onDuplicate={duplicate} onArchive={archive} />
+            ))}
+          </ChooserGrid>
+        )}
         {pages > 1 && (
           <nav className="lib-pages" aria-label="Pages of graphics">
             <span className="saved-sum">{from + 1}–{Math.min(from + PAGE, count)} of {count}</span>
@@ -116,15 +136,29 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
               aria-label="Search your graphics"
               onChange={(e) => set({ query: e.target.value })}
             />
-            <SegmentedControl value={filters.source} options={SOURCES} onChange={(source) => set({ source })} ariaLabel="Content source" />
-            <SegmentedControl value={filters.state} options={STATES} onChange={(state) => set({ state })} ariaLabel="Published or draft" />
+            <FilterChip label="Source" value={filters.source} options={SOURCES} offValue="all" onChange={(source) => set({ source })} />
+            <FilterChip label="Status" value={filters.state} options={STATES} offValue="all" onChange={(state) => set({ state })} />
             <span className="lib-gap" />
-            <label className="lib-sort"><span>Sort</span><SegmentedControl value={sort} options={SORTS} onChange={changeSort} ariaLabel="Sort by" /></label>
+            <SortMenu value={sort} options={SORTS} onChange={changeSort} />
+            <ViewToggle value={view} onChange={setView} />
           </div>
         </>
       )}
       {body}
     </section>
+  );
+}
+
+function SkeletonRows({ count }) {
+  return (
+    <div className="glist" role="status" aria-label="Loading your graphics">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="glist-row glist-skel" aria-hidden="true">
+          <span className="glist-thumb skel" />
+          <span className="glist-name"><span className="skel skel-line skel-title" /></span>
+        </div>
+      ))}
+    </div>
   );
 }
 

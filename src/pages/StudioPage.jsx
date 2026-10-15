@@ -8,6 +8,7 @@ import { diffGraphic, changes } from '../utils/changeDiff.js';
 import { useUploads } from '../hooks/useMediaUpload.js';
 import { missingFields, missingFieldsMessage, requiredMessage } from '../utils/requiredFields.js';
 import RemoteChangeBar from '../features/shared-editor/RemoteChangeBar.jsx';
+import { AirStatusProvider } from '../features/shared-editor/ContentTitle.jsx';
 import VersionHistory from '../features/shared-editor/VersionHistory.jsx';
 
 export default function StudioPage({ kind, graphic, doc, stream, onBack, content, style, preview }) {
@@ -45,8 +46,8 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     )
     : hasAir
       ? (
-        <Status kind="live" title={pub.note ? `v${pub.v}: ${pub.note}` : undefined}>
-          Published · <Version n={pub.v} /><span className="eh-sub"> · {pub.by ? `${pub.by} · ` : ''}{ago(pub.at)}</span>
+        <Status kind="live" title={`Published v${pub.v}${pub.by ? ` by ${pub.by}` : ''} · ${ago(pub.at)}${pub.note ? ` — ${pub.note}` : ''}`}>
+          Published · <Version n={pub.v} />
         </Status>
       )
       : <Status kind="off">{live ? `On ${streamName} · nothing published yet` : 'Unpublished'}</Status>;
@@ -151,7 +152,6 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
         onTitleChange={onTitleChange}
         placeholder={`Untitled ${kind}`}
         onBack={onBack}
-        air={airStatus}
         pending={pending}
         save={{
           onClick: () => openReview('save'),
@@ -170,7 +170,7 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
       {remote && <RemoteChangeBar remote={remote} onReload={askReload} />}
       <FieldErrors errors={fieldErrors}>
         <div className="detail studio-detail">
-          <div className="form keyform">{content}</div>
+          <div className="form keyform"><AirStatusProvider value={airStatus}>{content}</AirStatusProvider></div>
           <aside className="studio-side">
             <div className="studio-preview" aria-label="Live preview">{preview}</div>
             <div className="form keyform studio-style">{style}</div>

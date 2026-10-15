@@ -6,7 +6,6 @@ import { airFromPublished, isOnAir, liveStream } from '../../services/air.js';
 export const PAGE = 12;
 export const INDEX_REFRESH_MS = 1500;
 const SEARCH_DEBOUNCE_MS = 300;
-const STRIP_SIZE = 24;
 const PUSH_SLACK_MS = 5 * 1000;
 
 export const toCard = (g) => {
@@ -66,18 +65,6 @@ export function useGraphicsPage(view, page, refresh) {
 
   return { ...result, patch: (fn) => setResult((r) => ({ ...r, graphics: fn(r.graphics) })) };
 }
-export function usePublishedGraphics(refresh) {
-  const [graphics, setGraphics] = useState([]);
-  useEffect(() => {
-    const controller = new AbortController();
-    previewGraphics({ state: 'published', sort: 'published', size: STRIP_SIZE }, { signal: controller.signal })
-      .then(({ list = [] }) => setGraphics(list.map(toCard)))
-      .catch((err) => { if (!isAbort(err)) setGraphics([]); });
-    return () => controller.abort();
-  }, [refresh]);
-  return graphics;
-}
-
 export function useGraphicStats(refresh) {
   const [stats, setStats] = useState(null);
   useEffect(() => {

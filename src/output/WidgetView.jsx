@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { autoTextColor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
-import { usesFeedMedia } from '../constants/widgetTemplates.js';
+import { feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTemplates.js';
 import { widgetTransition } from '../constants/textAnimations.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
@@ -20,8 +20,9 @@ const VIDEO_TEXTURES = {
 };
 
 // Each item — a feed's, or a manual one typed in — is a title, an optional description and an
-// optional image; they cycle together.
-export default function WidgetView({ st }) {
+// optional image; they cycle together. In the editor, a widget with no items yet shows a
+// sample description and image where its layout has them.
+export default function WidgetView({ st, preview = false }) {
   const { style: s, headingText: ht, bodyText: bt } = st;
   const fromFeed = st.src !== 'manual';
   const previewItems = st.drafts?.[st.src] || st.items;
@@ -62,7 +63,8 @@ export default function WidgetView({ st }) {
     '--tex-speed': s.textureSpeed ?? 1,
   };
   const itemStyle = {
-    color: bodyTextColor,
+    color: bt.color || bodyTextColor,
+    lineHeight: lineHeightFor('body', s.textSpacing, bt),
     fontFamily: bt.fontFamily,
     fontWeight: bt.fontWeight,
     fontStyle: bt.fontStyle,
@@ -70,7 +72,8 @@ export default function WidgetView({ st }) {
   };
   const headingStyle = {
     background: s.headingBgGradient || s.headingBg,
-    color: headingTextColor,
+    color: ht.color || headingTextColor,
+    lineHeight: lineHeightFor('heading', s.textSpacing, ht),
     fontFamily: ht.fontFamily,
     fontWeight: ht.fontWeight,
     fontStyle: ht.fontStyle,
@@ -90,16 +93,21 @@ export default function WidgetView({ st }) {
     const days = Math.round(hrs / 24);
     return `${days} day${days === 1 ? '' : 's'} ago`;
   };
-  const renderItem = (index, phase) => {
+  const renderItem = (index, phase, ghost = false) => {
     const line = lines[index];
     const headline = line?.title || (fromFeed ? 'Validate a feed to show its items here' : 'Enter title here');
-    const summary = line?.description || '';
+    const sample = preview && !line;
+    const summary = line?.description || (sample && st.showFeedDescription !== false ? 'Enter description here' : '');
     const hasDescription = !!summary.trim();
     const standIn = s.badgeImage || placeholderThumb(line?.title || '');
-    const image = feedMedia ? line?.media?.url || standIn : line?.media?.url || s.badgeImage;
+    const image = (feedMedia ? line?.media?.url || standIn : line?.media?.url || s.badgeImage) || (sample && feedMediaOn(st) ? standIn : null);
     return (
-      <div key={index} className={`widget-card-main anim-${transition} phase-${phase}`} aria-hidden={phase === 'out' || undefined}>
-        <div className="widget-card-headline" style={headingStyle}>{headline}</div>
+      <div
+        key={ghost ? `ghost-${index}` : index}
+        className={ghost ? 'widget-card-main widget-card-ghost' : `widget-card-main anim-${transition} phase-${phase}`}
+        aria-hidden={ghost || phase === 'out' || undefined}
+      >
+        <div className="widget-card-headline" style={headingStyle}><span className="widget-card-headline-text">{headline}</span></div>
         {(hasDescription || image) && (
           <>
             <div className="widget-card-divider" />
@@ -108,7 +116,7 @@ export default function WidgetView({ st }) {
                 <div className="widget-card-thumb-wrap">
                   <img
                     key={image}
-                    className={'widget-card-thumb' + (s.imageSlowZoom ? ' slow-zoom' : '')}
+                    className={'widget-card-thumb' + (s.imageSlowZoom && !ghost ? ' slow-zoom' : '')}
                     style={s.imageSlowZoom ? { animationDuration: `${durationSec}s` } : undefined}
                     src={image}
                     alt=""
@@ -157,7 +165,10 @@ export default function WidgetView({ st }) {
             {st.category}
           </span>
         )}
+        {/* Every item is laid out (hidden) in the same cell, so the card is always as tall as
+            its tallest item and doesn't change size from one item to the next. */}
         <div className="widget-card-stage">
+          {lines.map((_, i) => (i === summaryIndex ? null : renderItem(i, 'hold', true)))}
           {renderItem(summaryIndex, phase)}
         </div>
         <div className="widget-card-footer">

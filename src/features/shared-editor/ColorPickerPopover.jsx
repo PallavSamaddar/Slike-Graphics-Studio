@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { colorToCss, hsvToRgb, isHex, parseColor, rgbToHex, rgbToHsv } from '../../utils/color.js';
+import { colorToCss, hsvToRgb, isHex, isRgba, parseColor, rgbToHex, rgbToHsv } from '../../utils/color.js';
 
-const POPOVER_W = 210;
+const POPOVER_W = 232;
 const POPOVER_H = 360;
 
 // Pulls the two hex/rgb color stops out of a simple two-stop linear-gradient
@@ -15,8 +15,10 @@ function parseGradientStops(css) {
   return [matches[0], matches[1]];
 }
 
+const toRgbaText = ({ r, g, b }, a) => `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${Math.round(a * 100) / 100})`;
+
 // Full color picker popover: saturation/lightness canvas + hue slider + opacity
-// slider + hex/RGB/A fields + eyedropper. Renders its own {r,g,b,a} state derived
+// slider + a HEX or RGBA text field + R/G/B/A fields + eyedropper. Renders its own {r,g,b,a} state derived
 // from `value`, committing to `onChange` (a CSS color string) as the user drags/types.
 // Rendered via portal into document.body, positioned fixed from `anchorRef`'s
 // bounding rect — this keeps it from being clipped by any ancestor's scroll/overflow.
@@ -25,7 +27,7 @@ function parseGradientStops(css) {
 // Gradient mode picks two color stops and composes a left-to-right
 // `linear-gradient`, committed via `onChangeGradient` (kept separate from
 // `onChange` so callers that don't pass `allowGradient` are unaffected).
-export default function ColorPickerPopover({ value, onClose, onChange, anchorRef, allowGradient = false, gradientValue, onChangeGradient }) {
+export default function ColorPickerPopover({ value, onClose, onChange, anchorRef, allowGradient = false, gradientValue, onChangeGradient, onAuto }) {
   const gradientStops = parseGradientStops(gradientValue);
   const [mode, setMode] = useState(gradientValue ? 'gradient' : 'solid');
   const [stop1, setStop1] = useState(gradientStops ? gradientStops[0] : (typeof value === 'string' && !value.includes('gradient') ? value : '#1A1714'));
@@ -42,6 +44,9 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
   const [val, setVal] = useState(initialHsv.v);
   const [alpha, setAlpha] = useState(initial.a);
   const [hexText, setHexText] = useState(rgbToHex(initial));
+  const [format, setFormat] = useState(initial.a < 1 ? 'rgba' : 'hex');
+  const [rgbaText, setRgbaText] = useState(toRgbaText(initial, initial.a));
+  const rgbaRef = useRef(null);
 
   const popRef = useRef(null);
   const canvasRef = useRef(null);
@@ -64,6 +69,10 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
   const css = colorToCss({ ...rgb, a: alpha });
 
   useEffect(() => setHexText(rgbToHex(rgb)), [hue, sat, val]);
+  // Not while it's being typed in — "0." would otherwise be rewritten to "0" mid-number.
+  useEffect(() => {
+    if (document.activeElement !== rgbaRef.current) setRgbaText(toRgbaText(rgb, alpha));
+  }, [hue, sat, val, alpha]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // In solid mode the canvas/hue drive `onChange` directly. In gradient mode
   // they instead drive whichever stop is active, so the same controls edit
@@ -72,8 +81,8 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
     if (mode === 'solid') {
       onChange(css);
     } else if (mode === 'gradient') {
-      const hex = rgbToHex(rgb);
-      if (activeStop === 'stop1') setStop1(hex); else setStop2(hex);
+      const stop = colorToCss({ ...rgb, a: alpha });
+      if (activeStop === 'stop1') setStop1(stop); else setStop2(stop);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hue, sat, val, alpha, mode]);
@@ -90,19 +99,14 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
     if (m === 'solid') onChangeGradient(null);
   };
 
-  // Clear: the same colour at 0% opacity, so picking a colour again brings it straight back.
-  const makeTransparent = () => {
-    if (mode !== 'solid') chooseMode('solid');
-    setAlpha(0);
-  };
-
   // Switching which stop is being edited re-syncs the canvas/hue state from
   // that stop's current color, so the picker always reflects the stop
   // actually selected instead of staying stuck on whatever was first shown.
   const selectStop = (which) => {
     setActiveStop(which);
-    const hsv = rgbToHsv(parseColor(which === 'stop1' ? stop1 : stop2));
-    setHue(hsv.h); setSat(hsv.s); setVal(hsv.v);
+    const color = parseColor(which === 'stop1' ? stop1 : stop2);
+    const hsv = rgbToHsv(color);
+    setHue(hsv.h); setSat(hsv.s); setVal(hsv.v); setAlpha(color.a);
   };
 
   useEffect(() => {
@@ -163,6 +167,15 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
     }
   };
 
+  const commitRgbaText = (v) => {
+    setRgbaText(v);
+    if (isRgba(v.trim())) {
+      const color = parseColor(v.trim());
+      const hsv = rgbToHsv(color);
+      setHue(hsv.h); setSat(hsv.s); setVal(hsv.v); setAlpha(Math.min(1, color.a));
+    }
+  };
+
   const setRgbChannel = (ch, n) => {
     const clamped = Math.min(255, Math.max(0, parseInt(n, 10) || 0));
     const next = { ...rgb, [ch]: clamped };
@@ -188,17 +201,15 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
 
   return createPortal(
     <div className="cp-popover" ref={popRef} role="dialog" aria-label="Color picker" style={{ left: pos.left, top: pos.top }}>
-      {allowGradient ? (
+      {allowGradient && (
         <div className="cp-mode-tabs">
           <button type="button" className={'cp-mode-tab' + (mode === 'solid' ? ' active' : '')} onClick={() => chooseMode('solid')}>Solid</button>
           <button type="button" className={'cp-mode-tab' + (mode === 'gradient' ? ' active' : '')} onClick={() => chooseMode('gradient')}>Gradient</button>
-          <button type="button" className={'cp-mode-tab' + (mode === 'solid' && alpha === 0 ? ' active' : '')} onClick={makeTransparent}>Transparent</button>
         </div>
-      ) : (
-        <div className="cp-mode-tabs">
-          <button type="button" className={'cp-mode-tab' + (alpha > 0 ? ' active' : '')} onClick={() => { if (alpha === 0) setAlpha(1); }}>Solid</button>
-          <button type="button" className={'cp-mode-tab' + (alpha === 0 ? ' active' : '')} onClick={makeTransparent}>Transparent</button>
-        </div>
+      )}
+
+      {onAuto && (
+        <button type="button" className="cp-auto" onClick={onAuto}>Back to auto colour</button>
       )}
 
       {mode === 'gradient' && (
@@ -233,33 +244,48 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
         <div className="cp-hue-thumb" style={{ left: `${(hue / 360) * 100}%`, background: rgbToHex(hueRgb) }} />
       </div>
 
-      {mode === 'solid' && (
-        <>
-          <div className="cp-row cp-opacity-row">
-            <span className="cp-lbl">Opacity</span>
-            <span className="cp-lbl-val">{Math.round(alpha * 100)}%</span>
-          </div>
-          <div
-            className="cp-opacity"
-            ref={opacityRef}
-            style={{ background: `linear-gradient(to right, transparent, ${rgbToHex(rgb)}), repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0/10px 10px` }}
-            onMouseDown={startDrag('opacity', handleOpacityPoint)}
-          >
-            <div className="cp-opacity-thumb" style={{ left: `${alpha * 100}%`, background: css }} />
-          </div>
-        </>
-      )}
+      <div className="cp-row cp-opacity-row">
+        <span className="cp-lbl">Opacity</span>
+        <span className="cp-lbl-val">{Math.round(alpha * 100)}%</span>
+      </div>
+      <div
+        className="cp-opacity"
+        ref={opacityRef}
+        style={{ background: `linear-gradient(to right, transparent, ${rgbToHex(rgb)}), repeating-conic-gradient(#ccc 0 25%, #fff 0 50%) 0 0/10px 10px` }}
+        onMouseDown={startDrag('opacity', handleOpacityPoint)}
+      >
+        <div className="cp-opacity-thumb" style={{ left: `${alpha * 100}%`, background: css }} />
+      </div>
 
+      <div className="cp-format-tabs" role="group" aria-label="Colour format">
+        <button type="button" className={'cp-format-tab' + (format === 'hex' ? ' active' : '')} onClick={() => setFormat('hex')}>HEX</button>
+        <button type="button" className={'cp-format-tab' + (format === 'rgba' ? ' active' : '')} onClick={() => setFormat('rgba')}>RGBA</button>
+      </div>
       <div className="cp-hex-row">
-        <div className="cp-hex-swatch" style={{ background: mode === 'gradient' ? rgbToHex(rgb) : css }} />
+        <div className="cp-hex-swatch" style={{ background: css }} />
         <div className="cp-hex-field">
-          <span className="cp-hex-hash">#</span>
-          <input
-            className="cp-hex-inp"
-            maxLength={6}
-            value={hexText.replace('#', '')}
-            onChange={(e) => commitHexText('#' + e.target.value)}
-          />
+          {format === 'hex' ? (
+            <>
+              <span className="cp-hex-hash">#</span>
+              <input
+                className="cp-hex-inp"
+                maxLength={6}
+                value={hexText.replace('#', '')}
+                onChange={(e) => commitHexText('#' + e.target.value)}
+                aria-label="Hex colour"
+              />
+            </>
+          ) : (
+            <input
+              ref={rgbaRef}
+              className="cp-hex-inp cp-rgba-inp"
+              value={rgbaText}
+              onChange={(e) => commitRgbaText(e.target.value)}
+              onBlur={() => setRgbaText(toRgbaText(rgb, alpha))}
+              aria-label="RGBA colour"
+              spellCheck={false}
+            />
+          )}
         </div>
         <button type="button" className="cp-eyedrop-btn" title="Pick color from screen" onClick={useEyedropper} disabled={!window.EyeDropper}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -272,12 +298,10 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
         <RgbField value={Math.round(rgb.r)} onChange={(n) => setRgbChannel('r', n)} />
         <RgbField value={Math.round(rgb.g)} onChange={(n) => setRgbChannel('g', n)} />
         <RgbField value={Math.round(rgb.b)} onChange={(n) => setRgbChannel('b', n)} />
-        {mode === 'solid' && (
-          <RgbField value={Math.round(alpha * 100)} max={100} onChange={(n) => setAlpha(Math.min(100, Math.max(0, parseInt(n, 10) || 0)) / 100)} />
-        )}
+        <RgbField value={Math.round(alpha * 100)} max={100} onChange={(n) => setAlpha(Math.min(100, Math.max(0, parseInt(n, 10) || 0)) / 100)} />
       </div>
       <div className="cp-rgb-labels">
-        <span>R</span><span>G</span><span>B</span>{mode === 'solid' && <span>A%</span>}
+        <span>R</span><span>G</span><span>B</span><span>A%</span>
       </div>
     </div>,
     document.body

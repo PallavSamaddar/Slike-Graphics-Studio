@@ -1,4 +1,5 @@
 import { callRpc } from './rpc.js';
+import { feedMediaOn } from '../constants/widgetTemplates.js';
 
 const MRSS = 'http://search.yahoo.com/mrss/';
 const CONTENT = 'http://purl.org/rss/1.0/modules/content/';
@@ -8,7 +9,10 @@ export class FeedError extends Error {}
 
 const text = (el) => (el?.textContent || '').trim();
 const plain = (html) => (html ? (new DOMParser().parseFromString(html, 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim() : '');
-const firstText = (els) => els.map((el) => plain(text(el))).find(Boolean) || '';
+// Placeholders a CMS sends before an article's summary exists count as no text, so the
+// item shows just its title until the real description comes in.
+const PLACEHOLDER = /^(undefined|null|none|n\/a|-)$/i;
+const firstText = (els) => els.map((el) => plain(text(el))).find((t) => t && !PLACEHOLDER.test(t)) || '';
 
 function child(item, name, ns) {
   const byNs = ns ? item.getElementsByTagNameNS(ns, name)[0] : null;
@@ -66,8 +70,6 @@ export async function loadFeed(url) {
   return titledItems(await fetchFeed(url));
 }
 
-export const feedMediaOn = (st) => st.showFeedMedia ?? (st.media?.rss || []).length > 0;
-
 export function withFeedItems(kind, st, items) {
   const titles = items.map((i) => i.title);
   const next = { ...st, drafts: { ...(st.drafts || {}), rss: titles }, items: titles };
@@ -77,6 +79,16 @@ export function withFeedItems(kind, st, items) {
     const pos = mediaList.find(Boolean)?.pos || st.style?.badgeImagePos || 'left';
     next.media = { ...st.media, rss: items.map((i) => (i.media ? { pos, url: i.media } : null)) };
   }
+  return next;
+}
+
+// The feed's items gone (its URL cleared). Whether images show stays as it was.
+export function withoutFeedItems(st) {
+  const next = { ...st, drafts: { ...st.drafts, rss: [] } };
+  if (st.src === 'rss') next.items = [];
+  if (st.descriptions) next.descriptions = { ...st.descriptions, rss: [] };
+  if (st.media) next.media = { ...st.media, rss: [] };
+  if (feedMediaOn(st)) next.showFeedMedia = true;
   return next;
 }
 

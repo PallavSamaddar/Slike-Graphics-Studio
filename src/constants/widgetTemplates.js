@@ -175,4 +175,18 @@ export const WIDGET_TPLS = DESIGNS.flatMap((design) => WIDGET_LAYOUTS
   .filter((layout) => !design.hidden || layout.key === nativeLayout(design))
   .map((layout) => inLayout(design, layout)));
 
+export const feedMediaOn = (st) => st.showFeedMedia ?? (st.media?.rss || []).length > 0;
+
 export const usesFeedMedia = (st) => st.src === 'rss' && (st.media?.rss || []).some(Boolean);
+
+export const TEXT_SPACING = [
+  { value: 'compact', label: 'Compact' },
+  { value: 'default', label: 'Default' },
+  { value: 'comfortable', label: 'Comfortable' },
+];
+
+const LINE_HEIGHT = {
+  heading: { compact: 1.05, default: 1.15, comfortable: 1.3 },
+  body: { compact: 1.3, default: 1.5, comfortable: 1.75 },
+};
+export const lineHeightFor = (part, spacing, tx) => LINE_HEIGHT[part][spacing ?? tx?.spacing] ?? tx?.lineHeight ?? LINE_HEIGHT[part].default;

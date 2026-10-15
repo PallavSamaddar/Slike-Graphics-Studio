@@ -1,8 +1,4 @@
-import { TEMPLATE_COUNT } from './graphics.js';
 import { openProfile, logOut } from '../services/user.js';
-
-// The Slike mark: full colour, transparent on the header band at 20px, beside the name set
-// in type. Never recoloured, boxed or set on a fill.
 export const BRAND = {
   name: 'Graphics Studio',
   mark: (
@@ -16,23 +12,7 @@ export const BRAND = {
   ),
 };
 
-// The rooms in the header band: 16px line icons, 1.5 stroke, in currentColor.
-export const ROOMS = [
-  {
-    id: 'home',
-    label: 'Home',
-    icon: <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 7.2 8 2.6l5.5 4.6" /><path d="M4 6.2V13.4h8V6.2" /><path d="M6.6 13.4V9.6h2.8v3.8" /></svg>,
-  },
-  {
-    id: 'templates',
-    label: 'Templates',
-    count: TEMPLATE_COUNT,
-    icon: <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M2 6h12M6.2 6v8" /></svg>,
-  },
-];
-
-// The signed-in person comes from user.me (hooks/useCurrentUser.js); the profile and log-out
-// live on the Slike accounts site, as in slike-frontend.
+export const ROOMS = [];
 export const PROFILE_MENU = [
   { label: 'View profile', onClick: openProfile },
   { label: 'Log out', danger: true, onClick: logOut },

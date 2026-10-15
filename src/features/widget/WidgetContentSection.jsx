@@ -1,6 +1,7 @@
 import ContentSource, { ContentSourceSwitch } from '../shared-editor/ContentSource.jsx';
 import { Field, Row, Section } from '../../ui-kit';
 import WidgetManualItems from './WidgetManualItems.jsx';
+import ContentTitle from '../shared-editor/ContentTitle.jsx';
 
 export default function WidgetContentSection({ st, setSt }) {
   const feedHeadingField = (
@@ -12,7 +13,7 @@ export default function WidgetContentSection({ st, setSt }) {
   );
 
   return (
-    <Section title="Content" action={<ContentSourceSwitch st={st} setSt={setSt} />}>
+    <Section title={<ContentTitle />} action={<ContentSourceSwitch st={st} setSt={setSt} />}>
       {st.src === 'manual' && <WidgetManualItems st={st} setSt={setSt} />}
 
       {st.src !== 'manual' && (

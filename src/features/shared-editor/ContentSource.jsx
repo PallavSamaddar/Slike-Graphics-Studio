@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ItemsEditor from './ItemsEditor.jsx';
-import { loadFeed, withFeedItems, REFRESH_OPTIONS } from '../../services/feed.js';
+import ContentTitle from './ContentTitle.jsx';
+import { loadFeed, withFeedItems, withoutFeedItems, REFRESH_OPTIONS } from '../../services/feed.js';
 import { DEFAULT_FEED_REFRESH_SEC } from '../../constants/initialState.js';
 import { useFeedStatus } from '../../hooks/useLiveFeed.js';
 import { SOURCE_LABEL } from '../../services/graphics.js';
@@ -106,7 +107,11 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
                   type="text"
                   placeholder="Paste any RSS/Atom feed URL — e.g. https://feeds.timesofindia.com/..."
                   value={st.rssUrl}
-                  onChange={(e) => { setRssLoaded(false); setSt((s) => ({ ...s, rssUrl: e.target.value })); }}
+                  onChange={(e) => {
+                    const rssUrl = e.target.value;
+                    setRssLoaded(false);
+                    setSt((s) => (rssUrl.trim() ? { ...s, rssUrl } : withoutFeedItems({ ...s, rssUrl })));
+                  }}
                 />
                 {validated ? (
                   <svg className="rss-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Validated">
@@ -158,7 +163,7 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
   if (bare) return body;
 
   return (
-    <Section title={title} action={<ContentSourceSwitch st={st} setSt={setSt} />}>
+    <Section title={<ContentTitle>{title}</ContentTitle>} action={<ContentSourceSwitch st={st} setSt={setSt} />}>
       {body}
     </Section>
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import WidgetView from '../../output/WidgetView.jsx';
 import FitToWindow, { FIT_INSET, NATURAL_WIDTH } from '../../output/FitToWindow.jsx';
 import PreviewCanvas from '../shared-editor/PreviewCanvas.jsx';
+import WidgetShowBar from './WidgetShowBar.jsx';
 
 function useFullscreen() {
   const [on, setOn] = useState(!!document.fullscreenElement);
@@ -15,10 +16,15 @@ function useFullscreen() {
 
 export default function WidgetPreview({ st, setSt }) {
   const fullscreen = useFullscreen();
-  const view = <WidgetView st={st} setSt={setSt} />;
+  const view = <WidgetView st={st} preview />;
   return (
-    <PreviewCanvas variant="widget-canvas">
-      {fullscreen ? <FitToWindow width={NATURAL_WIDTH.widget} inset={FIT_INSET.widget}>{view}</FitToWindow> : view}
-    </PreviewCanvas>
+    <>
+      <WidgetShowBar st={st} setSt={setSt} />
+      <PreviewCanvas variant="widget-canvas">
+        {fullscreen
+          ? <FitToWindow width={NATURAL_WIDTH.widget} inset={FIT_INSET.widget}>{view}</FitToWindow>
+          : <FitToWindow width={NATURAL_WIDTH.widget} inParent maxScale={1.6}>{view}</FitToWindow>}
+      </PreviewCanvas>
+    </>
   );
 }

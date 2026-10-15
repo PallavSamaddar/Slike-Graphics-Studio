@@ -1,8 +1,5 @@
-// What changed between two states of a graphic, in the page's own words, for the change
-// review (UI kit · ChangeReview): sections in the page's order, each change its
-// name, then the old value → the new one.
 import { TPLS } from '../constants/tickerTemplates.js';
-import { WIDGET_TPLS } from '../constants/widgetTemplates.js';
+import { TEXT_SPACING, WIDGET_TPLS } from '../constants/widgetTemplates.js';
 import { JACKET_TPLS } from '../constants/jacketTemplates.js';
 import { FONT_NAME } from '../constants/fonts.js';
 import { WIDGET_TRANSITIONS } from '../constants/textAnimations.js';
@@ -14,6 +11,7 @@ const BANNER = { chevron: 'Chevron — angled banner + tag', split: 'Split block
 const SCALE = { 0.8: 'Small', 1: 'Standard', 1.3: 'Large', 1.6: 'Extra large' };
 const SPEED = { 1: 'Slow', 2: 'Medium', 3: 'Fast' };
 const ANIM = { fade: 'Fade', flip: 'Flip', slide: 'Slide', typewriter: 'Typewriter' };
+const SPACING = Object.fromEntries(TEXT_SPACING.map((o) => [o.value, o.label]));
 const WIDGET_TRANSITION = Object.fromEntries(WIDGET_TRANSITIONS.map((a) => [a.value, a.label]));
 const CASE = { none: 'As typed', uppercase: 'UPPERCASE', lowercase: 'lowercase', capitalize: 'Title Case' };
 const SRC = SOURCE_LABEL;
@@ -43,6 +41,8 @@ const fmt = (pre) => ({
   textTransform: [`${pre}text case`, (v) => CASE[v] ?? v],
   letterSpacing: [`${pre}letter spacing`],
   verticalAlign: [`${pre}vertical align`, (v) => ALIGN[v] ?? v],
+  spacing: [`${pre}spacing`, (v) => SPACING[v] ?? v],
+  color: [`${pre}colour`, (v) => v || 'Auto'],
 });
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -103,6 +103,7 @@ const MAPS = {
       showProduct: ['Details', 'Show publisher', onOff],
       'style.bg': ['Style', 'Background colour'],
       'style.bgGradient': ['Style', 'Background gradient'],
+      'style.textSpacing': ['Style', 'Text spacing', (v) => SPACING[v] ?? v],
       'style.headingBg': ['Style', 'Heading background'],
       'style.headingBgGradient': ['Style', 'Heading background gradient'],
       'style.badgeImageName': ['Style', 'Image'],

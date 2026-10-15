@@ -1,16 +1,14 @@
-import { useRef, useState } from 'react';
-import ColorField from '../shared-editor/ColorField.jsx';
-import { Field, GroupLabel, NumberBox, Row, Section, SegmentedControl, Select, Tabs, Toggle } from '../../ui-kit';
-import FormattingToolbar from '../shared-editor/FormattingToolbar.jsx';
+import { useState } from 'react';
+import { Field, Select, Tabs } from '../../ui-kit';
+import { FONTS } from '../../constants/fonts.js';
+import { TEXT_SPACING } from '../../constants/widgetTemplates.js';
 import ScrollRow from '../shared-editor/ScrollRow.jsx';
+import TextColorButton from '../shared-editor/TextColorButton.jsx';
+import { autoTextColor, isSafeColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
-import ImageCropperModal from '../shared-editor/ImageCropperModal.jsx';
-import ImageUpload from '../shared-editor/ImageUpload.jsx';
 import { WIDGET_TRANSITIONS, widgetTransition } from '../../constants/textAnimations.js';
 import { VIDEO_PRESETS } from '../../constants/videoPresets.js';
-import { usesFeedMedia } from '../../constants/widgetTemplates.js';
-import { feedMediaOn, loadFeed, withFeedItems } from '../../services/feed.js';
-import { baseName, readAsDataUrl, takeFile } from '../../utils/files.js';
+import { baseName, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { uploadVideoWithSdk } from '../../services/uploadSdk.js';
 import { isMediaReady, mediaThumbUrl } from '../../services/media.js';
@@ -33,26 +31,6 @@ const TEXTURES = [
 export default function WidgetStyleSections({ st, setSt }) {
   const { style: s, headingText: ht, bodyText: bt, behavior } = st;
   const isVideo = !!(s.texture && s.texture.startsWith('video'));
-  const usingPerItemMedia = usesFeedMedia(st);
-  const showFeedMedia = feedMediaOn(st);
-  const feedPos = st.media?.rss?.find(Boolean)?.pos || 'left';
-
-  const setFeedMedia = (on) => {
-    setSt((state) => ({
-      ...state,
-      showFeedMedia: on,
-      media: { ...state.media, rss: on ? (state.drafts?.rss || []).map(() => ({ pos: state.style?.badgeImagePos || 'left' })) : [] },
-    }));
-    const url = (st.rssUrl || '').trim();
-    if (!on || !url || !(st.drafts?.rss || []).length) return;
-    loadFeed(url)
-      .then((items) => setSt((state) => (feedMediaOn(state) ? withFeedItems('widget', state, items) : state)))
-      .catch(() => {});
-  };
-  const setFeedPos = (pos) => setSt((state) => ({
-    ...state,
-    media: { ...state.media, rss: (state.media?.rss || []).map((m) => (m ? { ...m, pos } : m)) },
-  }));
   const setStyle = (k, v) => setSt((state) => ({ ...state, style: { ...state.style, [k]: v } }));
   const setHt = (k, v) => setSt((state) => ({ ...state, headingText: { ...state.headingText, [k]: v } }));
   const setBt = (k, v) => setSt((state) => ({ ...state, bodyText: { ...state.bodyText, [k]: v } }));
@@ -64,33 +42,8 @@ export default function WidgetStyleSections({ st, setSt }) {
 
   const [pendingVideo, setPendingVideo] = useState(null); // { url, file, fileName }
   const upload = useMediaUpload();
-  const [cropSrc, setCropSrc] = useState(null);
-  const [cropFileName, setCropFileName] = useState('');
   const [bgTab, setBgTab] = useState(isVideo ? 'video' : 'animation');
   const { videos: uploadedVideos, refresh: refreshUploaded } = useUploadedVideos(bgTab === 'video');
-  const [showTextureSettings, setShowTextureSettings] = useState(false);
-  const textureSettingsRef = useRef(null);
-
-  const toggleTextureSettings = () => {
-    setShowTextureSettings((v) => {
-      const next = !v;
-      if (next) {
-        setTimeout(() => textureSettingsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 0);
-      }
-      return next;
-    });
-  };
-
-  // A picked image opens the cropper first.
-  const handleBadgeImage = (file) => {
-    readAsDataUrl(file, setCropSrc);
-    setCropFileName(baseName(file));
-  };
-
-  const handleCropConfirm = (croppedDataUrl, name) => {
-    setCropSrc(null);
-    upload({ file: croppedDataUrl, label: name, setSt, path: 'style.badgeImage', local: croppedDataUrl, fields: { 'style.badgeImage': croppedDataUrl, 'style.badgeImageName': name } });
-  };
 
   // Video files are too large to reasonably hold as base64 in state — use an object URL
   // instead (valid for this browser session).
@@ -129,115 +82,87 @@ export default function WidgetStyleSections({ st, setSt }) {
   const customInList = uploadedVideos.some((m) => m.id === s.customVideoMediaId);
 
   const hasTexture = !!(s.texture && s.texture !== 'none');
-  const hasImage = !!s.badgeImage || (st.src === 'manual' && (st.media?.manual || []).some((m) => m?.url));
 
   return (
     <>
-      <Section title="Details">
-        <Row>
-          <Field path="showTime">
-            <Toggle
-              on={!!st.showTime}
-              onChange={(checked) => setSt((state) => ({
-                ...state,
-                showTime: checked,
-                publishedAt: checked && !state.publishedAt ? Date.now() : state.publishedAt,
-              }))}
-            >
-              Show time posted
-            </Toggle>
-          </Field>
-          <Field path="showProduct">
-            <Toggle on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Show publisher</Toggle>
-          </Field>
-        </Row>
-        {st.src === 'rss' && (
-          <Row>
-            <Field path="showFeedMedia">
-              <Toggle on={showFeedMedia} onChange={setFeedMedia}>
-                Show feed images/videos
-              </Toggle>
-            </Field>
-            <Field path="showFeedDescription">
-              <Toggle on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v }))}>
-                Show feed descriptions
-              </Toggle>
-            </Field>
-          </Row>
-        )}
-      </Section>
-
-      <Section title="Style">
-        <GroupLabel>Card</GroupLabel>
-        <Row>
-          <Field label="Background colour" path={['style.bg', 'style.bgGradient']} off={isVideo} offReason="A background video fills the widget — pick an animation to set a colour">
-            <ColorField value={s.bg} fallback="#8A1B12" onChange={setSolidBg} />
-          </Field>
-          <Field label="Transition" path="behavior.transition">
-            <Select value={widgetTransition(behavior.transition)} options={WIDGET_TRANSITIONS} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" />
-          </Field>
-          <Field label="Duration" path="behavior.itemDuration">
-            <NumberBox value={behavior.itemDuration || 4} unit="sec" min={1} max={30} onChange={(n) => setBehavior('itemDuration', Math.round(n))} ariaLabel="Duration" />
-          </Field>
-        </Row>
-
-        <GroupLabel>Heading</GroupLabel>
-        <Row>
-          <Field label="Heading background" path={['style.headingBg', 'style.headingBgGradient']}>
-            <ColorField
-              value={s.headingBg}
-              fallback="#1A1714"
-              onChange={setHeadingBgColor}
-              allowGradient
-              gradientValue={s.headingBgGradient}
-              onChangeGradient={(css) => setStyle('headingBgGradient', css)}
-            />
-          </Field>
-          <FormattingToolbar tx={ht} setTx={setHt} path="headingText" withSize={false} withStyle={false} />
-        </Row>
-
-        <GroupLabel>Description</GroupLabel>
-        <Row>
-          <FormattingToolbar tx={bt} setTx={setBt} path="bodyText" withSize={false} withStyle={false} />
-        </Row>
-
-        <GroupLabel>Image</GroupLabel>
-        <Row>
-          <Field label="Image" path={['style.badgeImageName', 'style.badgeImage']} off={usingPerItemMedia} offReason="Feed images are on for these headlines — they drive the image">
-            <ImageUpload src={s.badgeImage} name={s.badgeImageName} onFile={handleBadgeImage} onRemove={() => setStyle('badgeImage', null)} />
-          </Field>
-          <Field label="Image position" path={usingPerItemMedia ? 'media' : 'style.badgeImagePos'}>
-            <SegmentedControl
-              value={usingPerItemMedia ? feedPos : s.badgeImagePos || 'left'}
-              onChange={usingPerItemMedia ? setFeedPos : (v) => setStyle('badgeImagePos', v)}
-              off={!hasImage && !usingPerItemMedia}
-              title="Upload an image first"
-              ariaLabel="Image position"
-              options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]}
-            />
-          </Field>
-          <Field label="Slow zoom" path="style.imageSlowZoom">
-            <Toggle on={!!s.imageSlowZoom} onChange={(v) => setStyle('imageSlowZoom', v)}>Zoom in slowly while shown</Toggle>
-          </Field>
-        </Row>
-      </Section>
-
-      <Section title="Background">
-        <Tabs tabs={[{ id: 'animation', label: 'Animation' }, { id: 'video', label: 'Videos' }]} value={bgTab} onChange={setBgTab} />
-
-        {bgTab === 'animation' && (
-          <div className="bg-anim">
-            <div className="texture-panel-swatches-hd">
-              <span className="grp-label type-group-label">Background animation</span>
-              <button
-                type="button"
-                className="btn ghost small"
-                onClick={toggleTextureSettings}
-                aria-expanded={showTextureSettings}
-              >
-                Settings
-              </button>
+      <div className="fieldset style-sec" aria-label="Style">
+        <div className="cs-lines cs-compact">
+          <div className="cs-row">
+            <span className="cs-label">Card</span>
+            <div className="cs-bar">
+              <Field path={['style.bg', 'style.bgGradient']} off={isVideo} offReason="A background video fills the widget — pick an animation to set a colour">
+                <TextColorButton kind="fill" value={isSafeColor(s.bg || '') ? s.bg : '#8A1B12'} bar={s.bgGradient || s.bg} onChange={setSolidBg} label="Card background" />
+              </Field>
+              <Field path="behavior.transition" className="cs-bar-grow">
+                <div title="Transition between items">
+                  <Select value={widgetTransition(behavior.transition)} options={WIDGET_TRANSITIONS} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" />
+                </div>
+              </Field>
+              <Field path="behavior.itemDuration">
+                <div className="tool-group" title="How long each item stays on screen">
+                  <Stepper
+                    value={behavior.itemDuration || 4}
+                    display={(v) => `${v}s`}
+                    step={1} min={1} max={30}
+                    onChange={(v) => setBehavior('itemDuration', v)}
+                    label="duration"
+                  />
+                </div>
+              </Field>
+              <Field path="style.textSpacing">
+                <div title="Spacing of the heading and description text">
+                  <Select value={s.textSpacing || 'default'} options={TEXT_SPACING} onChange={(v) => setStyle('textSpacing', v)} ariaLabel="Text spacing" />
+                </div>
+              </Field>
             </div>
+          </div>
+          <div className="cs-row">
+            <span className="cs-label">Heading</span>
+            <div className="cs-bar">
+              <Field path={['style.headingBg', 'style.headingBgGradient']}>
+                <TextColorButton
+                  kind="fill"
+                  value={isSafeColor(s.headingBg || '') ? s.headingBg : '#1A1714'}
+                  bar={s.headingBgGradient || s.headingBg}
+                  onChange={setHeadingBgColor}
+                  allowGradient
+                  gradientValue={s.headingBgGradient}
+                  onChangeGradient={(css) => setStyle('headingBgGradient', css)}
+                  label="Heading background"
+                />
+              </Field>
+              <Field path="headingText.color">
+                <TextColorButton value={ht.color} auto={autoTextColor(s.headingBg)} onChange={(v) => setHt('color', v)} label="Heading" />
+              </Field>
+              <Field path="headingText.fontFamily" className="cs-bar-grow">
+                <TextTools tx={ht} setTx={setHt} label="Heading" />
+              </Field>
+            </div>
+          </div>
+          <div className="cs-row">
+            <span className="cs-label">Description</span>
+            <div className="cs-bar">
+              <Field path="bodyText.color">
+                <TextColorButton value={bt.color} auto={autoTextColor(s.bg)} onChange={(v) => setBt('color', v)} label="Description" />
+              </Field>
+              <Field path="bodyText.fontFamily" className="cs-bar-grow">
+                <TextTools tx={bt} setTx={setBt} label="Description" />
+              </Field>
+            </div>
+            <label className="cs-check" title="While an item is on screen, its image slowly zooms in">
+              <input type="checkbox" checked={!!s.imageSlowZoom} onChange={(e) => setStyle('imageSlowZoom', e.target.checked)} />
+              Image slow zoom
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div className="fieldset bg-sec" aria-label="Background">
+        <div className="bg-tabs-full">
+          <Tabs tabs={[{ id: 'animation', label: 'Background animation' }, { id: 'video', label: 'Background video' }]} value={bgTab} onChange={setBgTab} ariaLabel="Background type" />
+        </div>
+        <div className="bg-tab-body">
+          <div className={'bg-anim' + (bgTab === 'animation' ? '' : ' bg-tab-hidden')} aria-hidden={bgTab !== 'animation' || undefined}>
             <ScrollRow>
               {TEXTURES.map((t) => (
                 <button
@@ -258,30 +183,25 @@ export default function WidgetStyleSections({ st, setSt }) {
               ))}
             </ScrollRow>
 
-            {showTextureSettings && (
-              <Row className="texture-panel-settings" ref={textureSettingsRef}>
-                <Field label="Texture colour" path="style.textureColor">
-                  <ColorField value={s.textureColor || '#FFFFFF'} fallback="#FFFFFF" onChange={(v) => setStyle('textureColor', v)} allowEyedropper />
+            <div className="cs-lines cs-compact bg-texture">
+              <div className="cs-row">
+                <span className="cs-label">Texture</span>
+                <Field path="style.textureColor">
+                  <TextColorButton kind="fill" value={isSafeColor(s.textureColor || '') ? s.textureColor : '#FFFFFF'} onChange={(v) => setStyle('textureColor', v)} label="Texture" />
                 </Field>
-                <Field label="Texture speed" path="style.textureSpeed" off={!hasTexture} offReason="Pick a background animation first">
-                  <div className="opacity-stepper">
-                    <button
-                      type="button"
-                      className="fmt-icon-btn fmt-step-btn"
-                      onClick={() => setStyle('textureSpeed', Math.max(0.5, Math.round(((s.textureSpeed ?? 1) - 0.5) * 10) / 10))}
-                      aria-label="Decrease texture speed" title="Decrease texture speed"
-                    >−</button>
-                    <span className="opacity-stepper-val">{(s.textureSpeed ?? 1)}×</span>
-                    <button
-                      type="button"
-                      className="fmt-icon-btn fmt-step-btn"
-                      onClick={() => setStyle('textureSpeed', Math.min(3, Math.round(((s.textureSpeed ?? 1) + 0.5) * 10) / 10))}
-                      aria-label="Increase texture speed" title="Increase texture speed"
-                    >+</button>
+                <Field path="style.textureSpeed" off={!hasTexture} offReason="Pick a background animation first">
+                  <div className="tool-group" title="Texture speed">
+                    <Stepper
+                      value={s.textureSpeed ?? 1}
+                      display={(v) => `${v}×`}
+                      step={0.5} min={0.5} max={3}
+                      onChange={(v) => setStyle('textureSpeed', v)}
+                      label="texture speed"
+                    />
                   </div>
                 </Field>
-                <Field label="Texture opacity" path="style.textureOpacity" off={!hasTexture} offReason="Pick a background animation first">
-                  <div className="range-with-pill texture-opacity-box">
+                <Field path="style.textureOpacity" off={!hasTexture} offReason="Pick a background animation first">
+                  <div className="tool-group texture-opacity-group" title="Texture opacity">
                     <input
                       type="range"
                       min={0}
@@ -290,20 +210,19 @@ export default function WidgetStyleSections({ st, setSt }) {
                       value={Math.round((s.textureOpacity ?? 1) * 100)}
                       onChange={(e) => setStyle('textureOpacity', parseInt(e.target.value, 10) / 100)}
                       className="form-range"
+                      aria-label="Texture opacity"
                       style={{ '--range-pct': `${Math.round((s.textureOpacity ?? 1) * 100)}%` }}
                     />
                     <span className="texture-opacity-val">{Math.round((s.textureOpacity ?? 1) * 100)}%</span>
                   </div>
                 </Field>
-              </Row>
-            )}
+              </div>
+            </div>
           </div>
-        )}
 
         {bgTab === 'video' && (
           <div className="bg-videos">
-            <span className="grp-label type-group-label">Background videos</span>
-            <ScrollRow hideNav>
+            <ScrollRow>
               <label className="texture-swatch texture-swatch-upload texture-swatch-upload-empty" title="Upload video">
                 <span className="texture-swatch-preview">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -362,7 +281,8 @@ export default function WidgetStyleSections({ st, setSt }) {
             </ScrollRow>
           </div>
         )}
-      </Section>
+        </div>
+      </div>
 
       {pendingVideo && (
         <VideoNameModal
@@ -373,9 +293,28 @@ export default function WidgetStyleSections({ st, setSt }) {
         />
       )}
 
-      {cropSrc && (
-        <ImageCropperModal src={cropSrc} fileName={cropFileName} onCancel={() => setCropSrc(null)} onConfirm={handleCropConfirm} />
-      )}
     </>
   );
 }
+
+// A − value + stepper, for a tool group.
+function Stepper({ value, onChange, step, min, max, display = String, label, icon = null }) {
+  const go = (d) => onChange(Math.min(max, Math.max(min, Math.round((value + d) * 100) / 100)));
+  return (
+    <div className="tool-step">
+      <button type="button" onClick={() => go(-step)} disabled={value <= min} aria-label={`Decrease ${label}`} title={`Decrease ${label}`}>−</button>
+      <span className="tool-step-val">{icon}{display(value)}</span>
+      <button type="button" onClick={() => go(step)} disabled={value >= max} aria-label={`Increase ${label}`} title={`Increase ${label}`}>+</button>
+    </div>
+  );
+}
+
+// A text's font.
+function TextTools({ tx, setTx, label }) {
+  return (
+    <div className="text-tools">
+      <Select value={tx.fontFamily} options={FONTS} onChange={(v) => setTx('fontFamily', v)} ariaLabel={`${label} font`} title={`${label} font`} />
+    </div>
+  );
+}
+

@@ -72,7 +72,7 @@ export default function App() {
   if (route.view === 'home') {
     page = (
       <HomePage
-        onSeeAll={(category) => navigate(routes.gallery(category))}
+        onPickTemplate={(category, id) => navigate(routes.newGraphic(KIND_BY_CATEGORY[category], id))}
         onOpenGraphic={(id) => navigate(routes.edit(id))}
       />
     );

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { isHex, isSafeColor, parseColor } from '../../utils/color.js';
+import { isSafeColor } from '../../utils/color.js';
 import ColorPickerPopover from './ColorPickerPopover.jsx';
 
 export default function ColorField({ value, fallback, onChange, allowGradient = false, gradientValue, onChangeGradient, allowEyedropper = false, allowNone = false }) {
   const isNone = allowNone && value === 'none';
-  const isTransparent = !gradientValue && isSafeColor(value || '') && parseColor(value).a === 0;
   const swatchColor = gradientValue || (isSafeColor(value) ? value : fallback);
   const [text, setText] = useState(value);
   const [open, setOpen] = useState(false);
@@ -49,14 +48,14 @@ export default function ColorField({ value, fallback, onChange, allowGradient = 
       </div>
       <input
         className="hex-inp"
-        maxLength={7}
-        value={gradientValue ? 'Gradient' : isNone ? 'None' : isTransparent ? 'Transparent' : text}
-        disabled={!!gradientValue || isNone || isTransparent}
+        value={gradientValue ? 'Gradient' : isNone ? 'None' : text}
+        disabled={!!gradientValue || isNone}
         onChange={(e) => {
           const v = e.target.value;
           setText(v);
-          if (isHex(v)) onChange(v);
+          if (isSafeColor(v.trim())) onChange(v.trim());
         }}
+        spellCheck={false}
       />
       {allowEyedropper && window.EyeDropper && (
         <button type="button" className="color-field-eyedropper" onClick={pickWithEyedropper} aria-label="Pick color from screen" title="Pick color from screen">
