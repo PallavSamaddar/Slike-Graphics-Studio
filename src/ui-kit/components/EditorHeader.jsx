@@ -2,9 +2,7 @@ import { useRef, useState } from 'react';
 import useDismiss from '../hooks/useDismiss.js';
 import MenuItem from './MenuItem.jsx';
 
-// EditorHeader — back, the thing's name, where it stands, then Save · Publish · ⋯.
-// `title` / `onTitleChange` (optional): the thing's own name, edited in place beside its kind.
-export default function EditorHeader({ name, title, onTitleChange, placeholder, onBack, air, pending, save, publish, more }) {
+export default function EditorHeader({ name, title, onTitleChange, placeholder, onBack, pending, save, publish, more }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const ref = useRef(null);
@@ -33,7 +31,6 @@ export default function EditorHeader({ name, title, onTitleChange, placeholder, 
           </button>
         </span>
       ))}
-      {air}
       {pending}
       <span className="eh-gap" />
       <button type="button" className="btn ghost" onClick={save.onClick} disabled={save.disabled} title={save.title}>Save</button>

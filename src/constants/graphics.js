@@ -5,8 +5,6 @@ import { JACKET_TPLS } from './jacketTemplates.js';
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
-// The three kinds of graphic. Each names its templates, its starting state, the gallery tab
-// it lives under, and how picking a template shapes the state (kept exactly as before).
 export const GRAPHICS = {
   ticker: {
     name: 'Ticker',
@@ -52,10 +50,7 @@ export const GRAPHICS = {
   },
 };
 
-// Gallery tab → kind of graphic.
 export const KIND_BY_CATEGORY = { ticker: 'ticker', widgets: 'widget', jackets: 'jacket' };
 
-// The templates a kind offers to pick from — a hidden one stays only for graphics saved with it.
 export const galleryTemplates = (kind) => GRAPHICS[kind].templates.filter((t) => !t.hidden);
 
-export const TEMPLATE_COUNT = Object.keys(GRAPHICS).reduce((n, kind) => n + galleryTemplates(kind).length, 0);

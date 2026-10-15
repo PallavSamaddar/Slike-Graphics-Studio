@@ -26,7 +26,8 @@ export default function FitToWindow({ width, inset = 0, inParent = false, maxSca
         boxH = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
       }
       const scale = Math.min((boxW * room) / width, (boxH * room) / height, maxScale);
-      setFit({ scale: scale > 0 ? scale : 1, height });
+      const next = scale > 0 ? scale : 1;
+      setFit((f) => (f.scale === next && f.height === height ? f : { scale: next, height }));
     };
     measure();
     const observer = new ResizeObserver(measure);

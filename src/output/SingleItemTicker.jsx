@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Cycles through items one at a time, holding each for `durationSec`,
 // transitioning between them with the chosen `animation`. Stops after the last item.

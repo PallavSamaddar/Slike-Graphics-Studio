@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
 
-// The person's theme, as the kit's ThemeSwitch keeps it: Light, Dark or
-// Match device, picked in the profile menu, stored in this browser as `pc-theme`.
-// Everyone starts on Light. index.html applies the same pick before the page draws.
 const STORAGE_KEY = 'pc-theme'; // 'light' | 'dark' | 'device'
 
 function readPick() {
@@ -14,9 +11,9 @@ function readPick() {
 }
 
 const deviceDark = () => !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+const resolve = (pick) => (pick === 'dark' || (pick === 'device' && deviceDark()) ? 'dark' : 'light');
 
-function apply(pick) {
-  const theme = pick === 'dark' || (pick === 'device' && deviceDark()) ? 'dark' : 'light';
+function apply(theme) {
   const root = document.documentElement;
   if (root.getAttribute('data-theme') === theme) return;
   const paint = () => {
@@ -27,19 +24,19 @@ function apply(pick) {
   if (document.startViewTransition && !reduce) document.startViewTransition(paint);
   else paint();
 }
-
 export function useTheme() {
   const [pick, setPick] = useState(readPick);
+  const [theme, setTheme] = useState(() => resolve(readPick()));
 
   useEffect(() => {
-    apply(pick);
+    const show = () => { const t = resolve(pick); setTheme(t); apply(t); };
+    show();
     try { localStorage.setItem(STORAGE_KEY, pick); } catch { /* ignore */ }
     if (pick !== 'device' || !window.matchMedia) return undefined;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = () => apply('device');
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+    mq.addEventListener('change', show);
+    return () => mq.removeEventListener('change', show);
   }, [pick]);
 
-  return { pick, setPick };
+  return { pick, setPick, theme };
 }

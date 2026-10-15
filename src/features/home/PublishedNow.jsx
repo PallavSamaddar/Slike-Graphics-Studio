@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { previewGraphics } from '../../services/graphics.js';
 import { isAbort } from '../../services/rpc.js';
 import { toCard } from './useGraphicsIndex.js';
-import { savedThumb } from './savedThumb.js';
-import { THUMBS } from '../templates/TemplateThumbs.jsx';
+import { KIND_LABEL } from './GraphicCard.jsx';
+import MiniThumb from './MiniThumb.jsx';
 import { ago } from '../../utils/time.js';
 
 const SHOWN = 20;
-const KIND_LABEL = { ticker: 'Ticker', widget: 'Widget', jacket: 'Jacket' };
 
 export default function PublishedNow({ refresh, onOpen }) {
   const [state, setState] = useState({ status: 'loading', list: [], count: 0 });
@@ -32,14 +31,10 @@ export default function PublishedNow({ refresh, onOpen }) {
       {state.status === 'ready' && state.list.length > 0 && (
         <ul className="start-list pub-list">
           {state.list.map((g) => {
-            const Thumb = THUMBS[g.kind];
-            const thumb = Thumb && savedThumb(g);
             return (
               <li key={g.id}>
                 <button type="button" className="start-row" onClick={() => onOpen(g.id)}>
-                  <span className="start-row-thumb start-row-thumb-sm" aria-hidden="true">
-                    {thumb && <span className="start-row-thumb-inner"><Thumb t={thumb.t} {...thumb.text} /></span>}
-                  </span>
+                  <MiniThumb g={g} className="mini-thumb-sm" />
                   <span className="start-row-text">
                     <span className="start-row-name" title={g.title}>{g.title || 'Untitled'}</span>
                     <span className="start-row-sub">

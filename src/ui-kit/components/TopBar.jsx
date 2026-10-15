@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import useDismiss from '../hooks/useDismiss.js';
 import MenuItem from './MenuItem.jsx';
 
-export default function TopBar({ brand, rooms, room, onRoom, onBrand, user, menu = [], themePick, onThemePick }) {
+export default function TopBar({ brand, rooms, room, onRoom, onBrand, user, menu = [], theme, onThemePick }) {
   return (
     <header className="topbar"><div className="tb-in">
       {onBrand
@@ -27,7 +27,7 @@ export default function TopBar({ brand, rooms, room, onRoom, onBrand, user, menu
         </nav>
       )}
       <span className="tb-gap" />
-      {onThemePick && <ThemeToggle pick={themePick} onPick={onThemePick} />}
+      {onThemePick && <ThemeToggle theme={theme} onPick={onThemePick} />}
       <Profile user={user} menu={menu} />
     </div></header>
   );
@@ -53,9 +53,8 @@ function Profile({ user, menu }) {
   );
 }
 
-function ThemeToggle({ pick, onPick }) {
-  const deviceDark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const dark = pick === 'dark' || (pick === 'device' && deviceDark);
+function ThemeToggle({ theme, onPick }) {
+  const dark = theme === 'dark';
   const next = dark ? 'light' : 'dark';
   return (
     <button

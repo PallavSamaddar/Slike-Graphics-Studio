@@ -16,6 +16,7 @@ export default function WidgetShowBar({ st, setSt }) {
       .catch(() => {});
   };
 
+  const mediaOn = feedMediaOn(st);
   const feedPos = st.media?.rss?.find(Boolean)?.pos || st.style?.badgeImagePos || 'left';
   const setFeedPos = (pos) => setSt((state) => ({
     ...state,
@@ -39,9 +40,9 @@ export default function WidgetShowBar({ st, setSt }) {
         <CheckChip on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Publisher</CheckChip>
         {st.src === 'rss' && (
           <>
-            <div className={'chip-joined' + (feedMediaOn(st) ? ' on' : '')}>
-              <CheckChip on={feedMediaOn(st)} onChange={setFeedMedia}>Images/videos</CheckChip>
-              {feedMediaOn(st) && <ImagePosition value={feedPos} onChange={setFeedPos} />}
+            <div className={'chip-joined' + (mediaOn ? ' on' : '')}>
+              <CheckChip on={mediaOn} onChange={setFeedMedia}>Images/videos</CheckChip>
+              {mediaOn && <ImagePosition value={feedPos} onChange={setFeedPos} />}
             </div>
             <CheckChip on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v }))}>Descriptions</CheckChip>
           </>
@@ -79,7 +80,7 @@ function ImagePosition({ value, onChange }) {
 }
 
 // A checkbox as a box: ticked on or off.
-export function CheckChip({ on, onChange, children }) {
+function CheckChip({ on, onChange, children }) {
   return (
     <label className={'check-chip' + (on ? ' on' : '')}>
       <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} />

@@ -5,12 +5,10 @@ import { isSafeColor } from '../../utils/color.js';
 // A colour as a compact icon over a colour bar: "A" for a text's colour, a paint bucket for a
 // background (`kind="fill"`). A text left unset takes its automatic colour (readable on its
 // background), shown in the bar; Auto in the picker goes back to it.
-//   value: the picked colour or empty · auto: the automatic colour · bar: what the bar shows,
-//   when it differs (a gradient) · onChange(colour | null) · label · kind: 'text' | 'fill'
-export default function TextColorButton({ value, auto, bar, onChange, label, kind = 'text', allowGradient = false, gradientValue, onChangeGradient }) {
+export default function TextColorButton({ value, auto, fallback, bar, onChange, label, kind = 'text', allowGradient = false, gradientValue, onChangeGradient }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const shown = value && isSafeColor(value) ? value : auto;
+  const shown = value && isSafeColor(value) ? value : auto || fallback;
   return (
     <span className="text-color">
       <button
@@ -37,8 +35,7 @@ export default function TextColorButton({ value, auto, bar, onChange, label, kin
           value={shown}
           anchorRef={ref}
           onClose={() => setOpen(false)}
-          // The picker reports its starting colour on open; that isn't a pick.
-          onChange={(v) => { if (String(v).toUpperCase() === String(shown).toUpperCase()) return; onChange(v); }}
+          onChange={onChange}
           onAuto={value && auto ? () => { onChange(null); setOpen(false); } : undefined}
           allowGradient={allowGradient}
           gradientValue={gradientValue}

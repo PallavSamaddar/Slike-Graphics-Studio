@@ -8,11 +8,20 @@ const MEDIA_TYPES = /^(image|video)\//;
 export class FeedError extends Error {}
 
 const text = (el) => (el?.textContent || '').trim();
-const plain = (html) => (html ? (new DOMParser().parseFromString(html, 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim() : '');
-// Placeholders a CMS sends before an article's summary exists count as no text, so the
-// item shows just its title until the real description comes in.
+const htmlParser = new DOMParser();
+const plain = (html) => {
+  if (!html) return '';
+  const textOnly = /[<&]/.test(html) ? htmlParser.parseFromString(html, 'text/html').body.textContent || '' : html;
+  return textOnly.replace(/\s+/g, ' ').trim();
+};
 const PLACEHOLDER = /^(undefined|null|none|n\/a|-)$/i;
-const firstText = (els) => els.map((el) => plain(text(el))).find((t) => t && !PLACEHOLDER.test(t)) || '';
+const firstText = (els) => {
+  for (const el of els) {
+    const t = plain(text(el));
+    if (t && !PLACEHOLDER.test(t)) return t;
+  }
+  return '';
+};
 
 function child(item, name, ns) {
   const byNs = ns ? item.getElementsByTagNameNS(ns, name)[0] : null;
@@ -82,7 +91,6 @@ export function withFeedItems(kind, st, items) {
   return next;
 }
 
-// The feed's items gone (its URL cleared). Whether images show stays as it was.
 export function withoutFeedItems(st) {
   const next = { ...st, drafts: { ...st.drafts, rss: [] } };
   if (st.src === 'rss') next.items = [];

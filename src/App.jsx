@@ -18,7 +18,7 @@ import LiveFeedPreview from './features/shared-editor/LiveFeedPreview.jsx';
 export default function App() {
   const route = useRoute();
   const graphics = { ticker: useGraphic(GRAPHICS.ticker), widget: useGraphic(GRAPHICS.widget), jacket: useGraphic(GRAPHICS.jacket) };
-  const { pick: themePick, setPick: setThemePick } = useTheme();
+  const { setPick: setThemePick, theme } = useTheme();
   const user = useCurrentUser();
 
   // The studio once its graphic is loaded: { kind }; while it loads, null; or the failure.
@@ -67,12 +67,13 @@ export default function App() {
   const inStudio = route.view === 'new' || route.view === 'edit';
   const room = route.view === 'gallery' || (inStudio && fromRef.current.startsWith('#/templates')) ? 'templates' : 'home';
   const back = () => navigate(fromRef.current);
+  const pickTemplate = (category, id) => navigate(routes.newGraphic(KIND_BY_CATEGORY[category], id));
 
   let page;
   if (route.view === 'home') {
     page = (
       <HomePage
-        onPickTemplate={(category, id) => navigate(routes.newGraphic(KIND_BY_CATEGORY[category], id))}
+        onPickTemplate={pickTemplate}
         onOpenGraphic={(id) => navigate(routes.edit(id))}
       />
     );
@@ -81,7 +82,7 @@ export default function App() {
       <TemplatesPage
         category={route.category}
         onCategory={(category) => navigate(routes.gallery(category), { replace: true })}
-        onPick={(category, id) => navigate(routes.newGraphic(KIND_BY_CATEGORY[category], id))}
+        onPick={pickTemplate}
       />
     );
   } else if (openError) {
@@ -101,7 +102,7 @@ export default function App() {
       ticker: {
         content: <TickerContent st={g.cur} setSt={g.setCur} />,
         style: <TickerStyle st={g.cur} setSt={g.setCur} />,
-        preview: <LiveFeedPreview kind="ticker" st={g.cur}>{(st) => <TickerPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
+        preview: <LiveFeedPreview kind="ticker" st={g.cur}>{(st) => <TickerPreview st={st} />}</LiveFeedPreview>,
       },
       widget: {
         content: <WidgetContent st={g.cur} setSt={g.setCur} />,
@@ -140,7 +141,7 @@ export default function App() {
           onBrand={() => navigate(routes.home())}
           user={user}
           menu={PROFILE_MENU}
-          themePick={themePick}
+          theme={theme}
           onThemePick={setThemePick}
         />
         <main id="main" className="view-in" key={pageKey}>{page}</main>

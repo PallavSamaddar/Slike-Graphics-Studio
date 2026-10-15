@@ -4,7 +4,7 @@ import { FONTS } from '../../constants/fonts.js';
 import { TEXT_SPACING } from '../../constants/widgetTemplates.js';
 import ScrollRow from '../shared-editor/ScrollRow.jsx';
 import TextColorButton from '../shared-editor/TextColorButton.jsx';
-import { autoTextColor, isSafeColor } from '../../utils/color.js';
+import { autoTextColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
 import { WIDGET_TRANSITIONS, widgetTransition } from '../../constants/textAnimations.js';
 import { VIDEO_PRESETS } from '../../constants/videoPresets.js';
@@ -77,78 +77,60 @@ export default function WidgetStyleSections({ st, setSt }) {
     },
   }));
   const pickedUploaded = (media) => s.texture === 'video-custom' && s.customVideoMediaId === media.id;
-  // The picked video gets its own swatch only while it isn't in the list (a local copy
-  // still uploading, or a video from an older save).
   const customInList = uploadedVideos.some((m) => m.id === s.customVideoMediaId);
 
   const hasTexture = !!(s.texture && s.texture !== 'none');
+  const opacityPct = Math.round((s.textureOpacity ?? 1) * 100);
 
   return (
     <>
       <div className="fieldset style-sec" aria-label="Style">
-        <div className="cs-lines cs-compact">
+        <div className="cs-lines">
           <div className="cs-row">
             <span className="cs-label">Card</span>
-            <div className="cs-bar">
-              <Field path={['style.bg', 'style.bgGradient']} off={isVideo} offReason="A background video fills the widget — pick an animation to set a colour">
-                <TextColorButton kind="fill" value={isSafeColor(s.bg || '') ? s.bg : '#8A1B12'} bar={s.bgGradient || s.bg} onChange={setSolidBg} label="Card background" />
-              </Field>
-              <Field path="behavior.transition" className="cs-bar-grow">
-                <div title="Transition between items">
-                  <Select value={widgetTransition(behavior.transition)} options={WIDGET_TRANSITIONS} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" />
-                </div>
-              </Field>
-              <Field path="behavior.itemDuration">
-                <div className="tool-group" title="How long each item stays on screen">
-                  <Stepper
-                    value={behavior.itemDuration || 4}
-                    display={(v) => `${v}s`}
-                    step={1} min={1} max={30}
-                    onChange={(v) => setBehavior('itemDuration', v)}
-                    label="duration"
-                  />
-                </div>
-              </Field>
-              <Field path="style.textSpacing">
-                <div title="Spacing of the heading and description text">
-                  <Select value={s.textSpacing || 'default'} options={TEXT_SPACING} onChange={(v) => setStyle('textSpacing', v)} ariaLabel="Text spacing" />
-                </div>
-              </Field>
-            </div>
+            <Field path={['style.bg', 'style.bgGradient']} off={isVideo} offReason="A background video fills the widget — pick an animation to set a colour">
+              <TextColorButton kind="fill" value={s.bg} fallback="#8A1B12" bar={s.bgGradient || s.bg} onChange={setSolidBg} label="Card background" />
+            </Field>
+            <Field path="behavior.transition" className="cs-wide">
+              <Select value={widgetTransition(behavior.transition)} options={WIDGET_TRANSITIONS} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" title="Transition between items" />
+            </Field>
+            <Field path="behavior.itemDuration">
+              <Stepper value={behavior.itemDuration || 4} display={(v) => `${v}s`} step={1} min={1} max={30} onChange={(v) => setBehavior('itemDuration', v)} label="duration" title="How long each item stays on screen" />
+            </Field>
+            <Field path="style.textSpacing">
+              <Select value={s.textSpacing || 'default'} options={TEXT_SPACING} onChange={(v) => setStyle('textSpacing', v)} ariaLabel="Text spacing" title="Spacing of the heading and description text" />
+            </Field>
           </div>
           <div className="cs-row">
             <span className="cs-label">Heading</span>
-            <div className="cs-bar">
-              <Field path={['style.headingBg', 'style.headingBgGradient']}>
-                <TextColorButton
-                  kind="fill"
-                  value={isSafeColor(s.headingBg || '') ? s.headingBg : '#1A1714'}
-                  bar={s.headingBgGradient || s.headingBg}
-                  onChange={setHeadingBgColor}
-                  allowGradient
-                  gradientValue={s.headingBgGradient}
-                  onChangeGradient={(css) => setStyle('headingBgGradient', css)}
-                  label="Heading background"
-                />
-              </Field>
-              <Field path="headingText.color">
-                <TextColorButton value={ht.color} auto={autoTextColor(s.headingBg)} onChange={(v) => setHt('color', v)} label="Heading" />
-              </Field>
-              <Field path="headingText.fontFamily" className="cs-bar-grow">
-                <TextTools tx={ht} setTx={setHt} label="Heading" />
-              </Field>
-            </div>
+            <Field path={['style.headingBg', 'style.headingBgGradient']}>
+              <TextColorButton
+                kind="fill"
+                value={s.headingBg}
+                fallback="#1A1714"
+                bar={s.headingBgGradient || s.headingBg}
+                onChange={setHeadingBgColor}
+                allowGradient
+                gradientValue={s.headingBgGradient}
+                onChangeGradient={(css) => setStyle('headingBgGradient', css)}
+                label="Heading background"
+              />
+            </Field>
+            <Field path="headingText.color">
+              <TextColorButton value={ht.color} auto={autoTextColor(s.headingBg)} onChange={(v) => setHt('color', v)} label="Heading" />
+            </Field>
+            <Field path="headingText.fontFamily" className="cs-wide">
+              <FontSelect tx={ht} setTx={setHt} label="Heading" />
+            </Field>
           </div>
           <div className="cs-row">
             <span className="cs-label">Description</span>
-            <div className="cs-bar">
-              <Field path="bodyText.color">
-                <TextColorButton value={bt.color} auto={autoTextColor(s.bg)} onChange={(v) => setBt('color', v)} label="Description" />
-              </Field>
-              <Field path="bodyText.fontFamily" className="cs-bar-grow">
-                <TextTools tx={bt} setTx={setBt} label="Description" />
-              </Field>
-            </div>
+            <Field path="bodyText.color">
+              <TextColorButton value={bt.color} auto={autoTextColor(s.bg)} onChange={(v) => setBt('color', v)} label="Description" />
+            </Field>
+            <Field path="bodyText.fontFamily" className="cs-wide">
+              <FontSelect tx={bt} setTx={setBt} label="Description" />
+            </Field>
             <label className="cs-check" title="While an item is on screen, its image slowly zooms in">
               <input type="checkbox" checked={!!s.imageSlowZoom} onChange={(e) => setStyle('imageSlowZoom', e.target.checked)} />
               Image slow zoom
@@ -183,22 +165,14 @@ export default function WidgetStyleSections({ st, setSt }) {
               ))}
             </ScrollRow>
 
-            <div className="cs-lines cs-compact bg-texture">
+            <div className="cs-lines bg-texture">
               <div className="cs-row">
                 <span className="cs-label">Texture</span>
                 <Field path="style.textureColor">
-                  <TextColorButton kind="fill" value={isSafeColor(s.textureColor || '') ? s.textureColor : '#FFFFFF'} onChange={(v) => setStyle('textureColor', v)} label="Texture" />
+                  <TextColorButton kind="fill" value={s.textureColor} fallback="#FFFFFF" onChange={(v) => setStyle('textureColor', v)} label="Texture" />
                 </Field>
                 <Field path="style.textureSpeed" off={!hasTexture} offReason="Pick a background animation first">
-                  <div className="tool-group" title="Texture speed">
-                    <Stepper
-                      value={s.textureSpeed ?? 1}
-                      display={(v) => `${v}×`}
-                      step={0.5} min={0.5} max={3}
-                      onChange={(v) => setStyle('textureSpeed', v)}
-                      label="texture speed"
-                    />
-                  </div>
+                  <Stepper value={s.textureSpeed ?? 1} display={(v) => `${v}×`} step={0.5} min={0.5} max={3} onChange={(v) => setStyle('textureSpeed', v)} label="texture speed" title="Texture speed" />
                 </Field>
                 <Field path="style.textureOpacity" off={!hasTexture} offReason="Pick a background animation first">
                   <div className="tool-group texture-opacity-group" title="Texture opacity">
@@ -207,13 +181,13 @@ export default function WidgetStyleSections({ st, setSt }) {
                       min={0}
                       max={100}
                       step={1}
-                      value={Math.round((s.textureOpacity ?? 1) * 100)}
+                      value={opacityPct}
                       onChange={(e) => setStyle('textureOpacity', parseInt(e.target.value, 10) / 100)}
                       className="form-range"
                       aria-label="Texture opacity"
-                      style={{ '--range-pct': `${Math.round((s.textureOpacity ?? 1) * 100)}%` }}
+                      style={{ '--range-pct': `${opacityPct}%` }}
                     />
-                    <span className="texture-opacity-val">{Math.round((s.textureOpacity ?? 1) * 100)}%</span>
+                    <span className="texture-opacity-val">{opacityPct}%</span>
                   </div>
                 </Field>
               </div>
@@ -297,24 +271,20 @@ export default function WidgetStyleSections({ st, setSt }) {
   );
 }
 
-// A − value + stepper, for a tool group.
-function Stepper({ value, onChange, step, min, max, display = String, label, icon = null }) {
+// A boxed − value + stepper.
+function Stepper({ value, onChange, step, min, max, display = String, label, title }) {
   const go = (d) => onChange(Math.min(max, Math.max(min, Math.round((value + d) * 100) / 100)));
   return (
-    <div className="tool-step">
+    <div className="tool-group tool-step" title={title}>
       <button type="button" onClick={() => go(-step)} disabled={value <= min} aria-label={`Decrease ${label}`} title={`Decrease ${label}`}>−</button>
-      <span className="tool-step-val">{icon}{display(value)}</span>
+      <span className="tool-step-val">{display(value)}</span>
       <button type="button" onClick={() => go(step)} disabled={value >= max} aria-label={`Increase ${label}`} title={`Increase ${label}`}>+</button>
     </div>
   );
 }
 
 // A text's font.
-function TextTools({ tx, setTx, label }) {
-  return (
-    <div className="text-tools">
-      <Select value={tx.fontFamily} options={FONTS} onChange={(v) => setTx('fontFamily', v)} ariaLabel={`${label} font`} title={`${label} font`} />
-    </div>
-  );
-}
+const FontSelect = ({ tx, setTx, label }) => (
+  <Select value={tx.fontFamily} options={FONTS} onChange={(v) => setTx('fontFamily', v)} ariaLabel={`${label} font`} title={`${label} font`} />
+);
 

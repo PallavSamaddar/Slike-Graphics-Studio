@@ -18,7 +18,7 @@ export default function HomePage({ onPickTemplate, onOpenGraphic }) {
         <GraphicsLibrary stats={stats} refresh={refresh} onChanged={changed} onOpen={onOpenGraphic} />
       </div>
       <aside className="home-aside">
-        <StartNew onSeeAll={setPicking} />
+        <StartNew onPick={setPicking} />
         <PublishedNow refresh={refresh} onOpen={onOpenGraphic} />
       </aside>
       {picking && <TemplatePickerDialog category={picking} onPick={onPickTemplate} onClose={() => setPicking(null)} />}

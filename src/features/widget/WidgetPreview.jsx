@@ -21,9 +21,9 @@ export default function WidgetPreview({ st, setSt }) {
     <>
       <WidgetShowBar st={st} setSt={setSt} />
       <PreviewCanvas variant="widget-canvas">
-        {fullscreen
-          ? <FitToWindow width={NATURAL_WIDTH.widget} inset={FIT_INSET.widget}>{view}</FitToWindow>
-          : <FitToWindow width={NATURAL_WIDTH.widget} inParent maxScale={1.6}>{view}</FitToWindow>}
+        <FitToWindow width={NATURAL_WIDTH.widget} {...(fullscreen ? { inset: FIT_INSET.widget } : { inParent: true, maxScale: 1.6 })}>
+          {view}
+        </FitToWindow>
       </PreviewCanvas>
     </>
   );

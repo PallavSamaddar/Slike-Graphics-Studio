@@ -100,7 +100,7 @@ export default function WidgetView({ st, preview = false }) {
     const summary = line?.description || (sample && st.showFeedDescription !== false ? 'Enter description here' : '');
     const hasDescription = !!summary.trim();
     const standIn = s.badgeImage || placeholderThumb(line?.title || '');
-    const image = (feedMedia ? line?.media?.url || standIn : line?.media?.url || s.badgeImage) || (sample && feedMediaOn(st) ? standIn : null);
+    const image = line?.media?.url || (feedMedia ? standIn : s.badgeImage) || (sample && feedMediaOn(st) ? standIn : null);
     return (
       <div
         key={ghost ? `ghost-${index}` : index}

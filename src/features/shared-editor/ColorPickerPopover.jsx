@@ -53,6 +53,8 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
   const hueRef = useRef(null);
   const opacityRef = useRef(null);
   const draggingRef = useRef(null);
+  const touchedRef = useRef(false);
+  const touch = () => { touchedRef.current = true; };
   const [pos, setPos] = useState(null);
 
   useLayoutEffect(() => {
@@ -69,17 +71,13 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
   const css = colorToCss({ ...rgb, a: alpha });
 
   useEffect(() => setHexText(rgbToHex(rgb)), [hue, sat, val]);
-  // Not while it's being typed in — "0." would otherwise be rewritten to "0" mid-number.
   useEffect(() => {
     if (document.activeElement !== rgbaRef.current) setRgbaText(toRgbaText(rgb, alpha));
   }, [hue, sat, val, alpha]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // In solid mode the canvas/hue drive `onChange` directly. In gradient mode
-  // they instead drive whichever stop is active, so the same controls edit
-  // either end of the gradient.
   useEffect(() => {
     if (mode === 'solid') {
-      onChange(css);
+      if (touchedRef.current) onChange(css);
     } else if (mode === 'gradient') {
       const stop = colorToCss({ ...rgb, a: alpha });
       if (activeStop === 'stop1') setStop1(stop); else setStop2(stop);
@@ -88,7 +86,7 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
   }, [hue, sat, val, alpha, mode]);
 
   useEffect(() => {
-    if (allowGradient && mode === 'gradient') {
+    if (allowGradient && mode === 'gradient' && touchedRef.current) {
       onChangeGradient(`linear-gradient(180deg, ${stop1} 0%, ${stop2} 100%)`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,9 +97,6 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
     if (m === 'solid') onChangeGradient(null);
   };
 
-  // Switching which stop is being edited re-syncs the canvas/hue state from
-  // that stop's current color, so the picker always reflects the stop
-  // actually selected instead of staying stuck on whatever was first shown.
   const selectStop = (which) => {
     setActiveStop(which);
     const color = parseColor(which === 'stop1' ? stop1 : stop2);
@@ -200,7 +195,15 @@ export default function ColorPickerPopover({ value, onClose, onChange, anchorRef
   if (!pos) return null;
 
   return createPortal(
-    <div className="cp-popover" ref={popRef} role="dialog" aria-label="Color picker" style={{ left: pos.left, top: pos.top }}>
+    <div
+      className="cp-popover"
+      ref={popRef}
+      role="dialog"
+      aria-label="Color picker"
+      style={{ left: pos.left, top: pos.top }}
+      onPointerDownCapture={touch}
+      onKeyDownCapture={touch}
+    >
       {allowGradient && (
         <div className="cp-mode-tabs">
           <button type="button" className={'cp-mode-tab' + (mode === 'solid' ? ' active' : '')} onClick={() => chooseMode('solid')}>Solid</button>

@@ -1,10 +1,3 @@
-/* ============================================================
-   Graphics Studio UI kit — kit.css
-   The look of every kit component (components/*.jsx), on the tokens in tokens.css.
-   Owned by this project: change it here. It began as the subset of the Player Console
-   stylesheet this app uses (Oct 2026) and no longer follows that system.
-   Sections: base rules · the compact look · layout · theme · kit additions.
-   ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   font-size: var(--fs-lg);
@@ -805,15 +798,8 @@ tbody tr.pinned:hover td { background: var(--accent-soft); }
 .rvw.stacked.steady .dlg-foot { padding-top: 13px; padding-bottom: 17px; gap: 11px; }
 .rvw.stacked .rvw-note { background: var(--panel); font-size: var(--fs-md); }
 .rvw.stacked .rvw-acts .btn { padding: 0 16px; }
-/* ---------- the break icon: where a break sits in the video ----------
-   The icon (svg.brkg, 20 x 10) is the video as a line with one break standing on it, drawn in currentColor: before a
-   break's name in the editor's tabs, an ad setup's placements and a review's heads. */
-/* ---------- a version is a machine value, set in the mono; it keeps the size and weight of the words around it ---------- */
 .vno { font-family: var(--font-mono); font-weight: inherit; letter-spacing: -.2px; }
 .rvw-ver .vn { font-family: var(--font-mono); letter-spacing: -.2px; }
-/* ---------- the switch and the dropdown from the keyboard ----------
-   Focus is the accent border plus the ring (guidelines › accessibility). A switch has no border, so its track takes a
-   2px accent outline just outside it; the option the arrow keys are on takes the hover fill. */
 .select:focus-visible { outline: 0; border-color: var(--accent); box-shadow: var(--shadow-focus); }
 .toggle[role="switch"]:focus-visible { outline: 0; }
 .toggle[role="switch"]:focus-visible .track { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -832,12 +818,8 @@ tbody tr.pinned:hover td { background: var(--accent-soft); }
 }
 .rvw-acts:has(.rvw-track) { flex-wrap: wrap; }
 .btn[hidden] { display: none; }
-/* ======== Theme: what a token cannot say ======== */
-/* ---------- the browser's own parts (scrollbars, native pickers) follow the theme ---------- */
 :root { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
-/* ---------- a part with its own data-theme (brand art, a side-by-side) re-reads the colour roles the compact look sets on
-   the root, so its tables and cards take that part's theme; on the page itself nothing changes ---------- */
 [data-theme] {
   --th-bg: var(--table-head); --th-ink: var(--ink-soft); --row-line: var(--line-soft);
   --card-line: var(--line); --card-title-ink: var(--ink); --sec-title-ink: var(--ink);
@@ -848,29 +830,12 @@ input[type=checkbox] { accent-color: var(--accent-fill); }
 /* ---------- what fields took from the browser: their fill, their typed words, their placeholder ---------- */
 .num-wrap input { background: transparent; }
 ::placeholder { color: var(--placeholder); opacity: 1; }
-/* ---------- the profile menu's Theme choice: three real radios, the menu stays open on a pick ---------- */
-.me-theme { margin: 0 -5px 4px; padding: 0 5px 5px; border-bottom: 1px solid var(--line); }
-.me-theme-t { padding: 6px 10px 3px; font-size: var(--fs-md); font-weight: var(--fw-semibold); letter-spacing: 0; color: var(--ink-faint); }
-.me-opt { position: relative; justify-content: space-between; gap: 8px; color: var(--ink); }
-.me-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
-.me-opt .me-tick { flex: 0 0 14px; width: 14px; display: inline-flex; justify-content: flex-end; color: var(--accent); font-weight: var(--fw-semibold); visibility: hidden; }
-.me-opt input:checked ~ .me-tick { visibility: visible; }
-.me-opt input:checked ~ .me-opt-t { font-weight: var(--fw-semibold); }
-.me-opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
-@supports not selector(:has(a)) {
-  .me-opt:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
-}
-/* ---------- the switch: a quick crossfade where the browser offers one, instant under reduced motion ---------- */
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .2s; animation-timing-function: ease-out; }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
-
-/* ======== Kit additions ======== */
-/* a group's name inside a section (GroupLabel: type-group-label, ink-soft) */
 .grp-label { display: block; color: var(--ink-soft); margin: 0 0 var(--space-10); }
 .frow + .grp-label { margin-top: var(--space-22); }
-/* ChooserCard / CreateCard / ChooserGrid: a grid of chooser cards, each led by its picture */
 .tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-12); align-items: stretch; }
 .tpl-choice { position: relative; padding: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; isolation: isolate; }
 .tpl-choice:has(.rmenu.open) { z-index: 2; }
@@ -879,14 +844,11 @@ input[type=checkbox] { accent-color: var(--accent-fill); }
 .tpl-choice .tpl-thumb { border-bottom: 1px solid var(--line-soft); border-radius: var(--r-card) var(--r-card) 0 0; overflow: hidden; }
 .tpl-thumb-blank { aspect-ratio: 16 / 9; background: var(--surface-soft); }
 .dlg-card.create.tpl-choice { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-16); }
-/* ChangeReview: a quiet destructive act leads the acts' row */
 .rvw-acts .rvw-discard { margin-right: auto; }
 /* Dialog: a lead line under the title */
 .dlg-lead { margin: 0 0 var(--space-12); color: var(--ink-soft); }
-/* words for a screen reader only */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
-/* EditorHeader: the graphic's own name, edited in place beside the kind */
 .ehead .eh-title {
   width: 240px; min-width: 0; height: 30px; padding: 0 var(--space-8); font: inherit; font-size: var(--fs-md); font-weight: 600; color: var(--ink);
   background: transparent; border: 1px solid transparent; border-radius: var(--r-control); outline: none;

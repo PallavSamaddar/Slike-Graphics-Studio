@@ -6,6 +6,7 @@ import { GRAPHICS } from '../constants/graphics.js';
 import { liveStream } from '../services/air.js';
 import { diffGraphic, changes } from '../utils/changeDiff.js';
 import { useUploads } from '../hooks/useMediaUpload.js';
+import useCopy from '../hooks/useCopy.js';
 import { missingFields, missingFieldsMessage, requiredMessage } from '../utils/requiredFields.js';
 import RemoteChangeBar from '../features/shared-editor/RemoteChangeBar.jsx';
 import { AirStatusProvider } from '../features/shared-editor/ContentTitle.jsx';
@@ -69,14 +70,7 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
 
   const airUrl = hasAir && id ? embedUrl(id) : null;
   const notOnAir = 'Not on air — publish it first';
-  const copy = async (text, receipt) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast(receipt);
-    } catch {
-      toast('The browser would not let us copy — select it and copy it yourself', 'bad');
-    }
-  };
+  const copy = useCopy();
   const moreItems = [
     {
       label: 'Copy ID',
@@ -171,7 +165,7 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
       <FieldErrors errors={fieldErrors}>
         <div className="detail studio-detail">
           <div className="form keyform"><AirStatusProvider value={airStatus}>{content}</AirStatusProvider></div>
-          <aside className="studio-side">
+          <aside className={`studio-side studio-side-${kind}`}>
             <div className="studio-preview" aria-label="Live preview">{preview}</div>
             <div className="form keyform studio-style">{style}</div>
           </aside>

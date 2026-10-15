@@ -44,7 +44,6 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
     ...Object.values(GRAPHIC_KIND).map((k) => ({ id: k, label: stats ? `${KIND_LABEL[k]}s · ${stats.kind?.[k] ?? 0}` : `${KIND_LABEL[k]}s` })),
   ];
 
-  const list = graphics;
   const narrowed = JSON.stringify(filters) !== JSON.stringify(FILTERS_OFF);
   const pages = Math.max(1, Math.ceil(count / PAGE));
   const at = Math.min(page, pages);
@@ -57,9 +56,8 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
 
   let body;
   if (loading) {
-    body = view === 'list'
-      ? <SkeletonRows count={Math.min(PAGE, graphics.length || 8)} />
-      : <SkeletonCards count={Math.min(PAGE, graphics.length || 8)} />;
+    const placeholders = Math.min(PAGE, graphics.length || 8);
+    body = view === 'list' ? <SkeletonRows count={placeholders} /> : <SkeletonCards count={placeholders} />;
   } else if (status === 'error') {
     body = (
       <EmptyState title="Couldn't load your graphics">
@@ -68,7 +66,7 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
     );
   } else if (!narrowed && count === 0) {
     body = <EmptyState title="Nothing saved yet">Start a ticker, widget or jacket above; it shows up here once saved.</EmptyState>;
-  } else if (list.length === 0) {
+  } else if (graphics.length === 0) {
     body = (
       <EmptyState title="Nothing matches">
         No graphic fits this search and these filters. <button type="button" className="zlink" onClick={() => set(FILTERS_OFF)}>Clear them</button>
@@ -88,7 +86,7 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
               <span>Edited</span>
               <span />
             </div>
-            {list.map((g) => (
+            {graphics.map((g) => (
               <div role="listitem" key={g.id}>
                 <GraphicRow g={g} onOpen={onOpen} onDuplicate={duplicate} onArchive={archive} />
               </div>
@@ -96,7 +94,7 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
           </div>
         ) : (
           <ChooserGrid>
-            {list.map((g) => (
+            {graphics.map((g) => (
               <GraphicCard key={g.id} g={g} onOpen={onOpen} onDuplicate={duplicate} onArchive={archive} />
             ))}
           </ChooserGrid>
@@ -154,7 +152,7 @@ function SkeletonRows({ count }) {
     <div className="glist" role="status" aria-label="Loading your graphics">
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="glist-row glist-skel" aria-hidden="true">
-          <span className="glist-thumb skel" />
+          <span className="mini-thumb skel" />
           <span className="glist-name"><span className="skel skel-line skel-title" /></span>
         </div>
       ))}

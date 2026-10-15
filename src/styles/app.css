@@ -1,8 +1,3 @@
-/* ============================================================
-   DESIGN TOKENS
-   Light palette on warm off-white ground — editorial, not generic SaaS.
-   Blue anchors every selection/accent state.
-   ============================================================ */
 :root {
   --toi-red: #2563EB;
   --toi-red-dark: #1D4ED8;
@@ -133,21 +128,12 @@ input, select, textarea { font-family: inherit; }
   z-index: 100;
 }
 
-/* Buttons */
-
-/* ============================================================
-   LAYOUT
-   ============================================================ */
 .studio {
   display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
-
-/* ============================================================
-   PANEL — TEMPLATES (LEFT)
-   ============================================================ */
 
 .tpl-preview-bg {
   background: #1E1F23;
@@ -215,10 +201,6 @@ input, select, textarea { font-family: inherit; }
 }
 .sec:last-child { margin-bottom: 0; }
 
-/* Section header w/ icon + subtitle */
-
-/* Source toggle */
-
 /* Text formatting toolbar (Typography) — compact icon buttons, doc-editor style */
 .fmt-toolbar {
   display: flex;
@@ -251,66 +233,7 @@ input, select, textarea { font-family: inherit; }
 .fmt-icon-btn.active { background: var(--selected-bg); color: var(--toi-red); }
 .fmt-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .fmt-icon-btn:disabled:hover { background: none; color: var(--text-secondary); }
-.fmt-step-btn { font-size: 16px; font-weight: 600; line-height: 1; }
 .fmt-divider { width: 1px; height: 20px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
-.fmt-select {
-  height: 30px;
-  border: none;
-  border-radius: 5px;
-  background: none;
-  color: var(--text-primary);
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: 0 6px;
-  cursor: pointer;
-}
-.fmt-select:hover { background: var(--hover); }
-.fmt-select-font { max-width: 92px; }
-.fmt-size-inp {
-  width: 40px;
-  height: 30px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: var(--bg-panel);
-  color: var(--text-primary);
-  font-size: 12.5px;
-  text-align: center;
-  padding: 0;
-  flex-shrink: 0;
-  -moz-appearance: textfield;
-}
-.fmt-size-inp::-webkit-outer-spin-button, .fmt-size-inp::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-/* Text-case icon dropdown (Aa) — an icon-button shell wrapping a transparent
-   native <select> so it behaves like a real dropdown but looks like the
-   other icon buttons in the toolbar. */
-.fmt-icon-select {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 30px;
-  padding: 0 4px 0 7px;
-  border-radius: 5px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-  flex-shrink: 0;
-}
-.fmt-icon-select:hover { background: var(--hover); color: var(--text-primary); }
-.fmt-icon-select-glyph { width: 16px; height: 16px; flex-shrink: 0; pointer-events: none; }
-.fmt-icon-select-caret { width: 12px; height: 12px; flex-shrink: 0; pointer-events: none; opacity: 0.7; }
-.fmt-icon-select-inp {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  border: none;
-  cursor: pointer;
-}
-
-/* Ticker items */
 
 /* Form controls */
 
@@ -343,98 +266,6 @@ input, select, textarea { font-family: inherit; }
 }
 .form-lbl-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; line-height: 1; min-height: 13px; }
 
-.opacity-stepper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 33px;
-  padding: 0 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-panel);
-}
-.opacity-stepper .fmt-icon-btn { width: 25px; height: 25px; }
-.opacity-stepper-val { font-size: 13px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.range-with-badge { display: flex; align-items: flex-start; gap: 12px; }
-.range-with-badge-slider { flex: 1; min-width: 0; }
-.range-with-badge-slider-boxed {
-  height: 33px;
-  display: flex;
-  align-items: center;
-  padding: 0 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-panel);
-}
-.range-with-badge-slider-boxed .form-range { height: auto; }
-.form-lbl-row .range-badge-input { padding: 0; min-width: 0; font-size: 11px; line-height: 1; border-radius: 0; background: transparent; }
-.form-lbl-row .range-badge-input:focus-within { background: transparent; }
-.range-ticks {
-  display: flex;
-  justify-content: space-between;
-  /* Matches the slider thumb's half-width so the marks line up under the
-     track's actual travel range, not the element's outer edges. */
-  padding: 0 8px;
-  margin-top: 4px;
-}
-.range-ticks i {
-  display: block;
-  width: 1px;
-  height: 6px;
-  background: var(--border);
-  font-style: normal;
-}
-.range-tick-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-.range-tick-labels b:first-child { margin-left: -2px; }
-.range-tick-labels b:last-child { margin-right: -14px; }
-.range-with-pill { display: flex; align-items: center; gap: 8px; height: 28px; }
-.range-with-pill .form-range { flex: 1; }
-.range-with-pill-badge {
-  flex-shrink: 0;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: var(--selected-bg);
-  color: var(--toi-red);
-  font-size: 12.5px;
-  font-weight: 700;
-}
-.range-badge-input {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-width: 52px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: var(--selected-bg);
-  color: var(--toi-red);
-  font-size: 12.5px;
-  font-weight: 700;
-}
-.range-badge-input:focus-within { border-color: var(--toi-red); background: var(--bg-panel); }
-.form-lbl-row .range-badge-input input { width: 26px; height: 13px; padding: 0; }
-.range-badge-input input {
-  width: 26px;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: right;
-  -moz-appearance: textfield;
-}
-.range-badge-input input::-webkit-outer-spin-button,
-.range-badge-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .form-range {
   width: 100%;
   height: 33px;
@@ -493,70 +324,6 @@ input, select, textarea { font-family: inherit; }
   transition: border-color 0.13s;
 }
 .form-inp:focus { border-color: var(--toi-red); }
-.widget-toggle-field {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: 100%;
-  height: 30px;
-  box-sizing: border-box;
-  padding: 0 9px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  font-size: 12px;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: border-color 0.13s;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.widget-toggle-field:has(input:checked) { border-color: var(--toi-red); background: var(--selected-bg); }
-.widget-toggle-field input[type="checkbox"] {
-  flex-shrink: 0;
-  appearance: none;
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  border: 1.5px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg-panel);
-  cursor: pointer;
-  position: relative;
-  outline: none;
-}
-.widget-toggle-field input[type="checkbox"]:checked {
-  background: var(--toi-red);
-  border-color: var(--toi-red);
-}
-.widget-toggle-field input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 4px;
-  height: 8px;
-  border: solid #fff;
-  border-width: 0 1.6px 1.6px 0;
-  transform: rotate(45deg);
-}
-
-.color-field-eyedropper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-.color-field-eyedropper svg { width: 15px; height: 15px; }
-.color-field-eyedropper:hover { color: var(--text-primary); }
 
 /* Color field */
 .color-field {
@@ -594,31 +361,6 @@ input, select, textarea { font-family: inherit; }
   inset: 0;
   border-radius: 2px;
 }
-.swatch-vis-none {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.swatch-vis-none::after {
-  content: '';
-  width: 1px;
-  height: 130%;
-  background: var(--toi-red);
-  transform: rotate(45deg);
-}
-.color-field-none-btn {
-  flex-shrink: 0;
-  padding: 4px 9px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg-panel);
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.color-field-none-btn:hover { color: var(--text-primary); }
-.color-field-none-btn.active { background: var(--selected-bg); border-color: var(--toi-red); color: var(--toi-red); }
 
 .hex-inp {
   flex: 1;
@@ -644,7 +386,7 @@ input, select, textarea { font-family: inherit; }
   box-shadow: var(--shadow-md);
   padding: 14px;
 }
-.cp-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+
 .cp-mode-tabs {
   display: flex;
   gap: 4px;
@@ -813,13 +555,10 @@ input, select, textarea { font-family: inherit; }
 
 /* Radio options */
 
-/* Toggle */
-
 /* Badge type grid */
 
 .rss-row { display: flex; gap: 6px; }
 .rss-row .form-inp { flex: 1; }
-
 
 /* ============================================================
    PANEL — PREVIEW (RIGHT)
@@ -869,14 +608,6 @@ input, select, textarea { font-family: inherit; }
   height: 100%;
   justify-content: center;
   max-width: 100%;
-}
-.broadcast-frame-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  flex-shrink: 0;
 }
 .broadcast-frame {
   width: min(100%, calc(100cqh * 16 / 9));
@@ -1106,10 +837,6 @@ input, select, textarea { font-family: inherit; }
 
 /* Preview info */
 
-/* Style Options / Typography / Badge / Ticker Behaviour — flat, unboxed
-   sections stacked under the preview, each one separated by a divider
-   line (.style-sep) instead of its own bordered card. */
-
 /* ============================================================
    BOTTOM LIVE BAR
    ============================================================ */
@@ -1321,10 +1048,6 @@ input, select, textarea { font-family: inherit; }
   overflow: hidden;
 }
 
-/* Home dashboard — landing page showing featured Ticker/Widget templates */
-
-/* Category rail (Ticker / Widgets / Captions / Jackets) */
-
 /* Coming-soon placeholder */
 
 .gallery-preview-bg { padding: 16px 16px; }
@@ -1446,36 +1169,21 @@ input, select, textarea { font-family: inherit; }
   color: var(--text-secondary);
 }
 
-/* Content Source — per-tab save row */
-
-/* Content Source — bottom toast shown when saving a source overrides another with data */
-
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(-50%) translateY(8px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
-
-/* ============================================================
-   WIDGET — Heading + List
-   ============================================================ */
 .req-mark { color: var(--toi-red); margin-left: 2px; }
 
 .widget-canvas {
   align-items: stretch;
   padding: 12px 24px;
-  /* .widget-frame sizes to its own content (see below), which can exceed
-     the canvas's available height — scroll instead of silently clipping. */
   overflow-y: auto;
 }
 .widget-frame {
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
-  /* .widget-canvas stretches flex children to fill its cross-axis height,
-     which capped this shorter than heading+body content and let
-     overflow:hidden silently clip the body's bottom edge (and anything
-     pinned there, like the badge image). Size to content instead, and
-     center it vertically so the frame doesn't stick to the top edge. */
   align-self: center;
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -1483,25 +1191,6 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   flex-direction: column;
 }
-.widget-heading {
-  padding: 18px 20px;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-.widget-body {
-  flex: 1;
-  min-height: 200px;
-  padding: 18px 20px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* News-card widget layout — category pill, headline, divider, summary,
-   time/product footer, all over the textured background. */
 .widget-frame-card {
   position: relative;
   min-height: 280px;
@@ -1923,11 +1612,7 @@ input, select, textarea { font-family: inherit; }
   .widget-frame-card > [class^="widget-texture-"] { animation: none !important; transform: none !important; }
 }
 /* Background Texture — open swatch grid instead of a dropdown */
-.texture-picker {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
-  gap: 10px;
-}
+
 .texture-swatch {
   display: flex;
   flex-direction: column;
@@ -1943,11 +1628,7 @@ input, select, textarea { font-family: inherit; }
   flex: 0 0 128px;
   width: 128px;
 }
-/* An uploaded video still being transcoded. */
 .texture-swatch:disabled { cursor: default; opacity: 0.55; }
-
-/* Single-line scrollable row with left/right nav arrows below it — used for
-   texture and video pickers, which used to wrap onto multiple lines. */
 .scroll-row-track {
   display: flex;
   gap: 10px;
@@ -1957,67 +1638,7 @@ input, select, textarea { font-family: inherit; }
   scrollbar-width: none;
 }
 .scroll-row-track::-webkit-scrollbar { display: none; }
-.scroll-row-nav {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-.scroll-row-inline-wrap { display: flex; align-items: center; gap: 10px; }
-.scroll-row-inline-wrap .scroll-row-track { flex: 1; min-width: 0; }
-.scroll-row-nav-inline { justify-content: flex-start; margin-top: 0; flex-shrink: 0; }
 
-.texture-panel-swatches-hd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
-}
-.texture-settings-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 11px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-panel);
-  color: var(--text-secondary);
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.texture-settings-btn svg { width: 13px; height: 13px; }
-.texture-settings-btn:hover { color: var(--text-primary); }
-.texture-settings-btn.active { background: var(--selected-bg); border-color: var(--toi-red); color: var(--toi-red); }
-.texture-panel-settings {
-  display: grid;
-  grid-template-columns: 140px 140px 140px;
-  gap: 10px;
-  align-content: start;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border-subtle);
-}
-.texture-panel-settings .form-lbl { white-space: nowrap; }
-
-.texture-panel-settings .opacity-stepper,
-.texture-panel-settings .range-with-badge-slider-boxed { padding: 0 6px; }
-.texture-panel-settings .opacity-stepper-val { font-size: 12px; }
-.texture-panel-settings .range-tick-labels { font-size: 10px; margin-top: 2px; }
-.texture-opacity-box {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 33px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-panel);
-  overflow: hidden;
-}
-.texture-opacity-box .form-range { flex: 1; width: auto; min-width: 0; margin: 0 6px; }
 .texture-opacity-val {
   flex-shrink: 0;
   min-width: 28px;
@@ -2041,7 +1662,6 @@ input, select, textarea { font-family: inherit; }
 }
 .scroll-row-arrow svg { width: 14px; height: 14px; }
 .scroll-row { position: relative; }
-/* Over the row's ends, level with the swatch images (the label under each image is ~20px). */
 .scroll-row-arrow-side {
   position: absolute;
   top: calc(50% - 10px);
@@ -2098,10 +1718,6 @@ input, select, textarea { font-family: inherit; }
 .jacket-ticker-swatch .mini-ticker { width: 100%; border-radius: var(--radius-sm); }
 .jacket-ticker-style-row .texture-swatch-label { font-size: 9px; }
 .texture-swatch.active .texture-swatch-label { color: var(--toi-red); }
-
-/* Texture Colour tint — a color wash blended over the (always-white) texture
-   pattern, so one hex value can recolor any texture without rewriting each
-   one's hardcoded white/rgba values. */
 .texture-tint {
   position: absolute;
   inset: 0;
@@ -2116,49 +1732,9 @@ input, select, textarea { font-family: inherit; }
   pointer-events: none;
 }
 
-/* Widget body cycles one description line at a time, large and centered,
-   reusing SingleItemTicker's fade/slide/flip machinery — the wrap's default
-   sizing is tuned for a thin ticker bar (nowrap + ellipsis), so override it
-   here for a tall widget body that should wrap and fill the space. */
-.widget-single-item-wrap {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-}
-.widget-single-item-wrap .single-item-wrap {
-  flex: 1;
-  width: 100%;
-  overflow: visible;
-  padding: 0;
-}
-.widget-single-item {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1.25;
-  text-align: center;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-/* Richer than the ticker's plain fade — a gentle lift/scale accompanies the
-   crossfade so each new line feels like it's settling into place. Scoped to
-   fade specifically so slide/flip/typewriter keep their own distinct motion
-   instead of all collapsing into this one look. */
-.widget-single-item.anim-fade.phase-in { opacity: 0; transform: translateY(10px) scale(0.97); }
-.widget-single-item.anim-fade.phase-hold { opacity: 1; transform: translateY(0) scale(1); }
-.widget-single-item.anim-fade.phase-out { opacity: 0; transform: translateY(-10px) scale(0.97); }
-
-/* Video Background — the user's own motion-graphics footage, filling the
-   widget body under the heading/text. */
 .widget-video-bg {
   position: absolute;
   inset: 0;
-  /* Its own stacking layer under .widget-card-content (z-index 1): the Cleo player gives
-     its inner layers z-indexes of their own, which would otherwise rise over the card. */
   z-index: 0;
   isolation: isolate;
   width: 100%;
@@ -2166,8 +1742,6 @@ input, select, textarea { font-family: inherit; }
   object-fit: cover;
   pointer-events: none;
 }
-/* The Cleo player draws its own <video> (and poster, loader, docks) inside the box; it fills
-   it the same way, and none of it takes clicks meant for the card. */
 .widget-cleo-bg { overflow: hidden; }
 .widget-cleo-bg * { pointer-events: none !important; }
 .widget-cleo-bg .cpl-player { position: absolute !important; inset: 0; width: 100% !important; height: 100% !important; }
@@ -2225,17 +1799,6 @@ input, select, textarea { font-family: inherit; }
 }
 .widget-card-thumb.slow-zoom { animation: widgetSlowZoom linear forwards; }
 @keyframes widgetSlowZoom { from { transform: scale(1); } to { transform: scale(1.12); } }
-.widget-card-thumb-placeholder {
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,0.10);
-  cursor: pointer;
-  color: rgba(255,255,255,0.55);
-}
-.widget-card-thumb-placeholder svg { width: 46%; height: auto; }
-.widget-card-thumb-placeholder:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
 .badge-img-row { display: flex; }
 .badge-img-upload {
@@ -2277,57 +1840,7 @@ input, select, textarea { font-family: inherit; }
 .badge-img-remove svg { width: 10px; height: 10px; }
 
 /* Badge image crop modal */
-.cropper-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-.cropper-card {
-  background: var(--bg-panel);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 40px);
-  width: min(640px, calc(100vw - 40px));
-  overflow: hidden;
-}
-.cropper-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-.cropper-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.cropper-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
-.cropper-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-.cropper-close:hover { background: var(--hover); color: var(--text-primary); }
-.cropper-close svg { width: 15px; height: 15px; }
 
-.cropper-name-inp { height: 32px; font-size: 12.5px; padding: 0 10px; }
-
-.cropper-card-video { width: min(720px, calc(100vw - 40px)); }
-.cropper-body-video { align-items: flex-start; }
 .video-name-stage {
   position: relative;
   width: 400px;
@@ -2339,27 +1852,6 @@ input, select, textarea { font-family: inherit; }
 }
 .video-name-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.cropper-body {
-  display: flex;
-  gap: 22px;
-  padding: 20px;
-  overflow: auto;
-}
-.cropper-stage-scroll {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.cropper-stage {
-  position: relative;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: #111;
-  cursor: grab;
-}
-.cropper-stage:active { cursor: grabbing; }
 .cropper-ratio-tag {
   position: absolute;
   top: 8px;
@@ -2373,71 +1865,6 @@ input, select, textarea { font-family: inherit; }
   font-size: 10.5px;
   font-weight: 700;
   pointer-events: none;
-}
-.cropper-dim {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  pointer-events: none;
-}
-.cropper-rect {
-  position: absolute;
-  cursor: move;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
-  outline: 1.5px solid #fff;
-}
-.cropper-grid {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  pointer-events: none;
-}
-.cropper-grid span {
-  border-right: 1px solid rgba(255,255,255,0.5);
-  border-bottom: 1px solid rgba(255,255,255,0.5);
-}
-.cropper-grid span:nth-child(3n) { border-right: none; }
-.cropper-grid span:nth-child(n+7) { border-bottom: none; }
-.cropper-handle {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 2.5px solid #fff;
-}
-.cropper-handle-nw { top: -2px; left: -2px; border-right: none; border-bottom: none; cursor: nwse-resize; }
-.cropper-handle-ne { top: -2px; right: -2px; border-left: none; border-bottom: none; cursor: nesw-resize; }
-.cropper-handle-sw { bottom: -2px; left: -2px; border-right: none; border-top: none; cursor: nesw-resize; }
-.cropper-handle-se { bottom: -2px; right: -2px; border-left: none; border-top: none; cursor: nwse-resize; }
-.cropper-dims-caption { font-size: 11.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-
-.cropper-panel {
-  flex: 1;
-  min-width: 190px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.cropper-panel-g { display: flex; flex-direction: column; gap: 8px; }
-.cropper-panel-lbl { font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.01em; }
-.cropper-panel-lbl-row { display: flex; align-items: center; justify-content: space-between; }
-.cropper-zoom-row { display: flex; align-items: center; gap: 6px; }
-.cropper-zoom-row .form-range { flex: 1; }
-.cropper-rotate-row { display: flex; gap: 8px; }
-.cropper-rotate-btn { flex: 1; justify-content: center; font-size: 12.5px; }
-
-.cropper-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-@media (max-width: 560px) {
-  .cropper-body { flex-direction: column; align-items: center; }
-  .cropper-panel { width: 100%; }
 }
 
 /* Gallery mini-preview cards */
@@ -2536,7 +1963,6 @@ input, select, textarea { font-family: inherit; }
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.jacket-live-hint-sm { font-size: 9px; }
 
 .jacket-video-area-left { left: var(--jacket-panel-size, 26%); }
 .jacket-video-area-right { right: var(--jacket-panel-size, 26%); }

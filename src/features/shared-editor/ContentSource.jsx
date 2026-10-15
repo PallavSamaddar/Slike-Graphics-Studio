@@ -74,7 +74,6 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
     setRssLoading(true);
     try {
       const items = await loadFeed(url);
-      console.log('[feed] validate', url, '→', items.length, 'items,', items.filter((i) => i.description).length, 'with a description');
       setSt((s) => withFeedItems(kind, { ...s, src: 'rss' }, items));
       setRssLoaded(true);
     } catch (err) {
