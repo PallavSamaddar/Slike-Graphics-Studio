@@ -26,7 +26,11 @@ const TEXTURE = {
   'video-red': 'Red Background', 'video-custom': 'Uploaded video',
 };
 const onOff = (v) => (v ? 'On' : 'Off');
-const tplName = (list) => (v) => (list.find((t) => t.id === v)?.name ?? (v === 'scratch' ? 'From scratch' : v));
+const tplName = (list) => (v) => {
+  const t = list.find((tpl) => tpl.id === v);
+  if (!t) return v === 'scratch' ? 'From scratch' : v;
+  return t.layout ? `${t.name} · ${t.layout.label}` : t.name;
+};
 
 // A formatting block (font, size, weight…) under a prefix.
 const fmt = (pre) => ({
@@ -82,7 +86,7 @@ const MAPS = {
     },
   },
   widget: {
-    order: ['Content', 'Style', 'Background'],
+    order: ['Content', 'Details', 'Style', 'Background'],
     skip: ['drafts', 'headings', 'descriptions', 'publishedAt', 'style.customVideoUrl', 'style.badgeImage'],
     keys: {
       template: ['Style', 'Template', tplName(WIDGET_TPLS)],
@@ -91,10 +95,12 @@ const MAPS = {
       rssRefreshSec: ['Content', 'Feed refresh', refreshLabel],
       heading: ['Content', 'Heading'],
       items: ['Content', 'Item title'],
-      media: ['Content', 'Images/videos with headlines', (v) => (v && v.length ? 'Included' : 'Off')],
+      media: ['Details', 'Feed images/videos', (v) => (v && v.length ? 'Included' : 'Off')],
+      showFeedMedia: ['Details', 'Show feed images/videos', onOff],
+      showFeedDescription: ['Details', 'Feed descriptions', onOff],
       category: ['Content', 'Heading'],
-      showTime: ['Style', 'Show time posted', onOff],
-      showProduct: ['Style', 'Show publisher', onOff],
+      showTime: ['Details', 'Show time posted', onOff],
+      showProduct: ['Details', 'Show publisher', onOff],
       'style.bg': ['Style', 'Background colour'],
       'style.bgGradient': ['Style', 'Background gradient'],
       'style.headingBg': ['Style', 'Heading background'],

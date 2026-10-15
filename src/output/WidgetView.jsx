@@ -25,7 +25,8 @@ export default function WidgetView({ st }) {
   const { style: s, headingText: ht, bodyText: bt } = st;
   const fromFeed = st.src !== 'manual';
   const previewItems = st.drafts?.[st.src] || st.items;
-  const descriptions = st.descriptions?.[st.src] || [];
+  const hideDescriptions = fromFeed && st.showFeedDescription === false;
+  const descriptions = hideDescriptions ? [] : st.descriptions?.[st.src] || [];
   const itemMedia = fromFeed ? (usesFeedMedia(st) ? st.media.rss : null) : st.media?.manual || [];
   const lines = previewItems
     .map((title, i) => ({ title, description: descriptions[i] || '', media: itemMedia?.[i] || null }))

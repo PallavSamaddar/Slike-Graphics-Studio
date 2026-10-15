@@ -1,7 +1,4 @@
-// Presets for the "Heading + List" widget — each sets a background treatment
-// (solid / gradient / textured pattern) plus heading/list text styling.
-
-export const WIDGET_TPLS = [
+const DESIGNS = [
   {
     id: 'crimson-dots',
     name: 'Crimson',
@@ -66,6 +63,8 @@ export const WIDGET_TPLS = [
     id: 'midnight-image-right',
     name: 'Midnight + Image',
     desc: 'Solid navy · image right',
+    // Midnight with the image on the right — kept so saved graphics still open, not offered.
+    hidden: true,
     style: {
       bg: '#131A2B',
       bgGradient: null,
@@ -153,7 +152,27 @@ export const WIDGET_TPLS = [
   },
 ];
 
-export const templateHasImage = (id) => !!WIDGET_TPLS.find((t) => t.id === id)?.style?.badgeImagePos;
+const WIDGET_LAYOUTS = [
+  { key: 'title', label: 'Title only', desc: false, img: false },
+  { key: 'title-desc', label: 'Title + desc', desc: true, img: false },
+  { key: 'title-desc-img', label: 'Title + desc + image', desc: true, img: true },
+  { key: 'title-img', label: 'Title + image', desc: false, img: true },
+];
 
-// The Feed source's per-headline images drive the widget's image (instead of its own upload).
-export const usesFeedMedia = (st) => st.src === 'rss' && templateHasImage(st.template) && (st.media?.rss || []).some(Boolean);
+const nativeLayout = (design) => (design.style.badgeImagePos ? 'title-desc-img' : 'title-desc');
+
+function inLayout(design, layout) {
+  const { badgeImagePos, ...style } = design.style;
+  return {
+    ...design,
+    id: layout.key === nativeLayout(design) ? design.id : `${design.id}--${layout.key}`,
+    layout,
+    style: layout.img ? { ...style, badgeImagePos: badgeImagePos || 'left' } : style,
+  };
+}
+
+export const WIDGET_TPLS = DESIGNS.flatMap((design) => WIDGET_LAYOUTS
+  .filter((layout) => !design.hidden || layout.key === nativeLayout(design))
+  .map((layout) => inLayout(design, layout)));
+
+export const usesFeedMedia = (st) => st.src === 'rss' && (st.media?.rss || []).some(Boolean);

@@ -9,6 +9,7 @@ import ImageUpload from '../shared-editor/ImageUpload.jsx';
 import { WIDGET_TRANSITIONS, widgetTransition } from '../../constants/textAnimations.js';
 import { VIDEO_PRESETS } from '../../constants/videoPresets.js';
 import { usesFeedMedia } from '../../constants/widgetTemplates.js';
+import { feedMediaOn, loadFeed, withFeedItems } from '../../services/feed.js';
 import { baseName, readAsDataUrl, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { uploadVideoWithSdk } from '../../services/uploadSdk.js';
@@ -32,10 +33,26 @@ const TEXTURES = [
 export default function WidgetStyleSections({ st, setSt }) {
   const { style: s, headingText: ht, bodyText: bt, behavior } = st;
   const isVideo = !!(s.texture && s.texture.startsWith('video'));
-  // The Feed source can attach per-headline media (ticked in Content) —
-  // when that's active for the live source, it drives the image instead of
-  // this single manual upload, so hide the redundant control.
   const usingPerItemMedia = usesFeedMedia(st);
+  const showFeedMedia = feedMediaOn(st);
+  const feedPos = st.media?.rss?.find(Boolean)?.pos || 'left';
+
+  const setFeedMedia = (on) => {
+    setSt((state) => ({
+      ...state,
+      showFeedMedia: on,
+      media: { ...state.media, rss: on ? (state.drafts?.rss || []).map(() => ({ pos: state.style?.badgeImagePos || 'left' })) : [] },
+    }));
+    const url = (st.rssUrl || '').trim();
+    if (!on || !url || !(st.drafts?.rss || []).length) return;
+    loadFeed(url)
+      .then((items) => setSt((state) => (feedMediaOn(state) ? withFeedItems('widget', state, items) : state)))
+      .catch(() => {});
+  };
+  const setFeedPos = (pos) => setSt((state) => ({
+    ...state,
+    media: { ...state.media, rss: (state.media?.rss || []).map((m) => (m ? { ...m, pos } : m)) },
+  }));
   const setStyle = (k, v) => setSt((state) => ({ ...state, style: { ...state.style, [k]: v } }));
   const setHt = (k, v) => setSt((state) => ({ ...state, headingText: { ...state.headingText, [k]: v } }));
   const setBt = (k, v) => setSt((state) => ({ ...state, bodyText: { ...state.bodyText, [k]: v } }));
@@ -116,6 +133,40 @@ export default function WidgetStyleSections({ st, setSt }) {
 
   return (
     <>
+      <Section title="Details">
+        <Row>
+          <Field path="showTime">
+            <Toggle
+              on={!!st.showTime}
+              onChange={(checked) => setSt((state) => ({
+                ...state,
+                showTime: checked,
+                publishedAt: checked && !state.publishedAt ? Date.now() : state.publishedAt,
+              }))}
+            >
+              Show time posted
+            </Toggle>
+          </Field>
+          <Field path="showProduct">
+            <Toggle on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Show publisher</Toggle>
+          </Field>
+        </Row>
+        {st.src === 'rss' && (
+          <Row>
+            <Field path="showFeedMedia">
+              <Toggle on={showFeedMedia} onChange={setFeedMedia}>
+                Show feed images/videos
+              </Toggle>
+            </Field>
+            <Field path="showFeedDescription">
+              <Toggle on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v }))}>
+                Show feed descriptions
+              </Toggle>
+            </Field>
+          </Row>
+        )}
+      </Section>
+
       <Section title="Style">
         <GroupLabel>Card</GroupLabel>
         <Row>
@@ -155,11 +206,11 @@ export default function WidgetStyleSections({ st, setSt }) {
           <Field label="Image" path={['style.badgeImageName', 'style.badgeImage']} off={usingPerItemMedia} offReason="Feed images are on for these headlines — they drive the image">
             <ImageUpload src={s.badgeImage} name={s.badgeImageName} onFile={handleBadgeImage} onRemove={() => setStyle('badgeImage', null)} />
           </Field>
-          <Field label="Image position" path="style.badgeImagePos" off={usingPerItemMedia}>
+          <Field label="Image position" path={usingPerItemMedia ? 'media' : 'style.badgeImagePos'}>
             <SegmentedControl
-              value={s.badgeImagePos || 'left'}
-              onChange={(v) => setStyle('badgeImagePos', v)}
-              off={!hasImage}
+              value={usingPerItemMedia ? feedPos : s.badgeImagePos || 'left'}
+              onChange={usingPerItemMedia ? setFeedPos : (v) => setStyle('badgeImagePos', v)}
+              off={!hasImage && !usingPerItemMedia}
               title="Upload an image first"
               ariaLabel="Image position"
               options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]}
@@ -167,25 +218,6 @@ export default function WidgetStyleSections({ st, setSt }) {
           </Field>
           <Field label="Slow zoom" path="style.imageSlowZoom">
             <Toggle on={!!s.imageSlowZoom} onChange={(v) => setStyle('imageSlowZoom', v)}>Zoom in slowly while shown</Toggle>
-          </Field>
-        </Row>
-
-        <GroupLabel>Details</GroupLabel>
-        <Row>
-          <Field path="showTime">
-            <Toggle
-              on={!!st.showTime}
-              onChange={(checked) => setSt((state) => ({
-                ...state,
-                showTime: checked,
-                publishedAt: checked && !state.publishedAt ? Date.now() : state.publishedAt,
-              }))}
-            >
-              Show time posted
-            </Toggle>
-          </Field>
-          <Field path="showProduct">
-            <Toggle on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Show publisher</Toggle>
           </Field>
         </Row>
       </Section>

@@ -1,4 +1,4 @@
-import { GRAPHICS } from '../../constants/graphics.js';
+import { GRAPHICS, galleryTemplates } from '../../constants/graphics.js';
 import { ChooserCard } from '../../ui-kit';
 import { THUMBS } from '../templates/TemplateThumbs.jsx';
 
@@ -19,7 +19,8 @@ export default function StartNew({ onSeeAll }) {
       </div>
       <div className="start-grid">
         {KINDS.map(({ kind, title }) => {
-          const { templates, category } = GRAPHICS[kind];
+          const { category } = GRAPHICS[kind];
+          const templates = galleryTemplates(kind);
           const Thumb = THUMBS[kind];
           return (
             <ChooserCard key={kind} name={title} reach={`${templates.length} templates`} onOpen={() => onSeeAll(category)}>

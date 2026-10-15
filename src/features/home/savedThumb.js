@@ -35,9 +35,17 @@ export function savedThumb(g) {
   }
   const t = { ...tpl, style: { ...tpl.style, ...config.style } };
   if (g.kind === 'widget') {
-    const text = {};
-    if (config.heading) text.heading = config.heading;
-    if (lines[0]) text.line = lines[0];
+    const src = g.source_type || g.source?.type;
+    const legacy = src === 'manual' && config.heading && !Array.isArray(config.descriptions?.manual);
+    const hideDescriptions = src === 'rss' && config.showFeedDescription === false;
+    const descriptions = hideDescriptions ? [] : config.descriptions?.[src] || [];
+    const titles = config.drafts?.[src]?.length ? config.drafts[src] : lines;
+    const withDesc = titles.findIndex((title, i) => title?.trim() && descriptions[i]?.trim());
+    const text = legacy
+      ? { heading: config.heading, line: lines[0] || '' }
+      : withDesc >= 0
+        ? { heading: titles[withDesc], line: descriptions[withDesc] }
+        : { heading: lines[0] || 'Untitled', line: '' };
     return { t, text };
   }
   return { t, text: {} };

@@ -178,6 +178,7 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 .saved-thumb-pic { position: relative; }
 .saved-thumb-pic .tpl-preview-bg { aspect-ratio: 16 / 9; box-sizing: border-box; }
 .saved-thumb-pic .widget-mini-heading { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.saved-thumb-pic .widget-mini-title-only .widget-mini-heading { white-space: normal; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; font-size: 15px; line-height: 1.3; }
 .saved-thumb-pic .widget-mini-desc { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
 .saved-meta { position: absolute; left: var(--space-8); right: var(--space-8); bottom: var(--space-8); z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); pointer-events: none; }
 .saved-meta .saved-src, .saved-meta .saved-time { padding: 1px var(--space-8); border-radius: 999px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }

@@ -3,9 +3,8 @@ import ItemsEditor from './ItemsEditor.jsx';
 import { loadFeed, withFeedItems, REFRESH_OPTIONS } from '../../services/feed.js';
 import { DEFAULT_FEED_REFRESH_SEC } from '../../constants/initialState.js';
 import { useFeedStatus } from '../../hooks/useLiveFeed.js';
-import { templateHasImage } from '../../constants/widgetTemplates.js';
 import { SOURCE_LABEL } from '../../services/graphics.js';
-import { Field, Row, Section, SegmentedControl, Select, Toggle } from '../../ui-kit';
+import { Field, Row, Section, SegmentedControl, Select } from '../../ui-kit';
 
 const SOURCE_OPTIONS = Object.entries(SOURCE_LABEL).map(([value, label]) => ({ value, label }));
 
@@ -39,12 +38,9 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
   const [rssLoaded, setRssLoaded] = useState(() => (st.drafts?.rss || []).length > 0);
   const [rssError, setRssError] = useState('');
   const [rssLoading, setRssLoading] = useState(false);
-  const [rssItems, setRssItems] = useState([]); // the validated feed: [{ title, description, media }]
 
   const drafts = st.drafts || { manual: [], rss: [] };
-  const media = st.media || { rss: [] };
-  const [mediaEnabled, setMediaEnabled] = useState(() => (st.media?.rss || []).some(Boolean));
-
+  const showDescriptions = st.showFeedDescription !== false;
   useEffect(() => {
     const url = (st.rssUrl || '').trim();
     const missing = kind === 'widget' && st.src === 'rss' && url && drafts.rss?.length && !(st.descriptions?.rss || []).some(Boolean);
@@ -53,7 +49,6 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
     loadFeed(url)
       .then((items) => {
         if (stopped) return;
-        setRssItems(items);
         setSt((s) => withFeedItems(kind, s, items));
       })
       .catch(() => {});
@@ -62,27 +57,6 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
 
   // Editing a source's content (typing, or validating a Feed URL) makes it the live content at once.
   const setDraft = (key, items) => setSt((s) => ({ ...s, drafts: { ...(s.drafts || {}), [key]: items }, src: key, items }));
-
-  const mediaPos = media.rss?.find(Boolean)?.pos || 'left';
-
-  // No per-headline picking — toggling "Include images/videos" on/off applies to every Feed
-  // headline at once. A validated feed gives each headline its own media (url); an item
-  // without media gets none.
-  const setFeedMedia = (on) =>
-    setSt((s) => {
-      const count = (s.drafts?.rss || []).length;
-      const list = !on ? [] : Array.from({ length: count }, (_, i) => {
-        if (!rssItems.length) return { pos: mediaPos };
-        return rssItems[i]?.media ? { pos: mediaPos, url: rssItems[i].media } : null;
-      });
-      return { ...s, media: { ...(s.media || media), rss: list } };
-    });
-
-  const setMediaPos = (pos) =>
-    setSt((s) => {
-      const list = (s.media?.rss || []).map((m) => (m ? { ...m, pos } : m));
-      return { ...s, media: { ...(s.media || media), rss: list } };
-    });
 
   const loadRss = async () => {
     setRssError('');
@@ -99,9 +73,8 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
     setRssLoading(true);
     try {
       const items = await loadFeed(url);
-      setRssItems(items);
-      setMediaEnabled(false);
-      setSt((s) => withFeedItems(kind, { ...s, src: 'rss', media: { ...(s.media || media), rss: [] } }, items));
+      console.log('[feed] validate', url, '→', items.length, 'items,', items.filter((i) => i.description).length, 'with a description');
+      setSt((s) => withFeedItems(kind, { ...s, src: 'rss' }, items));
       setRssLoaded(true);
     } catch (err) {
       setRssError(err.message);
@@ -168,26 +141,13 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
       {st.src === 'rss' && (
         <div id="rssSec">
           {rssLoaded && !rssError && (
-            <>
-              <Field grow className="items-field">
-                {kind === 'widget' ? (
-                  <FeedItemsList titles={drafts.rss} descriptions={st.descriptions?.rss || []} />
-                ) : (
-                  <ItemsEditor items={drafts.rss} onChange={() => {}} readOnly />
-                )}
-              </Field>
-              {kind === 'widget' && templateHasImage(st.template) && (
-                <MediaPicker
-                  enabled={mediaEnabled}
-                  onToggleEnabled={() => {
-                    setMediaEnabled(!mediaEnabled);
-                    setFeedMedia(!mediaEnabled);
-                  }}
-                  pos={mediaPos}
-                  onSetPos={setMediaPos}
-                />
+            <Field grow className="items-field">
+              {kind === 'widget' ? (
+                <FeedItemsList titles={drafts.rss} descriptions={showDescriptions ? st.descriptions?.rss || [] : []} />
+              ) : (
+                <ItemsEditor items={drafts.rss} onChange={() => {}} readOnly />
               )}
-            </>
+            </Field>
           )}
         </div>
       )}
@@ -218,18 +178,5 @@ function FeedItemsList({ titles, descriptions }) {
         </li>
       ))}
     </ol>
-  );
-}
-
-function MediaPicker({ enabled, onToggleEnabled, pos, onSetPos }) {
-  return (
-    <Row className="media-picker">
-      <Field>
-        <Toggle on={enabled} onChange={onToggleEnabled}>Include images/videos with these headlines</Toggle>
-      </Field>
-      {enabled && (
-        <SegmentedControl value={pos} onChange={onSetPos} ariaLabel="Image position" options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]} />
-      )}
-    </Row>
   );
 }

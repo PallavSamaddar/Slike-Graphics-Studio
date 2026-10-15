@@ -31,7 +31,13 @@ export const GRAPHICS = {
     initial: initialWidgetState,
     applyTemplate: (s, id) => {
       const t = WIDGET_TPLS.find((tpl) => tpl.id === id);
-      return !t ? { ...s, template: id } : { ...s, template: id, style: clone(t.style) };
+      return !t ? { ...s, template: id } : {
+        ...s,
+        template: id,
+        style: clone(t.style),
+        showFeedDescription: t.layout.desc,
+        showFeedMedia: t.layout.img,
+      };
     },
   },
   jacket: {
@@ -49,4 +55,7 @@ export const GRAPHICS = {
 // Gallery tab → kind of graphic.
 export const KIND_BY_CATEGORY = { ticker: 'ticker', widgets: 'widget', jackets: 'jacket' };
 
-export const TEMPLATE_COUNT = TPLS.length + WIDGET_TPLS.length + JACKET_TPLS.length;
+// The templates a kind offers to pick from — a hidden one stays only for graphics saved with it.
+export const galleryTemplates = (kind) => GRAPHICS[kind].templates.filter((t) => !t.hidden);
+
+export const TEMPLATE_COUNT = Object.keys(GRAPHICS).reduce((n, kind) => n + galleryTemplates(kind).length, 0);

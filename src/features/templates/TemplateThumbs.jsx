@@ -24,23 +24,26 @@ export function TickerThumb({ t, lines = ['Breaking news from India', 'Markets h
   );
 }
 
-export function WidgetThumb({ t, heading = 'News Heading', line = 'Enter description here' }) {
+export function WidgetThumb({ t, heading = 'News Heading', line = t.layout?.desc === false ? '' : 'Enter description here' }) {
   const bodyTextColor = autoTextColor(t.style.bg);
   const headingTextColor = autoTextColor(t.style.headingBg);
+  const imgPos = t.style.badgeImagePos;
+  const titleOnly = !line && !imgPos;
+  const imgOnly = !line && !!imgPos;
   return (
-    <div className="widget-mini" style={{ background: t.style.bgGradient || t.style.bg }}>
+    <div className={'widget-mini' + (titleOnly ? ' widget-mini-title-only' : '')} style={{ background: t.style.bgGradient || t.style.bg }}>
       <div className={'widget-texture-' + (t.style.texture || 'none')} style={{ opacity: t.style.textureOpacity ?? 1 }} />
       <div className="widget-mini-heading" style={{ background: t.style.headingBgGradient || t.style.headingBg, color: headingTextColor }}>
         {heading}
       </div>
-      <div className={'widget-mini-body' + (t.style.badgeImagePos ? ' widget-mini-body-badge-' + t.style.badgeImagePos : '')}>
-        <span className="widget-mini-desc" style={{ color: bodyTextColor }}>{line}</span>
-        {t.style.badgeImagePos && (
-          <div className={'widget-mini-badge-img widget-mini-badge-img-placeholder widget-mini-badge-img-' + t.style.badgeImagePos}>
+      {!titleOnly && <div className={'widget-mini-body' + (imgPos && !imgOnly ? ' widget-mini-body-badge-' + imgPos : '')}>
+        {line && <span className="widget-mini-desc" style={{ color: bodyTextColor }}>{line}</span>}
+        {imgPos && (
+          <div className={'widget-mini-badge-img widget-mini-badge-img-placeholder widget-mini-badge-img-' + (imgOnly ? 'center' : imgPos)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="3.2" /><path d="M6 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /></svg>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

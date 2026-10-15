@@ -8,6 +8,7 @@ export class FeedError extends Error {}
 
 const text = (el) => (el?.textContent || '').trim();
 const plain = (html) => (html ? (new DOMParser().parseFromString(html, 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim() : '');
+const firstText = (els) => els.map((el) => plain(text(el))).find(Boolean) || '';
 
 function child(item, name, ns) {
   const byNs = ns ? item.getElementsByTagNameNS(ns, name)[0] : null;
@@ -30,11 +31,19 @@ function parseFeed(xml) {
   const rss = [...doc.getElementsByTagName('item')];
   const atom = rss.length ? [] : [...doc.getElementsByTagName('entry')];
   if (!rss.length && !atom.length) throw new FeedError('This feed has no items.');
-  return (rss.length ? rss : atom).map((item) => ({
+  const parsed = (rss.length ? rss : atom).map((item) => ({
     title: text(child(item, 'title')),
-    description: plain(text(child(item, 'description')) || text(child(item, 'encoded', CONTENT)) || text(child(item, 'summary')) || text(child(item, 'content')) || text(item.getElementsByTagNameNS(MRSS, 'description')[0])),
+    description: firstText([
+      child(item, 'description'),
+      child(item, 'encoded', CONTENT),
+      child(item, 'summary'),
+      child(item, 'content'),
+      item.getElementsByTagNameNS(MRSS, 'description')[0],
+    ]),
     media: mediaUrl(item),
   }));
+  const first = rss[0] || atom[0];
+  return parsed;
 }
 
 async function fetchFeed(url) {
@@ -57,13 +66,15 @@ export async function loadFeed(url) {
   return titledItems(await fetchFeed(url));
 }
 
+export const feedMediaOn = (st) => st.showFeedMedia ?? (st.media?.rss || []).length > 0;
+
 export function withFeedItems(kind, st, items) {
   const titles = items.map((i) => i.title);
   const next = { ...st, drafts: { ...(st.drafts || {}), rss: titles }, items: titles };
   if (kind === 'widget') next.descriptions = { ...st.descriptions, rss: items.map((i) => i.description || '') };
   const mediaList = st.media?.rss || [];
-  if (mediaList.length) {
-    const pos = mediaList.find(Boolean)?.pos || 'left';
+  if (feedMediaOn(st)) {
+    const pos = mediaList.find(Boolean)?.pos || st.style?.badgeImagePos || 'left';
     next.media = { ...st.media, rss: items.map((i) => (i.media ? { pos, url: i.media } : null)) };
   }
   return next;

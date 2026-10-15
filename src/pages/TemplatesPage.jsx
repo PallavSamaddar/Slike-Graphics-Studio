@@ -1,4 +1,4 @@
-import { GRAPHICS, KIND_BY_CATEGORY } from '../constants/graphics.js';
+import { KIND_BY_CATEGORY, galleryTemplates } from '../constants/graphics.js';
 import { ChooserCard, ChooserGrid, CreateCard, PageHead, Tabs } from '../ui-kit';
 import { THUMBS } from '../features/templates/TemplateThumbs.jsx';
 import ComingSoonPanel from '../features/templates/ComingSoonPanel.jsx';
@@ -30,8 +30,8 @@ export default function TemplatesPage({ category = 'ticker', onCategory, onPick 
       ) : (
         <ChooserGrid>
           <CreateCard label="Start from scratch" onOpen={() => onPick(category, SCRATCH[category])} />
-          {GRAPHICS[kind].templates.map((t) => (
-            <ChooserCard key={t.id} name={t.name} onOpen={() => onPick(category, t.id)}>
+          {galleryTemplates(kind).map((t) => (
+            <ChooserCard key={t.id} name={t.name} reach={t.layout?.label} onOpen={() => onPick(category, t.id)}>
               <Thumb t={t} />
             </ChooserCard>
           ))}

@@ -816,7 +816,6 @@ input, select, textarea { font-family: inherit; }
 .rss-row { display: flex; gap: 6px; }
 .rss-row .form-inp { flex: 1; }
 
-.media-picker { margin-top: 12px; }
 
 /* ============================================================
    PANEL — PREVIEW (RIGHT)
@@ -1556,6 +1555,7 @@ input, select, textarea { font-family: inherit; }
 }
 .widget-card-summary {
   min-width: 0;
+  text-align: center;
   font-size: clamp(10px, 3.6cqi, 16px);
   line-height: 1.5;
   opacity: 0.75;
@@ -2181,6 +2181,7 @@ input, select, textarea { font-family: inherit; }
 .widget-card-body {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   min-width: 0;
 }
@@ -2456,6 +2457,7 @@ input, select, textarea { font-family: inherit; }
 }
 .widget-mini-badge-img-left { left: 6%; }
 .widget-mini-badge-img-right { right: 6%; }
+.widget-mini-badge-img-center { left: 50%; transform: translateX(-50%); }
 .widget-mini-badge-img-placeholder {
   display: flex;
   align-items: center;
@@ -2467,6 +2469,7 @@ input, select, textarea { font-family: inherit; }
   position: relative;
   z-index: 1;
   padding: 10px 12px;
+  text-align: center;
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
@@ -2486,11 +2489,7 @@ input, select, textarea { font-family: inherit; }
 .widget-mini-body-badge-left { padding-left: calc(22% + 20px); }
 .widget-mini-body-badge-right { padding-right: calc(22% + 20px); }
 .widget-mini-desc { font-size: 15px; font-weight: 700; line-height: 1.25; }
-
-/* Jacket — a full-bleed live-feed overlay: a bottom-left logo + scrolling
-   ticker headline, a bottom-right clock, and a top-right inset "second
-   camera" video box with a show-name tag. Both video areas are
-   placeholders here — the real feeds play there on air. */
+.widget-mini-title-only { justify-content: center; }
 .jacket-frame {
   position: relative;
   width: 100%;
