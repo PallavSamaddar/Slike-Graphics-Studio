@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { ChooserGrid, EmptyState, Tabs, useToast } from '../../ui-kit';
-import { FilterChip, SortMenu, ViewToggle } from './LibControls.jsx';
+import { CheckChip, ChooserGrid, EmptyState, Tabs, useToast } from '../../ui-kit';
+import { SortMenu, ViewToggle } from './LibControls.jsx';
 import { GRAPHIC_KIND, SOURCE_TYPE, duplicateGraphic, archiveGraphic } from '../../services/graphics.js';
 import GraphicCard, { GraphicRow, KIND_LABEL } from './GraphicCard.jsx';
 import { useGraphicsPage, toCard, PAGE } from './useGraphicsIndex.js';
 
-const SOURCES = [{ value: 'all', label: 'Any source' }, { value: SOURCE_TYPE.MANUAL, label: 'Manual' }, { value: SOURCE_TYPE.RSS, label: 'Feed' }];
-const STATES = [{ value: 'all', label: 'Any status' }, { value: 'published', label: 'Published' }, { value: 'draft', label: 'Draft' }];
+const SOURCES = [{ value: SOURCE_TYPE.MANUAL, label: 'Manual' }, { value: SOURCE_TYPE.RSS, label: 'Feed' }];
+const STATES = [{ value: 'published', label: 'Published' }, { value: 'draft', label: 'Draft' }];
 const SORTS = [{ value: 'edited', label: 'Last edited' }, { value: 'published', label: 'Last published' }, { value: 'name', label: 'Name' }];
-const FILTERS_OFF = { query: '', kind: 'all', source: 'all', state: 'all' };
+const FILTERS_OFF = { query: '', kind: 'all', sources: SOURCES.map((o) => o.value), states: STATES.map((o) => o.value) };
+const toggled = (list, value, on) => (on ? [...list, value] : list.filter((v) => v !== value));
 
 function pageNumbers(page, pages) {
   const want = new Set([1, pages, page - 1, page, page + 1].filter((n) => n >= 1 && n <= pages));
@@ -44,7 +45,7 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
     ...Object.values(GRAPHIC_KIND).map((k) => ({ id: k, label: stats ? `${KIND_LABEL[k]}s · ${stats.kind?.[k] ?? 0}` : `${KIND_LABEL[k]}s` })),
   ];
 
-  const narrowed = JSON.stringify(filters) !== JSON.stringify(FILTERS_OFF);
+  const narrowed = !!filters.query || filters.kind !== 'all' || filters.sources.length < SOURCES.length || filters.states.length < STATES.length;
   const pages = Math.max(1, Math.ceil(count / PAGE));
   const at = Math.min(page, pages);
   const from = (at - 1) * PAGE;
@@ -134,8 +135,16 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
               aria-label="Search your graphics"
               onChange={(e) => set({ query: e.target.value })}
             />
-            <FilterChip label="Source" value={filters.source} options={SOURCES} offValue="all" onChange={(source) => set({ source })} />
-            <FilterChip label="Status" value={filters.state} options={STATES} offValue="all" onChange={(state) => set({ state })} />
+            <div className="lib-checks" role="group" aria-label="Source">
+              {SOURCES.map((o) => (
+                <CheckChip key={o.value} on={filters.sources.includes(o.value)} onChange={(on) => set({ sources: toggled(filters.sources, o.value, on) })}>{o.label}</CheckChip>
+              ))}
+            </div>
+            <div className="lib-checks" role="group" aria-label="Status">
+              {STATES.map((o) => (
+                <CheckChip key={o.value} on={filters.states.includes(o.value)} onChange={(on) => set({ states: toggled(filters.states, o.value, on) })}>{o.label}</CheckChip>
+              ))}
+            </div>
             <span className="lib-gap" />
             <SortMenu value={sort} options={SORTS} onChange={changeSort} />
             <ViewToggle value={view} onChange={setView} />

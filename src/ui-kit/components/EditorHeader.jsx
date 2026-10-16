@@ -33,7 +33,7 @@ export default function EditorHeader({ name, title, onTitleChange, placeholder, 
       ))}
       {pending}
       <span className="eh-gap" />
-      <button type="button" className="btn ghost" onClick={save.onClick} disabled={save.disabled} title={save.title}>Save</button>
+      {save && <button type="button" className="btn ghost" onClick={save.onClick} disabled={save.disabled} title={save.title}>Save</button>}
       <button type="button" className={'btn' + (publish.ghost ? ' ghost' : '')} onClick={publish.onClick} disabled={publish.disabled} title={publish.title}>{publish.label}</button>
       <div className={'eh-more' + (open ? ' open' : '')} ref={ref}>
         <button type="button" className="btn ghost eh-more-btn" aria-haspopup="true" aria-expanded={open} aria-label="More" onClick={() => setOpen((o) => !o)}>⋯</button>

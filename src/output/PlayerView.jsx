@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { GRAPHICS } from '../constants/graphics.js';
 import { getOnAirGraphic } from '../services/graphics.js';
 import { fromGraphic } from '../services/graphicMapper.js';
 import usePoll from '../hooks/usePoll.js';
+import { onAirChange } from '../services/airSignal.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
 import JacketView from './JacketView.jsx';
@@ -20,13 +21,23 @@ export default function PlayerView({ hash }) {
 
 function OnAirGraphic({ id }) {
   const [onAir, setOnAir] = useState(null); // { kind, st } | { gone: true }
-  usePoll((isStopped) => getOnAirGraphic(id)
-    .then((g) => {
-      const spec = GRAPHICS[g.kind];
-      if (!isStopped() && spec) setOnAir({ kind: g.kind, st: fromGraphic(g, spec.initial) });
-    })
-    .catch(() => { if (!isStopped()) setOnAir((cur) => cur || { gone: true }); }),
-  ON_AIR_POLL_MS, [id], { immediate: true });
+  // Bumped when this browser publishes or takes the graphic off air: read it again at once,
+  // past the CDN's copy — that one read only; the polls after it go back to the CDN.
+  const [nudged, setNudged] = useState(0);
+  const fresh = useRef(false);
+  useEffect(() => onAirChange(id, () => { fresh.current = true; setNudged((n) => n + 1); }), [id]);
+
+  usePoll((isStopped) => {
+    const skipCache = fresh.current;
+    fresh.current = false;
+    return getOnAirGraphic(id, { fresh: skipCache })
+      .then((g) => {
+        const spec = GRAPHICS[g.kind];
+        if (!isStopped() && spec) setOnAir({ kind: g.kind, st: fromGraphic(g, spec.initial) });
+      })
+      // Not on air (404): clear it. Any other failure (network, server) keeps what's showing.
+      .catch((err) => { if (!isStopped()) setOnAir((cur) => (err.code === 404 || !cur ? { gone: true } : cur)); });
+  }, ON_AIR_POLL_MS, [id, nudged], { immediate: true });
 
   if (!onAir || onAir.gone) return null;
   return <GraphicOnPage kind={onAir.kind} st={onAir.st} />;

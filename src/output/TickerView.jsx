@@ -1,20 +1,12 @@
 import { SPEEDS } from '../constants/tickerTemplates.js';
 import useTickerScrollDuration from '../hooks/useTickerScrollDuration.js';
 import SingleItemTicker from './SingleItemTicker.jsx';
-import { autoTextColor } from '../utils/color.js';
+import { autoTextColor, textShadowFor } from '../utils/color.js';
 
 function badgeLabel(badge) {
   return badge.customText || badge.type || 'LIVE';
 }
 
-// Renders just the ticker bar (badge + scrolling/single-pass text) from
-// state `st`. Shared by the small in-editor preview and the standalone
-// player page so both stay in sync.
-//
-// `scaled`: when true, sizes are expressed in container-query units
-// (relative to a real 1080p canvas) with a legibility floor, for use
-// inside the small preview frame. When false (player/export), the
-// author's raw px values are used as-is — the player IS the real canvas.
 export default function TickerView({ st, scaled = false }) {
   const { style: s, badge: b, text: tx, behavior } = st;
   const items = st.items.filter((x) => x.trim());
@@ -55,6 +47,7 @@ export default function TickerView({ st, scaled = false }) {
     textTransform: tx.textTransform,
     textAlign: tx.textAlign || 'left',
     color: autoColor,
+    textShadow: textShadowFor(autoColor),
   };
 
   const track = (
@@ -95,14 +88,14 @@ export default function TickerView({ st, scaled = false }) {
     const ddStyle = s.ddStyle || 'chevron';
     return (
       <div className={'p-ticker p-ticker-dd p-dd-' + ddStyle + (scaled ? '' : ' p-ticker-real')} style={{ height: ddTickerStyle.height }}>
-        <div className="p-dd-top" style={{ background: b.bgColor, color: badgeAutoColor, fontWeight: b.fontWeight }}>
+        <div className="p-dd-top" style={{ background: b.bgColor, color: badgeAutoColor, textShadow: textShadowFor(badgeAutoColor), fontWeight: b.fontWeight }}>
           {ddStyle === 'stripes' && (
             <span className="p-dd-stripes-mark" aria-hidden="true"><span /><span /><span /></span>
           )}
           <span className="p-dd-top-text">{badgeLabel(b)}</span>
         </div>
-        <div className="p-dd-bottom" style={{ background: s.bgColor, color: autoColor }}>
-          <div className="p-dd-tag" style={{ background: s.accentColor || '#1A1714', color: autoTextColor(s.accentColor || '#1A1714') }}>
+        <div className="p-dd-bottom" style={{ background: s.bgColor, color: autoColor, textShadow: textShadowFor(autoColor) }}>
+          <div className="p-dd-tag" style={{ background: s.accentColor || '#1A1714', color: autoTextColor(s.accentColor || '#1A1714'), textShadow: textShadowFor(autoTextColor(s.accentColor || '#1A1714')) }}>
             {b.tag2 || '24/7'}
           </div>
           {track}
@@ -116,7 +109,7 @@ export default function TickerView({ st, scaled = false }) {
   return (
     <div className={'p-ticker' + (scaled ? '' : ' p-ticker-real')} style={tickerStyle}>
       {b.show && (
-        <div className={'p-badge p-badge-' + ddStyle + (s.badgeShape === 'wedge' ? ' p-badge-wedge' : '')} style={{ background: b.bgColor, color: badgeAutoColor, fontWeight: b.fontWeight, '--badge-scale': b.scale || 1 }}>
+        <div className={'p-badge p-badge-' + ddStyle + (s.badgeShape === 'wedge' ? ' p-badge-wedge' : '')} style={{ background: b.bgColor, color: badgeAutoColor, textShadow: textShadowFor(badgeAutoColor), fontWeight: b.fontWeight, '--badge-scale': b.scale || 1 }}>
           {ddStyle === 'stripes' && (
             <span className="p-dd-stripes-mark" aria-hidden="true"><span /><span /><span /></span>
           )}

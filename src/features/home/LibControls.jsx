@@ -35,25 +35,6 @@ function Menu({ open, setOpen, options, value, onChange, heading, children, clas
   );
 }
 
-export function FilterChip({ label, value, options, offValue, onChange }) {
-  const [open, setOpen] = useState(false);
-  const on = value !== offValue;
-  const current = options.find((o) => o.value === value);
-  return (
-    <Menu open={open} setOpen={setOpen} options={options} value={value} onChange={onChange} heading={label} className={'lc-chip-wrap' + (on ? ' on' : '')}>
-      <button type="button" className={'lc-chip' + (on ? ' on' : '') + (open ? ' open' : '')} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <span className="lc-label">{on ? current?.label : label}</span>
-        <Chevron />
-      </button>
-      {on && (
-        <button type="button" className="lc-chip-clear" aria-label={`Clear ${label.toLowerCase()} filter`} title="Clear" onClick={() => onChange(offValue)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-        </button>
-      )}
-    </Menu>
-  );
-}
-
 // Sort as one quiet button showing the current order, with the choices in a menu (Drive style).
 export function SortMenu({ value, options, onChange }) {
   const [open, setOpen] = useState(false);

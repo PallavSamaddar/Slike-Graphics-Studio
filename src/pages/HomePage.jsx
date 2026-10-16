@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useGraphicStats, INDEX_REFRESH_MS } from '../features/home/useGraphicsIndex.js';
 import StartNew from '../features/home/StartNew.jsx';
 import GraphicsLibrary from '../features/home/GraphicsLibrary.jsx';
-import PublishedNow from '../features/home/PublishedNow.jsx';
 import TemplatePickerDialog from '../features/templates/TemplatePickerDialog.jsx';
 
 export default function HomePage({ onPickTemplate, onOpenGraphic }) {
@@ -19,7 +18,6 @@ export default function HomePage({ onPickTemplate, onOpenGraphic }) {
       </div>
       <aside className="home-aside">
         <StartNew onPick={setPicking} />
-        <PublishedNow refresh={refresh} onOpen={onOpenGraphic} />
       </aside>
       {picking && <TemplatePickerDialog category={picking} onPick={onPickTemplate} onClose={() => setPicking(null)} />}
     </div>

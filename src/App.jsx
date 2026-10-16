@@ -9,6 +9,7 @@ import { EmptyState, ToastHost, TopBar, useTheme } from './ui-kit';
 import HomePage from './pages/HomePage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
 import StudioPage from './pages/StudioPage.jsx';
+import StudioLoading from './pages/StudioLoading.jsx';
 import { TickerContent, TickerStyle, TickerPreview } from './features/ticker';
 import { WidgetContent, WidgetStyle, WidgetPreview } from './features/widget';
 import { JacketContent, JacketStyle, JacketPreview } from './features/jacket';
@@ -93,21 +94,22 @@ export default function App() {
       </EmptyState>
     );
   } else if (!studio) {
-    page = <div className="saved-status" role="status">Opening the graphic…</div>;
+    page = <StudioLoading onBack={back} />;
   } else {
     const kind = studio.kind;
     const g = graphics[kind];
+    const editor = docs.studio(kind);
     // Content fills the left column; the preview and, under it, the style sections the right.
     const parts = {
       ticker: {
         content: <TickerContent st={g.cur} setSt={g.setCur} />,
         style: <TickerStyle st={g.cur} setSt={g.setCur} />,
-        preview: <LiveFeedPreview kind="ticker" st={g.cur}>{(st) => <TickerPreview st={st} />}</LiveFeedPreview>,
+        preview: <LiveFeedPreview st={g.cur} refreshedAt={editor.doc.feedRefreshedAt} onFeed={editor.graphic.applyFeed}>{(st) => <TickerPreview st={st} />}</LiveFeedPreview>,
       },
       widget: {
         content: <WidgetContent st={g.cur} setSt={g.setCur} />,
         style: <WidgetStyle st={g.cur} setSt={g.setCur} />,
-        preview: <LiveFeedPreview kind="widget" st={g.cur}>{(st) => <WidgetPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
+        preview: <LiveFeedPreview st={g.cur} refreshedAt={editor.doc.feedRefreshedAt} onFeed={editor.graphic.applyFeed}>{(st) => <WidgetPreview st={st} setSt={g.setCur} />}</LiveFeedPreview>,
       },
       jacket: {
         content: <JacketContent st={g.cur} setSt={g.setCur} />,
@@ -118,7 +120,7 @@ export default function App() {
     page = (
       <StudioPage
         kind={kind}
-        {...docs.studio(kind)}
+        {...editor}
         stream={null}
         onBack={back}
         content={parts.content}

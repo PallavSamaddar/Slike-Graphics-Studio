@@ -49,6 +49,16 @@ export const rgbToHsv = ({ r, g, b }) => {
 };
 
 // Pick readable text color (light/dark) for given bg color (hex or rgba).
+// The shadow behind on-air text, as news channels use to lift it off what's behind: a soft
+// dark one under light text; under dark text only a faint light edge (a dark one would smudge).
+const SHADOW_UNDER_LIGHT = '0 1px 2px rgba(0,0,0,0.6), 0 0 8px rgba(0,0,0,0.35)';
+const SHADOW_UNDER_DARK = '0 1px 1px rgba(255,255,255,0.35)';
+export const textShadowFor = (textColor) => {
+  if (!textColor || !isSafeColor(textColor)) return SHADOW_UNDER_LIGHT;
+  const { r, g, b } = parseColor(textColor);
+  return (r * 299 + g * 587 + b * 114) / 1000 >= 150 ? SHADOW_UNDER_LIGHT : SHADOW_UNDER_DARK;
+};
+
 export const autoTextColor = (color, light = '#FFFFFF', dark = '#1A1714') => {
   if (!color || !isSafeColor(color)) return dark;
   const { r, g, b } = parseColor(color);

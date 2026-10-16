@@ -1255,8 +1255,14 @@ input, select, textarea { font-family: inherit; }
   font-size: clamp(10px, 3.6cqi, 16px);
   line-height: 1.5;
   opacity: 0.75;
+}
+/* with a background of its own, the description sits in a padded box like the heading's */
+.widget-card-summary.has-bg { padding: 0.35em 0.6em; border-radius: var(--radius-sm); }
+/* clamped inside any padding, so a 4th line can't peek out under it */
+.widget-card-summary-text {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

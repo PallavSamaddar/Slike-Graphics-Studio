@@ -3,6 +3,7 @@
 // The kit's look lives in styles/ (tokens.css, kit.css, fonts); load it once with
 //   import './ui-kit/styles';
 export { default as ChangeReview } from './components/ChangeReview.jsx';
+export { default as CheckChip } from './components/CheckChip.jsx';
 export { default as ChooserCard, CreateCard, ChooserGrid } from './components/ChooserCard.jsx';
 export { default as Dialog } from './components/Dialog.jsx';
 export { default as EditorHeader } from './components/EditorHeader.jsx';

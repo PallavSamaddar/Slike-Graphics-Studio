@@ -147,7 +147,8 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
         placeholder={`Untitled ${kind}`}
         onBack={onBack}
         pending={pending}
-        save={{
+        // Once published, edits go straight on air: Publish is the only act, no separate Save.
+        save={hasAir ? null : {
           onClick: () => openReview('save'),
           disabled: !canSave,
           title: canSave ? undefined : 'Nothing changed since the last save',

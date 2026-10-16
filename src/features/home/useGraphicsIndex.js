@@ -33,10 +33,13 @@ function useDebounced(value, ms) {
   return settled;
 }
 
-const toFilters = ({ kind, source, state, sort }, search, page) => ({
+// One ticked filters to it; all ticked is no filter (undefined); none ticked matches nothing (null).
+const only = (list) => (list.length === 1 ? list[0] : list.length ? undefined : null);
+
+const toFilters = ({ kind, sources, states, sort }, search, page) => ({
   kind: kind === 'all' ? undefined : kind,
-  sourceType: source === 'all' ? undefined : source,
-  state: state === 'all' ? undefined : state,
+  sourceType: only(sources),
+  state: only(states),
   search,
   sort,
   size: PAGE,
@@ -48,6 +51,10 @@ export function useGraphicsPage(view, page, refresh) {
   const [result, setResult] = useState({ status: 'loading', loading: true, graphics: [], count: 0, error: '' });
 
   useEffect(() => {
+    if (only(view.sources) === null || only(view.states) === null) {
+      setResult({ status: 'ready', loading: false, graphics: [], count: 0, error: '' });
+      return undefined;
+    }
     const controller = new AbortController();
     const { signal } = controller;
     setResult((r) => ({ ...r, loading: true }));
@@ -61,7 +68,7 @@ export function useGraphicsPage(view, page, refresh) {
         setResult((r) => ({ ...r, status: 'error', loading: false, error: err.message }));
       });
     return () => controller.abort();
-  }, [view.kind, view.source, view.state, view.sort, search, page, refresh]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [view.kind, only(view.sources), only(view.states), view.sort, search, page, refresh]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { ...result, patch: (fn) => setResult((r) => ({ ...r, graphics: fn(r.graphics) })) };
 }

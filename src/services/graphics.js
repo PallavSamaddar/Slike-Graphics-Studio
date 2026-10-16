@@ -51,7 +51,9 @@ export const publishGraphic = (id, mt, note) => callRpc(METHOD.PUBLISH, { id, mt
 
 export const unpublishGraphic = (id) => callRpc(METHOD.UNPUBLISH, { id });
 
-export const getOnAirGraphic = (id) => getPublic(`/graphicembed?id=${encodeURIComponent(id)}`);
+// `fresh` skips the CDN's cached copy (a read right after a publish).
+export const getOnAirGraphic = (id, { fresh = false } = {}) =>
+  getPublic(`/graphicembed?id=${encodeURIComponent(id)}${fresh ? `&t=${Date.now()}` : ''}`);
 
 export const updateGraphic = (id, mt, changes) => callRpc(METHOD.UPDATE, { ...changes, id, mt });
 

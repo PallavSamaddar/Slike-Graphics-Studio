@@ -39,6 +39,7 @@ export default function WidgetStyleSections({ st, setSt }) {
   // preset gradient, which otherwise always wins over the solid `bg` value.
   const setSolidBg = (v) => setSt((state) => ({ ...state, style: { ...state.style, bg: v, bgGradient: null } }));
   const setHeadingBgColor = (v) => setSt((state) => ({ ...state, style: { ...state.style, headingBg: v, headingBgGradient: null } }));
+  const setDescBgColor = (v) => setSt((state) => ({ ...state, style: { ...state.style, descBg: v, descBgGradient: null } }));
 
   const [pendingVideo, setPendingVideo] = useState(null); // { url, file, fileName }
   const upload = useMediaUpload();
@@ -122,26 +123,46 @@ export default function WidgetStyleSections({ st, setSt }) {
             <Field path="headingText.fontFamily" className="cs-wide">
               <FontSelect tx={ht} setTx={setHt} label="Heading" />
             </Field>
+            <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" />
           </div>
           <div className="cs-row">
             <span className="cs-label">Description</span>
+            <Field path={['style.descBg', 'style.descBgGradient']}>
+              <TextColorButton
+                kind="fill"
+                value={s.descBg}
+                fallback="transparent"
+                bar={s.descBgGradient || s.descBg}
+                onChange={setDescBgColor}
+                allowGradient
+                gradientValue={s.descBgGradient}
+                onChangeGradient={(css) => setStyle('descBgGradient', css)}
+                label="Description background"
+              />
+            </Field>
             <Field path="bodyText.color">
               <TextColorButton value={bt.color} auto={autoTextColor(s.bg)} onChange={(v) => setBt('color', v)} label="Description" />
             </Field>
             <Field path="bodyText.fontFamily" className="cs-wide">
               <FontSelect tx={bt} setTx={setBt} label="Description" />
             </Field>
+            <TextFormat tx={bt} setTx={setBt} path="bodyText" label="Description" />
+            <span className="cs-pipe" aria-hidden="true" />
+            <span className="cs-label cs-label-inline">Image</span>
             <label className="cs-check" title="While an item is on screen, its image slowly zooms in">
               <input type="checkbox" checked={!!s.imageSlowZoom} onChange={(e) => setStyle('imageSlowZoom', e.target.checked)} />
-              Image slow zoom
+              Slow zoom
             </label>
           </div>
         </div>
       </div>
 
       <div className="fieldset bg-sec" aria-label="Background">
-        <div className="bg-tabs-full">
-          <Tabs tabs={[{ id: 'animation', label: 'Background animation' }, { id: 'video', label: 'Background video' }]} value={bgTab} onChange={setBgTab} ariaLabel="Background type" />
+        <div className="cs-row bg-tabs-row">
+          <span className="cs-label">Background</span>
+          <div className="bg-tabs-full">
+            <Tabs tabs={[{ id: 'animation', label: 'Animation' }, { id: 'video', label: 'Video' }]} value={bgTab} onChange={setBgTab} ariaLabel="Background type" />
+          </div>
         </div>
         <div className="bg-tab-body">
           <div className={'bg-anim' + (bgTab === 'animation' ? '' : ' bg-tab-hidden')} aria-hidden={bgTab !== 'animation' || undefined}>
@@ -282,6 +303,38 @@ function Stepper({ value, onChange, step, min, max, display = String, label, tit
     </div>
   );
 }
+
+// A text's bold / italic / underline and its alignment (its size adapts to the card on its own).
+function TextFormat({ tx, setTx, path, label }) {
+  const bold = parseInt(tx.fontWeight, 10) >= 700;
+  const italic = tx.fontStyle === 'italic';
+  const underline = tx.textDecoration === 'underline';
+  const align = tx.align || 'center';
+  const btn = (on, onClick, title, children) => (
+    <button key={title} type="button" className={on ? 'on' : undefined} onClick={onClick} aria-pressed={on} aria-label={title} title={title}>{children}</button>
+  );
+  return (
+    <Field path={[`${path}.fontWeight`, `${path}.fontStyle`, `${path}.textDecoration`, `${path}.align`]}>
+      <div className="tool-group tool-fmt" role="group" aria-label={`${label} text style`}>
+        {btn(bold, () => setTx('fontWeight', bold ? '500' : '800'), 'Bold', <b>B</b>)}
+        {btn(italic, () => setTx('fontStyle', italic ? 'normal' : 'italic'), 'Italic', <i>I</i>)}
+        {btn(underline, () => setTx('textDecoration', underline ? 'none' : 'underline'), 'Underline', <u>U</u>)}
+        <span className="tool-fmt-sep" />
+        {ALIGNS.map(([value, title, lines]) => btn(align === value, () => setTx('align', value), title, (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            {lines.map(([x1, x2], i) => <line key={i} x1={x1} x2={x2} y1={6 + i * 6} y2={6 + i * 6} />)}
+          </svg>
+        )))}
+      </div>
+    </Field>
+  );
+}
+
+const ALIGNS = [
+  ['left', 'Align left', [[4, 20], [4, 14], [4, 17]]],
+  ['center', 'Align center', [[4, 20], [7, 17], [5.5, 18.5]]],
+  ['right', 'Align right', [[4, 20], [10, 20], [7, 20]]],
+];
 
 // A text's font.
 const FontSelect = ({ tx, setTx, label }) => (

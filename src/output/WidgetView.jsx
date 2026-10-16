@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { autoTextColor } from '../utils/color.js';
+import { autoTextColor, textShadowFor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
 import { feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTemplates.js';
 import { widgetTransition } from '../constants/textAnimations.js';
@@ -60,10 +60,15 @@ export default function WidgetView({ st, preview = false }) {
   const bodyStyle = {
     background: s.bgGradient || s.bg,
     color: bodyTextColor,
+    textShadow: textShadowFor(bodyTextColor),
     '--tex-speed': s.textureSpeed ?? 1,
   };
+  const descBg = s.descBgGradient || s.descBg;
   const itemStyle = {
     color: bt.color || bodyTextColor,
+    textShadow: textShadowFor(bt.color || bodyTextColor),
+    background: descBg || undefined,
+    textAlign: bt.align,
     lineHeight: lineHeightFor('body', s.textSpacing, bt),
     fontFamily: bt.fontFamily,
     fontWeight: bt.fontWeight,
@@ -73,6 +78,8 @@ export default function WidgetView({ st, preview = false }) {
   const headingStyle = {
     background: s.headingBgGradient || s.headingBg,
     color: ht.color || headingTextColor,
+    textShadow: textShadowFor(ht.color || headingTextColor),
+    textAlign: ht.align,
     lineHeight: lineHeightFor('heading', s.textSpacing, ht),
     fontFamily: ht.fontFamily,
     fontWeight: ht.fontWeight,
@@ -124,7 +131,11 @@ export default function WidgetView({ st, preview = false }) {
                   />
                 </div>
               )}
-              {hasDescription && <div className="widget-card-summary" style={itemStyle}>{summary}</div>}
+              {hasDescription && (
+                <div className={'widget-card-summary' + (descBg ? ' has-bg' : '')} style={itemStyle}>
+                  <span className="widget-card-summary-text">{summary}</span>
+                </div>
+              )}
             </div>
           </>
         )}

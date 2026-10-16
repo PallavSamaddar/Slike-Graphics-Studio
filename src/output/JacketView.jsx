@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react';
-import { autoTextColor } from '../utils/color.js';
+import { autoTextColor, textShadowFor } from '../utils/color.js';
 import { TPLS } from '../constants/tickerTemplates.js';
 import TickerView from './TickerView.jsx';
-
-// Renders a Jacket: a full-bleed live-feed overlay matching broadcast
-// convention — bottom-left logo + scrolling ticker headline, bottom-right
-// time/weather box, and an optional vertical image panel pinned to the
-// left or right edge. The main video area is a placeholder here — the
-// real feed plays there on air.
 export default function JacketView({ st, setSt }) {
   const { style: s, headlineText: ht } = st;
   const logoTextColor = autoTextColor(s.logoColor);
@@ -19,10 +13,9 @@ export default function JacketView({ st, setSt }) {
     fontStyle: ht.fontStyle,
     textDecoration: ht.textDecoration,
     textTransform: ht.textTransform,
+    textShadow: textShadowFor('#FFD400'), // the headline's yellow on the black bar
   };
 
-  // A jacket is a live on-air frame, not a dated item — the clock always
-  // shows the current wall time, ticking every second.
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -31,8 +24,6 @@ export default function JacketView({ st, setSt }) {
   const clockText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   const dateText = now.toLocaleDateString([], { day: '2-digit', month: 'short' });
 
-  // When both Time and Weather are on, the box flips between the two every
-  // few seconds instead of cramming both into one line.
   const showTime = !!st.showTime;
   const showWeather = !!st.showWeather && !!st.weather;
   const [showingWeather, setShowingWeather] = useState(false);
@@ -43,10 +34,6 @@ export default function JacketView({ st, setSt }) {
   }, [showTime, showWeather]);
   const faceIsWeather = showWeather && (!showTime || showingWeather);
 
-  // When a Ticker Style is picked, feed its template style/badge/text into
-  // the real TickerView with the jacket's own headline as the single
-  // scrolling item, so the headline strip is a genuine ticker bar instead
-  // of a plain scrolling text clone.
   const tickerTpl = st.tickerTemplate && TPLS.find((t) => t.id === st.tickerTemplate);
   const tickerSt = tickerTpl ? {
     style: { ...tickerTpl.style, ...st.tickerStyleOverrides },
@@ -56,9 +43,6 @@ export default function JacketView({ st, setSt }) {
     behavior: { speed: 2, mode: 'loop', animation: 'fade', itemDuration: 5 },
   } : null;
 
-  // Drag the panel's free edge to resize it live in the preview, instead of
-  // only offering a numeric field — percentage of the frame's relevant
-  // axis (width for left/right, height for top), clamped to a sane range.
   const panelSize = st.imagePanelSize ?? 26;
   const startResize = (e) => {
     e.preventDefault();
@@ -94,7 +78,7 @@ export default function JacketView({ st, setSt }) {
       )}
       {st.logoSubtext && <span className="jacket-logo-subtext">{st.logoSubtext}</span>}
       {st.tagText && (
-        <span className="jacket-logo-tag" style={{ background: s.tagColor, color: tagTextColor }}>{st.tagText}</span>
+        <span className="jacket-logo-tag" style={{ background: s.tagColor, color: tagTextColor, textShadow: textShadowFor(tagTextColor) }}>{st.tagText}</span>
       )}
     </>
   );
@@ -123,14 +107,14 @@ export default function JacketView({ st, setSt }) {
       )}
 
       {showLogoBlock && logoPos !== 'bottom-left' && (
-        <div className={'jacket-logo-block jacket-logo-floating jacket-logo-floating-' + logoPos} style={{ background: s.logoGradient || s.logoColor, color: logoTextColor }}>
+        <div className={'jacket-logo-block jacket-logo-floating jacket-logo-floating-' + logoPos} style={{ background: s.logoGradient || s.logoColor, color: logoTextColor, textShadow: textShadowFor(logoTextColor) }}>
           {logoContent}
         </div>
       )}
 
       <div className="jacket-bottom-bar">
         {showLogoBlock && logoPos === 'bottom-left' && (
-          <div className="jacket-logo-block" style={{ background: s.logoGradient || s.logoColor, color: logoTextColor }}>
+          <div className="jacket-logo-block" style={{ background: s.logoGradient || s.logoColor, color: logoTextColor, textShadow: textShadowFor(logoTextColor) }}>
             {logoContent}
           </div>
         )}
@@ -155,7 +139,7 @@ export default function JacketView({ st, setSt }) {
         )}
 
         {(showTime || showWeather) && (
-          <div className="jacket-time-box" style={{ background: s.timeColor, color: autoTextColor(s.timeColor) }}>
+          <div className="jacket-time-box" style={{ background: s.timeColor, color: autoTextColor(s.timeColor), textShadow: textShadowFor(autoTextColor(s.timeColor)) }}>
             {faceIsWeather ? (
               <>
                 <span className="jacket-time-main">{st.weather}</span>

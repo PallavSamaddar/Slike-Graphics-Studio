@@ -100,6 +100,22 @@ export function withoutFeedItems(st) {
   return next;
 }
 
+// A graphic without the parts a feed refresh writes — what's left are the person's own edits.
+export const withoutFeed = (st) => ({
+  ...st,
+  rssRefreshSec: undefined,
+  items: undefined,
+  drafts: { ...st.drafts, rss: undefined },
+  descriptions: { ...st.descriptions, rss: undefined },
+  media: { ...st.media, rss: undefined },
+});
+
+// What a graphic shows from its feed, comparable between two states of it.
+const feedPart = (st) => JSON.stringify([st?.drafts?.rss, st?.descriptions?.rss, st?.media?.rss]);
+export const sameFeed = (a, b) => feedPart(a) === feedPart(b);
+// True if the two states differ only in what a feed refresh writes (or not at all).
+export const onlyFeedDiffers = (a, b) => JSON.stringify(withoutFeed(a)) === JSON.stringify(withoutFeed(b));
+
 export const REFRESH_OPTIONS = [
   { value: 0, label: 'Off' },
   { value: 60, label: 'Every 1 min' },

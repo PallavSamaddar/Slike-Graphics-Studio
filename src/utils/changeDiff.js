@@ -42,6 +42,7 @@ const fmt = (pre) => ({
   letterSpacing: [`${pre}letter spacing`],
   verticalAlign: [`${pre}vertical align`, (v) => ALIGN[v] ?? v],
   spacing: [`${pre}spacing`, (v) => SPACING[v] ?? v],
+  align: [`${pre}alignment`, (v) => ALIGN[v] ?? v],
   color: [`${pre}colour`, (v) => v || 'Auto'],
 });
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -104,6 +105,8 @@ const MAPS = {
       'style.bg': ['Style', 'Background colour'],
       'style.bgGradient': ['Style', 'Background gradient'],
       'style.textSpacing': ['Style', 'Text spacing', (v) => SPACING[v] ?? v],
+      'style.descBg': ['Style', 'Description background'],
+      'style.descBgGradient': ['Style', 'Description background gradient'],
       'style.headingBg': ['Style', 'Heading background'],
       'style.headingBgGradient': ['Style', 'Heading background gradient'],
       'style.badgeImageName': ['Style', 'Image'],

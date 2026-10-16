@@ -22,7 +22,14 @@ function toSource(kind, st) {
   }
   const clean = (list) => list.filter((item) => item?.trim());
   if (st.src !== SOURCE_TYPE.RSS) return { type: SOURCE_TYPE.MANUAL, items: clean(st.items || []) };
-  return { type: SOURCE_TYPE.RSS, url: st.rssUrl, items: clean(st.items || []) };
+  const items = st.items || [];
+  const source = { type: SOURCE_TYPE.RSS, url: st.rssUrl, items: clean(items) };
+  // A widget's descriptions go with its titles, so the saved feed never pairs new titles
+  // with old descriptions; the server's feed sync keeps both up to date after that.
+  if (Array.isArray(st.descriptions?.rss)) {
+    source.descriptions = items.map((title, i) => [title, st.descriptions.rss[i] || '']).filter(([title]) => title?.trim()).map(([, d]) => d);
+  }
+  return source;
 }
 
 export function toGraphicPayload(kind, st, title) {
@@ -46,7 +53,9 @@ export function fromGraphic(graphic, initialState) {
     st.items = src.items || [];
     return graphic.kind === GRAPHIC_KIND.WIDGET ? withManualItems(st, graphic.config || {}) : st;
   }
-  const descriptions = st.descriptions?.rss || [];
+  // The feed's descriptions as last synced on the server (they match its titles), else the
+  // ones saved with the graphic before the server kept them.
+  const descriptions = src.descriptions || st.descriptions?.rss || [];
   const feedSt = graphic.kind === GRAPHIC_KIND.WIDGET ? withManualItems(st, graphic.config || {}) : st;
   return withFeedItems(graphic.kind, feedSt, (src.items || []).map((title, i) => ({ title, description: descriptions[i] || '', media: src.media?.[i] || null })));
 }
