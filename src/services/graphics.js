@@ -55,7 +55,8 @@ export const unpublishGraphic = (id) => callRpc(METHOD.UNPUBLISH, { id });
 export const getOnAirGraphic = (id, { fresh = false } = {}) =>
   getPublic(`/graphicembed?id=${encodeURIComponent(id)}${fresh ? `&t=${Date.now()}` : ''}`);
 
-export const updateGraphic = (id, mt, changes) => callRpc(METHOD.UPDATE, { ...changes, id, mt });
+export const updateGraphic = (id, mt, changes) =>
+  callRpc(METHOD.UPDATE, { ...changes, id, if_match: { field: 'mt', value: mt } });
 
 export const listGraphics = (filters) =>
   callRpc(METHOD.LIST, { ...buildQuery(filters), fields: LIST_FIELDS });

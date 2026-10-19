@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { GRAPHICS } from '../constants/graphics.js';
 import { getGraphic, publishGraphic, unpublishGraphic } from '../services/graphics.js';
 import { saveGraphic, fromGraphic, hasInlineMedia } from '../services/graphicMapper.js';
-import { airFromPublished, isOnAir } from '../services/air.js';
+import { airFromPublished } from '../services/air.js';
 import { announceAirChange } from '../services/airSignal.js';
-import { onlyFeedDiffers, sameFeed, withFeedItems, withoutFeed } from '../services/feed.js';
-import { diffGraphic } from '../utils/changeDiff.js';
+import { onlyFeedDiffers, sameFeed, withFeedItems, withFeedOf } from '../services/feed.js';
 import useRemoteWatch from './useRemoteWatch.js';
 
 const NEW_DOC = { id: null, mt: null, title: '', savedTitle: '', feedRefreshedAt: null };
@@ -62,32 +61,19 @@ export default function useDocument(graphics, { onCreated } = {}) {
         ...g,
         save: () => persist(kind, g.cur),
         publish: (note) => publishState(g.cur, note),
-        // A feed read: the fresh items go into the graphic, and when nothing but feed content
-        // differs it's kept in step on its own —
-        //   on air, and on air differs from it only in feed content → put on air again;
-        //   a saved draft (or on air with other saved changes waiting) → saved.
-        // Unsaved edits of the person's own are never saved or published for them.
-        // → { done: 'same' | 'applied' | 'saved' | 'published', heldBy?: [what changed besides
-        //   the feed, which kept the refresh from going on air on its own] }
         applyFeed: async (items) => {
           const next = withFeedItems(kind, g.cur, items);
           const changed = !sameFeed(next, g.cur);
           if (changed) g.setCur(next);
-          const snap = isOnAir(g.air) ? g.air.snap : null;
-          const airBehind = !!snap && !sameFeed(next, snap);
-          const ownChanges = (from) => diffGraphic(kind, withoutFeed(from), withoutFeed(next)).sections.flatMap((sec) => sec.rows.map((r) => r.what));
-          const unsaved = [...(doc.title !== doc.savedTitle ? ['Name'] : []), ...(onlyFeedDiffers(g.cur, g.saved) ? [] : ownChanges(g.saved))];
-          if (!doc.id || unsaved.length) {
-            return { done: changed ? 'applied' : 'same', heldBy: airBehind || changed ? unsaved : undefined };
-          }
-          if (airBehind && onlyFeedDiffers(next, snap)) {
-            await publishState(next, 'Feed refreshed');
-            return { done: 'published' };
-          }
-          const heldBy = airBehind ? ownChanges(snap) : undefined;
-          if (!changed && sameFeed(next, g.saved)) return { done: 'same', heldBy };
+          const ownUnsaved = doc.title !== doc.savedTitle || !onlyFeedDiffers(g.cur, g.saved);
+          if (!doc.id || ownUnsaved) return { done: changed ? 'applied' : 'same' };
+          if (!changed && sameFeed(next, g.saved)) return { done: 'same' };
           await persist(kind, next);
-          return { done: 'saved', heldBy };
+          return { done: 'saved' };
+        },
+        restore: (entry) => {
+          const st = fromGraphic({ kind, ...entry.snapshot }, spec.initial);
+          g.setCur(st.src === 'rss' && st.rssUrl === g.cur.rssUrl ? withFeedOf(st, g.cur) : st);
         },
         takeOffAir: async () => {
           const published = await unpublishGraphic(doc.id);

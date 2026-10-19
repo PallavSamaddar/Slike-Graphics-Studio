@@ -2,10 +2,7 @@ import { Dialog, Version } from '../../ui-kit';
 import { isOnAir } from '../../services/air.js';
 import { when } from '../../utils/time.js';
 
-// Every push this graphic has had, newest first: the version, its note, who pushed it and
-// when. The one on air is marked; a graphic taken off air says so at the top.
-//   air: the publish record (services/air.js)
-export default function VersionHistory({ air, name, onClose }) {
+export default function VersionHistory({ air, name, onRestore, onClose }) {
   const rows = [...(air?.history || [])].reverse();
   const onAir = isOnAir(air);
   return (
@@ -27,7 +24,15 @@ export default function VersionHistory({ air, name, onClose }) {
                   <span className="vh-note">{h.note || <i className="muted">No note</i>}</span>
                   <span className="vh-meta">{h.by ? `${h.by} · ` : ''}{when(h.at)}</span>
                 </span>
-                {current && <span className="pill live">On air</span>}
+                <span className="vh-act">
+                  {current ? (
+                    <span className="pill live">On air</span>
+                  ) : h.snapshot && onRestore ? (
+                    <button type="button" className="btn ghost small vh-restore" title={`Load v${h.v}'s design into the editor, to review and publish`} onClick={() => onRestore(h)}>
+                      Restore
+                    </button>
+                  ) : null}
+                </span>
               </li>
             );
           })}

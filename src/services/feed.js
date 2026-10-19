@@ -110,6 +110,14 @@ export const withoutFeed = (st) => ({
   media: { ...st.media, rss: undefined },
 });
 
+export function withFeedOf(st, from) {
+  const next = { ...st, drafts: { ...st.drafts, rss: from.drafts?.rss || [] } };
+  if (st.src === 'rss') next.items = from.items || [];
+  if (st.descriptions) next.descriptions = { ...st.descriptions, rss: from.descriptions?.rss || [] };
+  if (st.media) next.media = { ...st.media, rss: from.media?.rss || [] };
+  return next;
+}
+
 // What a graphic shows from its feed, comparable between two states of it.
 const feedPart = (st) => JSON.stringify([st?.drafts?.rss, st?.descriptions?.rss, st?.media?.rss]);
 export const sameFeed = (a, b) => feedPart(a) === feedPart(b);

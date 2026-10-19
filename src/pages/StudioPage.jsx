@@ -5,6 +5,7 @@ import { ago } from '../utils/time.js';
 import { ChangeReview, ChangeScope, Dialog, EditorHeader, FieldErrors, Status, Version, useToast } from '../ui-kit';
 import { GRAPHICS } from '../constants/graphics.js';
 import { liveStream } from '../services/air.js';
+import { withoutFeed } from '../services/feed.js';
 import { diffGraphic, changes } from '../utils/changeDiff.js';
 import { useUploads } from '../hooks/useMediaUpload.js';
 import useCopy from '../hooks/useCopy.js';
@@ -14,7 +15,7 @@ import { AirStatusProvider } from '../features/shared-editor/ContentTitle.jsx';
 import VersionHistory from '../features/shared-editor/VersionHistory.jsx';
 
 export default function StudioPage({ kind, graphic, doc, stream, onBack, content, style, preview }) {
-  const { cur, saved, base, pub, air, save: onSave, publish: onPublish, takeOffAir, discard: onDiscard } = graphic;
+  const { cur, saved, base, pub, air, save: onSave, publish: onPublish, restore, takeOffAir, discard: onDiscard } = graphic;
   const { id, title, savedTitle, isNew, onTitleChange, remote, reload } = doc;
   const toast = useToast();
   const [review, setReview] = useState(null); // 'save' | 'publish'
@@ -32,8 +33,9 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     sections: [{ title: 'Details', rows: [{ what: 'Name', was: savedTitle.trim() || 'Untitled', now: title.trim() || 'Untitled' }] }, ...edits.sections],
   };
   const canSave = isNew || unsaved.count > 0;
-  const waiting = pub ? diffGraphic(kind, pub.snap, saved) : null; 
-  const toAir = diffGraphic(kind, pub ? pub.snap : base, cur);
+  const design = (st) => (st?.src === 'rss' ? withoutFeed(st) : st);
+  const waiting = pub ? diffGraphic(kind, design(pub.snap), design(saved)) : null;
+  const toAir = diffGraphic(kind, design(pub ? pub.snap : base), design(cur));
   const hasAir = !!pub;
   const live = stream || liveStream(air);
   const carried = hasAir && !!live; 
@@ -267,7 +269,18 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
         </Dialog>
       )}
 
-      {history && <VersionHistory air={air} name={title.trim() || `Untitled ${kind}`} onClose={() => setHistory(false)} />}
+      {history && (
+        <VersionHistory
+          air={air}
+          name={title.trim() || `Untitled ${kind}`}
+          onRestore={(entry) => {
+            restore(entry);
+            setHistory(false);
+            toast(<span><Version n={entry.v} /> loaded — review it, then publish to put it on air</span>);
+          }}
+          onClose={() => setHistory(false)}
+        />
+      )}
     </ChangeScope>
   );
 }
