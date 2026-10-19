@@ -1,20 +1,21 @@
-import ColorField from '../shared-editor/ColorField.jsx';
-import TickerBehaviour from './TickerBehaviourSection.jsx';
-import FormattingToolbar from '../shared-editor/FormattingToolbar.jsx';
-import { Field, Row, Section, Select, Toggle } from '../../ui-kit';
+import { Field, SegmentedControl, Select } from '../../ui-kit';
+import TextColorButton from '../shared-editor/TextColorButton.jsx';
+import { FontSelect, Stepper, TextFormat } from '../shared-editor/StyleControls.jsx';
+import { TEXT_ANIMATIONS } from '../../constants/textAnimations.js';
+import { autoTextColor } from '../../utils/color.js';
 
 const HEIGHTS = [
-  { value: '36px', label: 'Compact — 36px' },
-  { value: '44px', label: 'Small — 44px' },
-  { value: '48px', label: 'Standard — 48px' },
-  { value: '56px', label: 'Tall — 56px' },
-  { value: '64px', label: 'Large — 64px' },
+  { value: '36px', label: 'Compact · 36px' },
+  { value: '44px', label: 'Small · 44px' },
+  { value: '48px', label: 'Standard · 48px' },
+  { value: '56px', label: 'Tall · 56px' },
+  { value: '64px', label: 'Large · 64px' },
 ];
 const BANNERS = [
-  { value: 'chevron', label: 'Chevron — angled banner + tag' },
-  { value: 'split', label: 'Split block — solid + angled' },
-  { value: 'stripes', label: 'Diagonal stripes accent' },
-  { value: 'pill', label: 'Rounded pill tag' },
+  { value: 'chevron', label: 'Chevron' },
+  { value: 'split', label: 'Split block' },
+  { value: 'stripes', label: 'Stripes' },
+  { value: 'pill', label: 'Pill' },
 ];
 const SIZES = [
   { value: 0.8, label: 'Small' },
@@ -22,66 +23,106 @@ const SIZES = [
   { value: 1.3, label: 'Large' },
   { value: 1.6, label: 'Extra large' },
 ];
+const SPEEDS = [
+  { value: 1, label: 'Slow' },
+  { value: 2, label: 'Medium' },
+  { value: 3, label: 'Fast' },
+];
 
-// The ticker's Style, Badge and Behaviour sections, each a section of the editor's one
-// surface (UI kit Section inside .keyform).
 export default function TickerStyleSections({ st, setSt }) {
   const { style: s, badge: b, text: tx, behavior } = st;
-  // Alignment only affects a single held item — meaningless for a
-  // continuous scroll, where every item just streams past left-to-right.
-  const alignDisabled = behavior.mode !== 'single';
   const setStyle = (k, v) => setSt((state) => ({ ...state, style: { ...state.style, [k]: v } }));
   const setTx = (k, v) => setSt((state) => ({ ...state, text: { ...state.text, [k]: v } }));
   const setBadge = (k, v) => setSt((state) => ({ ...state, badge: { ...state.badge, [k]: v } }));
+  const setBehavior = (k, v) => setSt((state) => ({ ...state, behavior: { ...state.behavior, [k]: v } }));
+  const loop = behavior.mode !== 'single';
   const badgeOff = !b.show;
-  const offReason = 'Badge is off — switch it on first';
+  const badgeReason = 'Badge is off — tick Show first';
 
   return (
-    <>
-      <Section title="Style">
-        <Row>
-          <Field label="Background colour" path={['style.bgColor', 'style.bgGradient']}>
-            <ColorField value={s.bgColor} fallback="#D7282F" onChange={(v) => setStyle('bgColor', v)} />
+    <div className="fieldset style-sec" aria-label="Style">
+      <div className="cs-lines">
+        <div className="cs-row">
+          <span className="cs-label">Bar</span>
+          <Field path={['style.bgColor', 'style.bgGradient']}>
+            <TextColorButton kind="fill" value={s.bgColor} fallback="#D7282F" onChange={(v) => setStyle('bgColor', v)} label="Bar background" />
           </Field>
-          <Field label="Height" path="style.height">
-            <Select value={s.height} options={HEIGHTS} onChange={(v) => setStyle('height', v)} ariaLabel="Height" />
+          <Field path="style.height" className="cs-wide">
+            <Select value={s.height} options={HEIGHTS} onChange={(v) => setStyle('height', v)} ariaLabel="Height" title="Bar height — the text grows and shrinks with it" />
           </Field>
-        </Row>
-        <Row>
-          <FormattingToolbar
+        </div>
+
+        <div className="cs-row">
+          <span className="cs-label">Text</span>
+          <Field path="text.color">
+            <TextColorButton value={tx.color} auto={autoTextColor(s.bgColor)} onChange={(v) => setTx('color', v)} label="Text" />
+          </Field>
+          <Field path="text.fontFamily" className="cs-wide">
+            <FontSelect tx={tx} setTx={setTx} label="Text" />
+          </Field>
+          <TextFormat
             tx={tx}
             setTx={setTx}
             path="text"
-            fonts={['Inter', 'Roboto', 'Georgia', 'Merriweather', 'Courier']}
+            label="Text"
+            alignKey="textAlign"
+            alignDefault="left"
+            alignOff={loop}
+            alignReason="Alignment only applies to Sequential"
             withCase
-            maxSize={72}
-            alignDisabled={alignDisabled}
-            alignReason="Alignment only applies to Sequential display mode"
           />
-        </Row>
-      </Section>
+        </div>
 
-      <Section title="Badge" action={<Toggle on={b.show} onChange={(v) => setBadge('show', v)}>Show badge</Toggle>}>
-        <Row>
-          <Field label="Badge text" path="badge.customText" off={badgeOff} offReason={offReason}>
-            <span className="num-wrap badge-text">
-              <input placeholder="LIVE" maxLength={20} value={b.customText} onChange={(e) => setBadge('customText', e.target.value)} />
-              <span className="unit">{b.customText.length}/20</span>
-            </span>
+        <div className="cs-row">
+          <span className="cs-label">Badge</span>
+          <label className="cs-check" title="Show the badge at the start of the bar">
+            <input type="checkbox" checked={!!b.show} onChange={(e) => setBadge('show', e.target.checked)} />
+            Show
+          </label>
+          <Field path="badge.customText" off={badgeOff} offReason={badgeReason}>
+            <input
+              type="text"
+              className="cs-text"
+              placeholder="LIVE"
+              maxLength={20}
+              value={b.customText || ''}
+              onChange={(e) => setBadge('customText', e.target.value)}
+              aria-label="Badge text"
+              title="Badge text (up to 20 characters)"
+            />
           </Field>
-          <Field label="Background" path="badge.bgColor" off={badgeOff} offReason={offReason}>
-            <ColorField value={b.bgColor} fallback="#D7282F" onChange={(v) => setBadge('bgColor', v)} />
+          <Field path="badge.bgColor" off={badgeOff} offReason={badgeReason}>
+            <TextColorButton kind="fill" value={b.bgColor} fallback="#D7282F" onChange={(v) => setBadge('bgColor', v)} label="Badge background" />
           </Field>
-          <Field label="Banner style" path="style.ddStyle" off={badgeOff} offReason={offReason}>
-            <Select value={s.ddStyle || 'chevron'} options={BANNERS} onChange={(v) => setStyle('ddStyle', v)} ariaLabel="Banner style" />
+          <Field path="style.ddStyle" off={badgeOff} offReason={badgeReason}>
+            <Select value={s.ddStyle || 'chevron'} options={BANNERS} onChange={(v) => setStyle('ddStyle', v)} ariaLabel="Banner style" title="Banner style" />
           </Field>
-          <Field label="Badge size" path="badge.scale" off={badgeOff} offReason={offReason}>
-            <Select value={b.scale || 1} options={SIZES} onChange={(v) => setBadge('scale', parseFloat(v))} ariaLabel="Badge size" />
+          <Field path="badge.scale" off={badgeOff} offReason={badgeReason}>
+            <Select value={b.scale || 1} options={SIZES} onChange={(v) => setBadge('scale', parseFloat(v))} ariaLabel="Badge size" title="Badge size" />
           </Field>
-        </Row>
-      </Section>
+        </div>
 
-      <TickerBehaviour st={st} setSt={setSt} />
-    </>
+        <div className="cs-row">
+          <span className="cs-label">Motion</span>
+          <Field path="behavior.mode">
+            <SegmentedControl
+              value={loop ? 'loop' : 'single'}
+              onChange={(m) => setBehavior('mode', m)}
+              ariaLabel="Display mode"
+              options={[{ value: 'loop', label: 'Continuous' }, { value: 'single', label: 'Sequential' }]}
+            />
+          </Field>
+          <Field path="behavior.speed" off={!loop} offReason="Only for Continuous">
+            <Select value={behavior.speed} options={SPEEDS} onChange={(v) => setBehavior('speed', parseInt(v, 10))} ariaLabel="Scroll speed" title="Scroll speed" />
+          </Field>
+          <Field path="behavior.animation" off={loop} offReason="Only for Sequential">
+            <Select value={behavior.animation || 'fade'} options={TEXT_ANIMATIONS} onChange={(v) => setBehavior('animation', v)} ariaLabel="Text animation" title="Text animation" />
+          </Field>
+          <Field path="behavior.itemDuration" off={loop} offReason="Only for Sequential">
+            <Stepper value={behavior.itemDuration || 5} display={(v) => `${v}s`} step={1} min={1} max={30} onChange={(v) => setBehavior('itemDuration', v)} label="duration" title="How long each headline stays on screen" />
+          </Field>
+        </div>
+      </div>
+    </div>
   );
 }

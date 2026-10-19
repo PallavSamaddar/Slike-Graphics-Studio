@@ -5,6 +5,7 @@ import useGraphic from './hooks/useGraphic.js';
 import useDocument from './hooks/useDocument.js';
 import useCurrentUser from './hooks/useCurrentUser.js';
 import useRoute, { navigate, routes } from './hooks/useRoute.js';
+import { inFrame } from './utils/frame.js';
 import { EmptyState, ToastHost, TopBar, useTheme } from './ui-kit';
 import HomePage from './pages/HomePage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
@@ -67,7 +68,8 @@ export default function App() {
 
   const inStudio = route.view === 'new' || route.view === 'edit';
   const room = route.view === 'gallery' || (inStudio && fromRef.current.startsWith('#/templates')) ? 'templates' : 'home';
-  const back = () => navigate(fromRef.current);
+  // In a frame the host page has its own back, so the studio shows none.
+  const back = inFrame ? null : () => navigate(fromRef.current);
   const pickTemplate = (category, id) => navigate(routes.newGraphic(KIND_BY_CATEGORY[category], id));
 
   let page;

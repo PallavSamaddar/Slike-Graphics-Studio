@@ -15,6 +15,8 @@ export const toCard = (g) => {
   return {
     ...g,
     source_type: g.source_type ?? g.source?.type,
+    descriptions: g.descriptions ?? g.source?.descriptions,
+    media: g.media ?? g.source?.media,
     items: g.items ?? g.source?.items ?? [],
     mt,
     air,

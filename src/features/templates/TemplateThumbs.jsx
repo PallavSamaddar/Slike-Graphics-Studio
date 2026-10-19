@@ -24,10 +24,11 @@ export function TickerThumb({ t, lines = ['Breaking news from India', 'Markets h
   );
 }
 
-export function WidgetThumb({ t, heading = 'News Heading', line = t.layout?.desc === false ? '' : 'Enter description here' }) {
+// A saved widget's card passes its own `image` (and side); a template shows a placeholder.
+export function WidgetThumb({ t, heading = 'News Heading', line = t.layout?.desc === false ? '' : 'Enter description here', image = null, imagePos }) {
   const bodyTextColor = autoTextColor(t.style.bg);
   const headingTextColor = autoTextColor(t.style.headingBg);
-  const imgPos = t.style.badgeImagePos;
+  const imgPos = image ? imagePos || t.style.badgeImagePos || 'left' : t.style.badgeImagePos;
   const titleOnly = !line && !imgPos;
   const imgOnly = !line && !!imgPos;
   return (
@@ -38,7 +39,16 @@ export function WidgetThumb({ t, heading = 'News Heading', line = t.layout?.desc
       </div>
       {!titleOnly && <div className={'widget-mini-body' + (imgPos && !imgOnly ? ' widget-mini-body-badge-' + imgPos : '')}>
         {line && <span className="widget-mini-desc" style={{ color: bodyTextColor }}>{line}</span>}
-        {imgPos && (
+        {image && (
+          <img
+            className={'widget-mini-badge-img widget-mini-badge-img-' + (imgOnly ? 'center' : imgPos)}
+            src={image}
+            alt=""
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
+          />
+        )}
+        {imgPos && !image && (
           <div className={'widget-mini-badge-img widget-mini-badge-img-placeholder widget-mini-badge-img-' + (imgOnly ? 'center' : imgPos)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="3.2" /><path d="M6 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /></svg>
           </div>

@@ -36,6 +36,7 @@ export default function JacketView({ st, setSt }) {
 
   const tickerTpl = st.tickerTemplate && TPLS.find((t) => t.id === st.tickerTemplate);
   const tickerSt = tickerTpl ? {
+    template: tickerTpl.id,
     style: { ...tickerTpl.style, ...st.tickerStyleOverrides },
     badge: { ...tickerTpl.badge, ...st.tickerBadgeOverrides },
     text: tickerTpl.text,

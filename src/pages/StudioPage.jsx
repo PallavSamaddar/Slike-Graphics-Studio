@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PreviewActions } from '../features/shared-editor/PreviewCanvas.jsx';
 import { embedUrl } from '../utils/playerUrl.js';
 import { ago } from '../utils/time.js';
 import { ChangeReview, ChangeScope, Dialog, EditorHeader, FieldErrors, Status, Version, useToast } from '../ui-kit';
@@ -18,6 +19,7 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
   const toast = useToast();
   const [review, setReview] = useState(null); // 'save' | 'publish'
   const [confirm, setConfirm] = useState(null); // 'discard' | 'offair' | 'reload'
+  const [styleOpen, setStyleOpen] = useState(false); // narrow screens: the style panel shown
   const [history, setHistory] = useState(false);
   const [showRequired, setShowRequired] = useState(false);
   const name = GRAPHICS[kind].name;
@@ -166,9 +168,23 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
       <FieldErrors errors={fieldErrors}>
         <div className="detail studio-detail">
           <div className="form keyform"><AirStatusProvider value={airStatus}>{content}</AirStatusProvider></div>
-          <aside className={`studio-side studio-side-${kind}`}>
-            <div className="studio-preview" aria-label="Live preview">{preview}</div>
-            <div className="form keyform studio-style">{style}</div>
+          <aside className={`studio-side studio-side-${kind}` + (styleOpen ? ' style-open' : '')}>
+            {/* Narrow screens only: the style panel opens under the preview, above the content. */}
+            <PreviewActions.Provider value={(
+              <button
+                type="button"
+                className="studio-style-toggle"
+                aria-expanded={styleOpen}
+                aria-controls="studio-style"
+                onClick={() => setStyleOpen((open) => !open)}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="17" x2="20" y2="17" /><circle cx="9" cy="7" r="2.2" fill="var(--bg-panel)" /><circle cx="15" cy="17" r="2.2" fill="var(--bg-panel)" /></svg>
+                {styleOpen ? 'Hide settings' : 'Settings'}
+              </button>
+            )}>
+              <div className="studio-preview" aria-label="Live preview">{preview}</div>
+            </PreviewActions.Provider>
+            <div className="form keyform studio-style" id="studio-style">{style}</div>
           </aside>
         </div>
       </FieldErrors>

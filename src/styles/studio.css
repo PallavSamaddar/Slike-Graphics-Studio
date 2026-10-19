@@ -4,6 +4,7 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 
 .shell main:has(> .studio-detail) { padding-bottom: var(--main-pad-top); }
 .shell .studio-detail {
+  flex-direction: row-reverse;
   align-items: flex-start;
   --studio-top: 72px;
   --studio-col-h: calc(100vh - var(--size-band) - var(--studio-top) - var(--main-pad-top));
@@ -195,6 +196,9 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 .cs-lines .select .sel-opt.on { font-weight: var(--fw-semibold); }
 .cs-check { display: inline-flex; align-items: center; gap: 7px; margin-left: 2px; font-size: var(--fs-md); color: var(--ink-soft); cursor: pointer; user-select: none; white-space: nowrap; }
 .cs-check input { margin: 0; }
+.cs-lines .cs-text { width: 92px; height: 30px; min-height: 30px; padding: 0 10px; font-size: var(--fs-md); }
+.tool-case { font-size: 12px; font-weight: 700; letter-spacing: .2px; }
+.tool-fmt button:disabled { opacity: .35; cursor: default; }
 
 .text-color { position: relative; display: inline-flex; }
 .text-color-btn {
@@ -247,6 +251,17 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 }
 .home-aside { display: flex; flex-direction: column; gap: var(--space-16); min-width: 0; min-height: 0; }
 .home-aside > .start-panel { flex: 1 1 0; min-height: 240px; display: flex; flex-direction: column; }
+.studio-style-toggle { display: none; }
+@media (max-width: 1150px) {
+  .shell .studio-detail { flex-direction: column-reverse; align-items: stretch; }
+  .studio-side { flex: none; width: 100%; position: static; height: auto; }
+  .studio-side:not(.style-open) > .studio-style { display: none; }
+  .studio-side > .form.keyform.studio-style { flex: none; max-height: 60vh; }
+  .studio-style-toggle { display: inline-flex; }
+  .studio-style-toggle svg { width: 15px; height: 15px; }
+  .studio-detail > .form.keyform { flex: none; width: 100%; height: min(80vh, 760px); min-height: 420px; }
+}
+
 @media (max-width: 960px) {
   .home-split { grid-template-columns: 1fr; height: auto; }
   .home-main { overflow: visible; }

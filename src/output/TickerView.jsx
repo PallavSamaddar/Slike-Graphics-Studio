@@ -1,7 +1,14 @@
-import { SPEEDS } from '../constants/tickerTemplates.js';
+import { SPEEDS, TPLS } from '../constants/tickerTemplates.js';
 import useTickerScrollDuration from '../hooks/useTickerScrollDuration.js';
 import SingleItemTicker from './SingleItemTicker.jsx';
 import { autoTextColor, textShadowFor } from '../utils/color.js';
+const BASE_HEIGHT_PX = 48;
+function fontSizeFor(st) {
+  const base = parseFloat(st.text?.fontSize) || 14;
+  const height = parseFloat(st.style?.height) || BASE_HEIGHT_PX;
+  const designedFor = parseFloat(TPLS.find((t) => t.id === st.template)?.style?.height) || BASE_HEIGHT_PX;
+  return Math.round(base * (height / designedFor) * 10) / 10;
+}
 
 function badgeLabel(badge) {
   return badge.customText || badge.type || 'LIVE';
@@ -17,7 +24,7 @@ export default function TickerView({ st, scaled = false }) {
     active: behavior.mode !== 'single',
   });
 
-  const autoColor = autoTextColor(s.bgColor);
+  const autoColor = tx.color || autoTextColor(s.bgColor);
   const badgeAutoColor = autoTextColor(b.bgColor);
 
   const REF_HEIGHT = 1080;
@@ -29,9 +36,6 @@ export default function TickerView({ st, scaled = false }) {
     height: scaled ? cqPlus(s.height, 10) : s.height,
   };
 
-  // Double-decker stacks a top banner + bottom row in the same bar, so it
-  // needs more total height than a single-row ticker at the same "Height"
-  // setting — otherwise both rows get squeezed too thin to read.
   const ddHeightPx = (parseFloat(s.height) || 48) * 1.7;
   const ddTickerStyle = {
     background: s.bgColor,
@@ -40,7 +44,7 @@ export default function TickerView({ st, scaled = false }) {
 
   const itemStyle = {
     fontFamily: tx.fontFamily,
-    fontSize: scaled ? cqPlus(tx.fontSize, 6) : tx.fontSize,
+    fontSize: scaled ? cqPlus(fontSizeFor(st) + 'px', 6) : fontSizeFor(st) + 'px',
     fontWeight: tx.fontWeight,
     fontStyle: tx.fontStyle || 'normal',
     textDecoration: tx.textDecoration || 'none',
@@ -81,9 +85,6 @@ export default function TickerView({ st, scaled = false }) {
     </div>
   );
 
-  // Double-decker layout disabled for now — kept behind this permanently-false
-  // check so the rendering path/markup is preserved for later re-enable.
-  // eslint-disable-next-line no-constant-condition
   if (false && s.layout === 'double-decker' && b.show) {
     const ddStyle = s.ddStyle || 'chevron';
     return (

@@ -9,7 +9,7 @@ export default function EditorHeader({ name, title, onTitleChange, placeholder, 
   useDismiss(open, ref, () => setOpen(false));
   return (
     <div className="ehead">
-      <a className="eh-back" href="/" aria-label="Back" onClick={(e) => { e.preventDefault(); onBack(); }}>←</a>
+      {onBack && <a className="eh-back" href="/" aria-label="Back" onClick={(e) => { e.preventDefault(); onBack(); }}>←</a>}
       <h1>{name}</h1>
       {onTitleChange && (editing ? (
         <input
