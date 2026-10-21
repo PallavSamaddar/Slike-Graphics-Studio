@@ -96,7 +96,18 @@ body.player-body {
 .player-fit { position: relative; margin: 0 auto; }
 .player-fit-inner { position: absolute; top: 0; left: 0; transform-origin: top left; }
 .player-widget { height: 100vh; display: flex; align-items: center; justify-content: center; }
-.player-widget .widget-frame { border-radius: 0; box-shadow: none; }
+.player-fill { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+.player-widget .widget-frame { height: 100%; aspect-ratio: auto; border-radius: 0; box-shadow: none; }
+/* On air the card can be taller than 16:9 (a vertical frame): its text follows its height,
+   between the 16:9 sizes (the minimum, so a 16:9 card is unchanged) and a cap. In a small
+   frame it never drops below a readable size on screen (FillWindow's --fill-scale undoes the
+   card's scaling), so a small card shows fewer, bigger lines instead of many tiny ones. */
+.player-widget .widget-frame-card { container-type: size; }
+.player-widget .widget-card-headline { font-size: max(clamp(24px, 5cqh, 60px), calc(16px / var(--fill-scale, 1))); }
+.player-widget .widget-card-summary { font-size: max(clamp(16px, 3.4cqh, 38px), calc(13px / var(--fill-scale, 1))); }
+.player-widget .widget-card-category { font-size: max(clamp(11.5px, 1.8cqh, 20px), calc(9px / var(--fill-scale, 1))); }
+.player-widget .widget-card-footer { font-size: max(clamp(12.5px, 2cqh, 22px), calc(10px / var(--fill-scale, 1))); }
+.player-widget .widget-card-thumb { max-height: clamp(150px, 30cqh, 420px); }
 #root {
   height: 100vh;
   display: flex;
@@ -1255,10 +1266,12 @@ input, select, textarea { font-family: inherit; }
   padding: 0.35em 0.6em;
   border-radius: var(--radius-sm);
 }
-/* Clamped inside the padding, so a 4th line can't show in it under the ellipsis. */
+/* Clamped inside the padding, so a line past the clamp can't show in it under the ellipsis.
+   WidgetView raises the clamps (from 3) while the card has room for more lines. */
 .widget-card-headline-text {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: var(--head-lines, 3);
+  line-clamp: var(--head-lines, 3);
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1278,11 +1291,11 @@ input, select, textarea { font-family: inherit; }
 }
 /* with a background of its own, the description sits in a padded box like the heading's */
 .widget-card-summary.has-bg { padding: 0.35em 0.6em; border-radius: var(--radius-sm); }
-/* clamped inside any padding, so a 4th line can't peek out under it */
+/* clamped inside any padding, so a line past the clamp can't peek out under it */
 .widget-card-summary-text {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: var(--summary-lines, 3);
+  line-clamp: var(--summary-lines, 3);
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

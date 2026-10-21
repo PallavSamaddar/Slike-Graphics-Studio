@@ -7,10 +7,12 @@ import { onAirChange } from '../services/airSignal.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
 import JacketView from './JacketView.jsx';
-import FitToWindow, { NATURAL_WIDTH } from './FitToWindow.jsx';
+import FitToWindow, { FillWindow, NATURAL_WIDTH } from './FitToWindow.jsx';
 
 const ON_AIR_POLL_MS = 15 * 1000;
 const PLAYER_WIDTH = NATURAL_WIDTH;
+// The widget fills the host's frame, whatever its shape; it's designed for 640 × 360 (16:9).
+const WIDGET_DESIGN_HEIGHT = 360;
 const LIVE_REFRESH_ACTION = 'SLIKE_GRAPHIC';
 const TICKER_HEIGHT_MESSAGE = 'SLIKE_TICKER_HEIGHT';
 export default function PlayerView({ hash }) {
@@ -70,5 +72,7 @@ function GraphicOnPage({ kind, st }) {
 
   const view = kind === 'jacket' ? <JacketView st={st} /> : kind === 'widget' ? <WidgetView st={st} /> : <TickerView st={st} />;
   const width = PLAYER_WIDTH[kind];
-  return <div ref={pageRef} className={`player-page player-${kind}`}>{width ? <FitToWindow width={width}>{view}</FitToWindow> : view}</div>;
+  const fitted = kind === 'widget' ? <FillWindow width={width} height={WIDGET_DESIGN_HEIGHT}>{view}</FillWindow>
+    : width ? <FitToWindow width={width}>{view}</FitToWindow> : view;
+  return <div ref={pageRef} className={`player-page player-${kind}`}>{fitted}</div>;
 }

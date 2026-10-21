@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { autoTextColor, textShadowFor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
 import { feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTemplates.js';
@@ -12,6 +12,11 @@ import redeBgVideo from '../assets/rede-bg.mp4';
 import redBackgroundVideo from '../assets/red-background.mp4';
 
 const TRANSITION_MS = 200;
+// Lines the headline and description are clamped to: 3 each, raised (headline first) while
+// every item still fits the card, or lowered (description first) when even 3 don't.
+const MIN_LINES = 3;
+const MAX_HEAD_LINES = 6;
+const MAX_SUMMARY_LINES = 12;
 
 const VIDEO_TEXTURES = {
   'video-news': newsBackgroundVideo,
@@ -54,6 +59,8 @@ export default function WidgetView({ st, preview = false }) {
     return () => timers.forEach(clearTimeout);
   }, [activeIndex, items.length, itemsKey, durationSec]);
   const summaryIndex = items.length ? Math.min(activeIndex, items.length - 1) : 0;
+  const stageRef = useRef(null);
+  useFitLines(stageRef, st);
 
   const bodyTextColor = autoTextColor(s.bg);
   const headingTextColor = autoTextColor(s.headingBg);
@@ -178,7 +185,7 @@ export default function WidgetView({ st, preview = false }) {
         )}
         {/* Every item is laid out (hidden) in the same cell, so the card is always as tall as
             its tallest item and doesn't change size from one item to the next. */}
-        <div className="widget-card-stage">
+        <div className="widget-card-stage" ref={stageRef}>
           {lines.map((_, i) => (i === summaryIndex ? null : renderItem(i, 'hold', true)))}
           {renderItem(summaryIndex, phase)}
         </div>
@@ -195,4 +202,44 @@ export default function WidgetView({ st, preview = false }) {
       </div>
     </div>
   );
+}
+
+// Sets --head-lines / --summary-lines on the stage: as many as fit, at least one each.
+// An item's height is the sum of its parts (not its box, which the stage stretches or clips),
+// measured without transforms, so an item mid-animation measures the same as at rest.
+function useFitLines(stageRef, st) {
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+    const tallest = () => Math.max(0, ...[...stage.children].map((item) => {
+      const parts = [...item.children];
+      const gap = parseFloat(getComputedStyle(item).rowGap) || 0;
+      return parts.reduce((h, part) => h + part.offsetHeight, 0) + gap * Math.max(0, parts.length - 1);
+    }));
+    const set = (head, summary) => {
+      stage.style.setProperty('--head-lines', head);
+      stage.style.setProperty('--summary-lines', summary);
+    };
+    const fits = (head, summary) => { set(head, summary); return tallest() <= stage.clientHeight; };
+    const fit = () => {
+      let head = MIN_LINES;
+      let summary = MIN_LINES;
+      while (summary > 1 && !fits(head, summary)) summary--;
+      while (head > 1 && !fits(head, summary)) head--;
+      while (head < MAX_HEAD_LINES && fits(head + 1, summary)) head++;
+      while (summary < MAX_SUMMARY_LINES && fits(head, summary + 1)) summary++;
+      set(head, summary);
+    };
+    fit();
+    let live = true;
+    document.fonts?.ready.then(() => { if (live) fit(); });
+    const observer = new ResizeObserver(fit);
+    observer.observe(stage);
+    stage.addEventListener('load', fit, true); // an image's height arrives when it loads
+    return () => {
+      live = false;
+      observer.disconnect();
+      stage.removeEventListener('load', fit, true);
+    };
+  }, [stageRef, st]);
 }

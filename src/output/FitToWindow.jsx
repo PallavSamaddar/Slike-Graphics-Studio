@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 // A graphic laid out at its natural width, scaled to fit the window (less `inset` on every
 // side). The on-air player and the editor's full-screen preview both show it this way; with
@@ -43,6 +43,29 @@ export default function FitToWindow({ width, inset = 0, inParent = false, maxSca
   return (
     <div ref={outerRef} className="player-fit" style={{ width: width * fit.scale, height: fit.height * fit.scale }}>
       <div ref={innerRef} className="player-fit-inner" style={{ width, transform: `scale(${fit.scale})` }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// A graphic that fills the whole window, whatever its shape (16:9, vertical, square…): laid
+// out at the window's own proportions, scaled so its shorter side matches a width × height
+// design. In a 16:9 window that is the same as FitToWindow; in a vertical one the graphic
+// keeps its design width and grows taller. The scale is passed on as --fill-scale, so the
+// graphic's CSS can keep text readable on screen however small the window.
+export function FillWindow({ width, height, children }) {
+  const [box, setBox] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  useEffect(() => {
+    const measure = () => setBox((b) => (b.w === window.innerWidth && b.h === window.innerHeight ? b : { w: window.innerWidth, h: window.innerHeight }));
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+  const fit = Math.min(box.w / width, box.h / height);
+  const scale = fit > 0 ? fit : 1;
+  return (
+    <div className="player-fill" style={{ '--fill-scale': scale }}>
+      <div className="player-fit-inner" style={{ width: box.w / scale, height: box.h / scale, transform: `scale(${scale})` }}>
         {children}
       </div>
     </div>
