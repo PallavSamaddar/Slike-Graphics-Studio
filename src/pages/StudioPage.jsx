@@ -152,6 +152,7 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     try {
       const v = await onPublish('');
       toast(<span>Published · <Version n={v} /></span>);
+      announceToHost({ id, v });
     } catch (err) {
       toast(err.message, 'bad');
       announceToHost({ id, error: err.message });

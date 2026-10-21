@@ -4,6 +4,7 @@ import { getOnAirGraphic } from '../services/graphics.js';
 import { fromGraphic } from '../services/graphicMapper.js';
 import usePoll from '../hooks/usePoll.js';
 import { onAirChange } from '../services/airSignal.js';
+import { inFrame } from '../utils/frame.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
 import JacketView from './JacketView.jsx';
@@ -28,14 +29,13 @@ function OnAirGraphic({ id }) {
   const [nudged, setNudged] = useState(0);
   const fresh = useRef(true);
   const shownV = useRef(0);
-  useEffect(() => onAirChange(id, () => { fresh.current = true; setNudged((n) => n + 1); }), [id]);
+  // Read it again at once, past the CDN's copy.
+  const refetch = () => { fresh.current = true; setNudged((n) => n + 1); };
+  useEffect(() => onAirChange(id, refetch), [id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const onMessage = (e) => {
       const msg = e.data;
-      if (msg?.action !== LIVE_REFRESH_ACTION || msg.id !== id) return;
-      if (Number(msg.v) <= shownV.current) return;
-      fresh.current = true;
-      setNudged((n) => n + 1);
+      if (msg?.action === LIVE_REFRESH_ACTION && msg.id === id && Number(msg.v) > shownV.current) refetch();
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
@@ -61,14 +61,14 @@ function OnAirGraphic({ id }) {
 function GraphicOnPage({ kind, st }) {
   const pageRef = useRef(null);
   useEffect(() => {
-    const ticker = kind === 'ticker' && window.parent !== window ? pageRef.current?.firstElementChild : null;
+    const ticker = kind === 'ticker' && inFrame ? pageRef.current?.firstElementChild : null;
     if (!ticker) return undefined;
     const send = () => window.parent.postMessage({ name: TICKER_HEIGHT_MESSAGE, height: ticker.offsetHeight }, '*');
     send();
     const observer = new ResizeObserver(send);
     observer.observe(ticker);
     return () => observer.disconnect();
-  }, [kind, st]);
+  }, [kind]);
 
   const view = kind === 'jacket' ? <JacketView st={st} /> : kind === 'widget' ? <WidgetView st={st} /> : <TickerView st={st} />;
   const width = PLAYER_WIDTH[kind];

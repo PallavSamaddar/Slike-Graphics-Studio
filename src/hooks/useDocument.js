@@ -3,7 +3,7 @@ import { GRAPHICS } from '../constants/graphics.js';
 import { getGraphic, publishGraphic, unpublishGraphic } from '../services/graphics.js';
 import { saveGraphic, fromGraphic, hasInlineMedia } from '../services/graphicMapper.js';
 import { airFromPublished } from '../services/air.js';
-import { announceAirChange, announceToHost } from '../services/airSignal.js';
+import { announceAirChange } from '../services/airSignal.js';
 import { onlyFeedDiffers, sameFeed, withFeedItems, withFeedOf } from '../services/feed.js';
 import useRemoteWatch from './useRemoteWatch.js';
 
@@ -51,7 +51,6 @@ export default function useDocument(graphics, { onCreated } = {}) {
         const published = await publishGraphic(id, mt, note);
         g.setAir(airFromPublished(kind, published, spec.initial));
         announceAirChange(id);
-        announceToHost({ id, v: published.v });
         return published.v;
       } catch (err) {
         throw new Error(`Saved, but not published: ${err.isConflict ? CONFLICT_MESSAGE : err.message}`);
@@ -80,7 +79,6 @@ export default function useDocument(graphics, { onCreated } = {}) {
           const published = await unpublishGraphic(doc.id);
           g.setAir(airFromPublished(kind, published, spec.initial));
           announceAirChange(doc.id);
-          announceToHost({ id: doc.id, v: published?.v, off: true });
         },
         discard: () => {
           g.discard();
