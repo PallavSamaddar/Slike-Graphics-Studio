@@ -8,6 +8,7 @@ export default function Select({ value, options, onChange, placeholder = 'Choose
   const [open, setOpen] = useState(false);
   const [cursor, setCursor] = useState(-1);
   const [query, setQuery] = useState('');
+  const [place, setPlace] = useState(null); 
   const faceRef = useRef(null);
   const searchRef = useRef(null);
   const optRefs = useRef({});
@@ -46,9 +47,24 @@ export default function Select({ value, options, onChange, placeholder = 'Choose
     if (open && cursor >= 0) optRefs.current[cursor]?.focus();
   }, [open, cursor]);
 
+  const fitMenu = () => {
+    const face = faceRef.current;
+    if (!face || withSearch) return null;
+    let box = face.parentElement;
+    while (box && box !== document.body && !/(auto|scroll|hidden)/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+    const bounds = box && box !== document.body ? box.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+    const rect = face.getBoundingClientRect();
+    const below = Math.min(bounds.bottom, window.innerHeight) - rect.bottom - 8;
+    const above = rect.top - Math.max(bounds.top, 0) - 8;
+    const want = Math.min(240, options.length * 34 + 12);
+    const up = below < want && above > below;
+    return { up, maxHeight: Math.max(96, Math.min(240, up ? above : below)) };
+  };
+
   const openMenu = () => {
     if (disabled) return;
     setCursor(withSearch ? -1 : current);
+    setPlace(fitMenu());
     setOpen(true);
   };
 
@@ -105,7 +121,7 @@ export default function Select({ value, options, onChange, placeholder = 'Choose
   return (
     <div
       ref={faceRef}
-      className={'select' + (open ? ' open' : '')}
+      className={'select' + (open ? ' open' : '') + (open && place?.up ? ' up' : '')}
       tabIndex={disabled ? -1 : 0}
       role="combobox"
       aria-haspopup="listbox"
@@ -120,7 +136,7 @@ export default function Select({ value, options, onChange, placeholder = 'Choose
       <span className={'sel-label' + (chosen ? '' : ' ph')}>{chosen ? chosen.label : placeholder}</span>
       <span className="sel-chev">▾</span>
       {open && (
-        <div className={'sel-menu' + (withSearch ? ' has-search' : '')} id={listId} role="listbox">
+        <div className={'sel-menu' + (withSearch ? ' has-search' : '')} id={listId} role="listbox" style={place ? { maxHeight: place.maxHeight } : undefined}>
           {withSearch ? (
             <>
               <div className="sh-search">

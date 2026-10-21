@@ -137,7 +137,7 @@ export default function App() {
   return (
     <ToastHost>
       <div className="shell">
-        <TopBar
+        {!inFrame && <TopBar
           brand={BRAND}
           rooms={ROOMS}
           room={room}
@@ -147,7 +147,7 @@ export default function App() {
           menu={PROFILE_MENU}
           theme={theme}
           onThemePick={setThemePick}
-        />
+        />}
         <main id="main" className="view-in" key={pageKey}>{page}</main>
       </div>
     </ToastHost>

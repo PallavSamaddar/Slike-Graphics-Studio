@@ -10,6 +10,8 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
   --studio-col-h: calc(100vh - var(--size-band) - var(--studio-top) - var(--main-pad-top));
 }
 #main .studio-detail { margin-bottom: 0; }
+html.in-frame { --size-band: 0px; }
+html.in-frame .shell .studio-detail { --studio-top: 0px; }
 .studio-detail > .form.keyform { height: var(--studio-col-h); overflow-y: auto; display: flex; flex-direction: column; }
 .studio-detail > .form.keyform > .fieldset:only-child { flex: 1 0 auto; display: flex; flex-direction: column; min-height: 100%; }
 .studio-detail > .form.keyform:has(#rssSec .feed-items-list),
@@ -209,6 +211,8 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 .cs-lines .select .sel-menu { min-width: 170px; top: calc(100% + 4px); padding: 4px; border-radius: var(--r-control); }
 .cs-lines .select .sel-opt { padding: 5px 8px; font-size: var(--fs-md); font-weight: var(--fw-medium); }
 .cs-lines .select .sel-opt.on { font-weight: var(--fw-semibold); }
+.cs-lines .select.up .sel-menu { top: auto; bottom: calc(100% + 4px); }
+.cs-lines .chg::before { left: -4px; top: 5px; bottom: 5px; }
 .cs-check { display: inline-flex; align-items: center; gap: 7px; margin-left: 2px; font-size: var(--fs-md); color: var(--ink-soft); cursor: pointer; user-select: none; white-space: nowrap; }
 .cs-check input { margin: 0; }
 .cs-lines .cs-text { width: 92px; height: 30px; min-height: 30px; padding: 0 10px; font-size: var(--fs-md); }
@@ -267,7 +271,7 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 .home-aside { display: flex; flex-direction: column; gap: var(--space-16); min-width: 0; min-height: 0; }
 .home-aside > .start-panel { flex: 1 1 0; min-height: 240px; display: flex; flex-direction: column; }
 .studio-style-toggle { display: none; }
-@media (max-width: 1150px) {
+@media (max-width: 900px) {
   .shell .studio-detail { flex-direction: column-reverse; align-items: stretch; }
   .studio-side { flex: none; width: 100%; position: static; height: auto; }
   .studio-side:not(.style-open) > .studio-style { display: none; }

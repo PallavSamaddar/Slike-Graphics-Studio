@@ -228,6 +228,7 @@ tbody tr:hover { background: var(--row-hover); }
   padding: 5px; max-height: 240px; overflow-y: auto;
 }
 .select.open .sel-menu { display: block; }
+.select.up .sel-menu { top: auto; bottom: calc(100% + 6px); }
 .sel-menu.has-search { max-height: none; overflow: visible; cursor: default; }
 .select.open .sel-menu.has-search { display: flex; flex-direction: column; }
 .sel-menu .sel-opts { max-height: 240px; overflow-y: auto; }

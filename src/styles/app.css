@@ -92,9 +92,11 @@ body.player-body {
 .player-page .p-ticker {
   border-radius: 0;
 }
+.player-ticker { height: 100vh; display: flex; align-items: flex-end; }
 .player-fit { position: relative; margin: 0 auto; }
 .player-fit-inner { position: absolute; top: 0; left: 0; transform-origin: top left; }
 .player-widget { height: 100vh; display: flex; align-items: center; justify-content: center; }
+.player-widget .widget-frame { border-radius: 0; box-shadow: none; }
 #root {
   height: 100vh;
   display: flex;
@@ -1202,8 +1204,7 @@ input, select, textarea { font-family: inherit; }
 }
 .widget-frame {
   width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
+  aspect-ratio: 16 / 9;
   align-self: center;
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -1213,7 +1214,6 @@ input, select, textarea { font-family: inherit; }
 }
 .widget-frame-card {
   position: relative;
-  min-height: 280px;
   padding: 22px 24px;
   container-type: inline-size;
 }
@@ -1286,7 +1286,7 @@ input, select, textarea { font-family: inherit; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.widget-card-stage { flex: 1; min-height: 0; display: grid; }
+.widget-card-stage { flex: 1; min-height: 0; display: grid; overflow: hidden; }
 .widget-card-stage > .widget-card-main { grid-area: 1 / 1; }
 .widget-card-main.widget-card-ghost { visibility: hidden; pointer-events: none; }
 .widget-card-main { transition: opacity 0.2s ease, transform 0.2s ease, clip-path 0.2s ease, filter 0.2s ease; }
@@ -1820,7 +1820,7 @@ input, select, textarea { font-family: inherit; }
   display: block;
   width: 100%;
   height: auto;
-  max-height: 180px;
+  max-height: 150px;
   object-fit: contain;
 }
 .widget-card-thumb.slow-zoom { animation: widgetSlowZoom linear forwards; }

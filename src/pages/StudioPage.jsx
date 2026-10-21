@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PreviewActions } from '../features/shared-editor/PreviewCanvas.jsx';
 import { embedUrl } from '../utils/playerUrl.js';
 import { ago } from '../utils/time.js';
 import { ChangeReview, ChangeScope, Dialog, EditorHeader, FieldErrors, Status, Version, useToast } from '../ui-kit';
 import { GRAPHICS } from '../constants/graphics.js';
 import { liveStream } from '../services/air.js';
+import { announceToHost, onPublishRequest } from '../services/airSignal.js';
+import { inFrame } from '../utils/frame.js';
 import { withoutFeed } from '../services/feed.js';
 import { diffGraphic, changes } from '../utils/changeDiff.js';
 import { useUploads } from '../hooks/useMediaUpload.js';
@@ -133,6 +135,30 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
     }
   };
 
+  // Inside Slike Live the host's own button publishes (no header here): same checks, no review step.
+  const hostPublish = useRef(null);
+  hostPublish.current = async () => {
+    if (missing.length) {
+      setShowRequired(true);
+      const message = missingFieldsMessage(missing, 'publish');
+      toast(message, 'bad');
+      announceToHost({ id, error: message });
+      return;
+    }
+    if (!somethingToPublish) {
+      announceToHost({ id, v: pub.v });
+      return;
+    }
+    try {
+      const v = await onPublish('');
+      toast(<span>Published · <Version n={v} /></span>);
+    } catch (err) {
+      toast(err.message, 'bad');
+      announceToHost({ id, error: err.message });
+    }
+  };
+  useEffect(() => (inFrame ? onPublishRequest(() => hostPublish.current()) : undefined), []);
+
   const doReload = () => reload()
     .then(() => { setConfirm(null); toast('Reloaded'); })
     .catch((err) => toast(`Couldn't reload: ${err.message}`, 'bad'));
@@ -144,7 +170,7 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
 
   return (
     <ChangeScope saved={saved} cur={cur}>
-      <EditorHeader
+      {!inFrame && <EditorHeader
         name={name}
         title={title}
         onTitleChange={onTitleChange}
@@ -165,7 +191,7 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
           onClick: () => openReview('publish'),
         }}
         more={moreItems}
-      />
+      />}
       {remote && <RemoteChangeBar remote={remote} onReload={askReload} />}
       <FieldErrors errors={fieldErrors}>
         <div className="detail studio-detail">

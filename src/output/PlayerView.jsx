@@ -7,10 +7,12 @@ import { onAirChange } from '../services/airSignal.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
 import JacketView from './JacketView.jsx';
-import FitToWindow from './FitToWindow.jsx';
+import FitToWindow, { NATURAL_WIDTH } from './FitToWindow.jsx';
 
-const ON_AIR_POLL_MS = 60 * 1000;
-const PLAYER_WIDTH = { widget: 640, jacket: 640 };
+const ON_AIR_POLL_MS = 15 * 1000;
+const PLAYER_WIDTH = NATURAL_WIDTH;
+const LIVE_REFRESH_ACTION = 'SLIKE_GRAPHIC';
+const TICKER_HEIGHT_MESSAGE = 'SLIKE_TICKER_HEIGHT';
 export default function PlayerView({ hash }) {
   const id = new URLSearchParams(hash.split('?')[1] || '').get('id');
   if (!id) {
@@ -20,12 +22,22 @@ export default function PlayerView({ hash }) {
 }
 
 function OnAirGraphic({ id }) {
-  const [onAir, setOnAir] = useState(null); // { kind, st } | { gone: true }
-  // Bumped when this browser publishes or takes the graphic off air: read it again at once,
-  // past the CDN's copy — that one read only; the polls after it go back to the CDN.
+  const [onAir, setOnAir] = useState(null);
   const [nudged, setNudged] = useState(0);
-  const fresh = useRef(false);
+  const fresh = useRef(true);
+  const shownV = useRef(0);
   useEffect(() => onAirChange(id, () => { fresh.current = true; setNudged((n) => n + 1); }), [id]);
+  useEffect(() => {
+    const onMessage = (e) => {
+      const msg = e.data;
+      if (msg?.action !== LIVE_REFRESH_ACTION || msg.id !== id) return;
+      if (Number(msg.v) <= shownV.current) return;
+      fresh.current = true;
+      setNudged((n) => n + 1);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [id]);
 
   usePoll((isStopped) => {
     const skipCache = fresh.current;
@@ -33,9 +45,10 @@ function OnAirGraphic({ id }) {
     return getOnAirGraphic(id, { fresh: skipCache })
       .then((g) => {
         const spec = GRAPHICS[g.kind];
-        if (!isStopped() && spec) setOnAir({ kind: g.kind, st: fromGraphic(g, spec.initial) });
+        if (isStopped() || !spec) return;
+        shownV.current = g.v || 0;
+        setOnAir({ kind: g.kind, st: fromGraphic(g, spec.initial) });
       })
-      // Not on air (404): clear it. Any other failure (network, server) keeps what's showing.
       .catch((err) => { if (!isStopped()) setOnAir((cur) => (err.code === 404 || !cur ? { gone: true } : cur)); });
   }, ON_AIR_POLL_MS, [id, nudged], { immediate: true });
 
@@ -44,7 +57,18 @@ function OnAirGraphic({ id }) {
 }
 
 function GraphicOnPage({ kind, st }) {
+  const pageRef = useRef(null);
+  useEffect(() => {
+    const ticker = kind === 'ticker' && window.parent !== window ? pageRef.current?.firstElementChild : null;
+    if (!ticker) return undefined;
+    const send = () => window.parent.postMessage({ name: TICKER_HEIGHT_MESSAGE, height: ticker.offsetHeight }, '*');
+    send();
+    const observer = new ResizeObserver(send);
+    observer.observe(ticker);
+    return () => observer.disconnect();
+  }, [kind, st]);
+
   const view = kind === 'jacket' ? <JacketView st={st} /> : kind === 'widget' ? <WidgetView st={st} /> : <TickerView st={st} />;
   const width = PLAYER_WIDTH[kind];
-  return <div className={`player-page player-${kind}`}>{width ? <FitToWindow width={width}>{view}</FitToWindow> : view}</div>;
+  return <div ref={pageRef} className={`player-page player-${kind}`}>{width ? <FitToWindow width={width}>{view}</FitToWindow> : view}</div>;
 }

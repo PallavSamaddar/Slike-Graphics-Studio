@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 // A graphic laid out at its natural width, scaled to fit the window (less `inset` on every
 // side). The on-air player and the editor's full-screen preview both show it this way; with
 // `inParent` it fits the box it sits in instead (the editor's preview area), never past `maxScale`.
-export const NATURAL_WIDTH = { widget: 420, jacket: 640 };
+export const NATURAL_WIDTH = { widget: 640, jacket: 640 };
 export const FIT_INSET = { widget: 0.1 };
 
 export default function FitToWindow({ width, inset = 0, inParent = false, maxScale = Infinity, children }) {
