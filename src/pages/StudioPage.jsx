@@ -41,7 +41,8 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
   const hasAir = !!pub;
   const live = stream || liveStream(air);
   const carried = hasAir && !!live; 
-  const somethingToPublish = !hasAir || toAir.count > 0;
+  const unsavedDesign = renamed || diffGraphic(kind, design(saved), design(cur)).count > 0;
+  const somethingToPublish = !hasAir || toAir.count > 0 || unsavedDesign;
   const streamName = live?.name || live?.id;
   const pushWord = carried ? 'Push to air' : 'Publish';
 
