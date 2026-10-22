@@ -1,11 +1,8 @@
-import { Field, SegmentedControl } from '../../ui-kit';
+import { Field } from '../../ui-kit';
 import ImageUpload from '../shared-editor/ImageUpload.jsx';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { baseName, readAsDataUrl } from '../../utils/files.js';
 
-// The Manual widget's items: a box each, with a title (required), a description and an
-// image. Kept on `st` as parallel lists like the Feed's — drafts.manual (titles),
-// descriptions.manual and media.manual ({ url, name } or null) — so both sources render alike.
 export const readManualItems = (s) => {
   const titles = s.drafts?.manual?.length ? s.drafts.manual : [''];
   return titles.map((title, i) => ({
@@ -69,16 +66,6 @@ export default function WidgetManualItems({ st, setSt }) {
           </div>
         ))}
       </div>
-      {items.some((item) => item.media?.url) && (
-        <Field label="Image position" path="style.badgeImagePos">
-          <SegmentedControl
-            value={st.style?.badgeImagePos || 'left'}
-            onChange={(v) => setSt((s) => ({ ...s, style: { ...s.style, badgeImagePos: v } }))}
-            ariaLabel="Image position"
-            options={[{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }]}
-          />
-        </Field>
-      )}
       <div className="manual-items-divider" />
       <button type="button" className="btn ghost manual-items-add" onClick={add}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>

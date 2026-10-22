@@ -18,13 +18,6 @@ export default function WidgetShowBar({ st, setSt }) {
   };
 
   const mediaOn = feedMediaOn(st);
-  const feedPos = st.media?.rss?.find(Boolean)?.pos || st.style?.badgeImagePos || 'left';
-  const setFeedPos = (pos) => setSt((state) => ({
-    ...state,
-    style: { ...state.style, badgeImagePos: pos },
-    media: { ...state.media, rss: (state.media?.rss || []).map((m) => (m ? { ...m, pos } : m)) },
-  }));
-
   return (
     <div className="show-bar" role="group" aria-label="Show on the widget">
       <div className="show-bar-checks">
@@ -41,41 +34,11 @@ export default function WidgetShowBar({ st, setSt }) {
         <CheckChip on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Publisher</CheckChip>
         {st.src === 'rss' && (
           <>
-            <div className={'chip-joined' + (mediaOn ? ' on' : '')}>
-              <CheckChip on={mediaOn} onChange={setFeedMedia}>Images/videos</CheckChip>
-              {mediaOn && <ImagePosition value={feedPos} onChange={setFeedPos} />}
-            </div>
+            <CheckChip on={mediaOn} onChange={setFeedMedia}>Images/videos</CheckChip>
             <CheckChip on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v }))}>Descriptions</CheckChip>
           </>
         )}
       </div>
-    </div>
-  );
-}
-
-// Image on the left or right of the description, as two small icons.
-function ImagePosition({ value, onChange }) {
-  const icon = (side) => (
-    <svg viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-      <rect x={side === 'left' ? 1.5 : 11.5} y="3" width="7" height="10" rx="1.5" fill="currentColor" fillOpacity=".25" />
-      {[5, 8, 11].map((y) => <line key={y} x1={side === 'left' ? 11 : 1.5} x2={side === 'left' ? 18.5 : 9} y1={y} y2={y} />)}
-    </svg>
-  );
-  return (
-    <div className="chip-pos" role="radiogroup" aria-label="Image position">
-      {['left', 'right'].map((side) => (
-        <button
-          key={side}
-          type="button"
-          role="radio"
-          aria-checked={value === side}
-          className={value === side ? 'on' : undefined}
-          onClick={() => onChange(side)}
-          title={side === 'left' ? 'Image on the left' : 'Image on the right'}
-        >
-          {icon(side)}
-        </button>
-      ))}
     </div>
   );
 }

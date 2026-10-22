@@ -11,7 +11,8 @@ html #root { height: auto; min-height: 100vh; display: block; overflow: visible;
 }
 #main .studio-detail { margin-bottom: 0; }
 html.in-frame { --size-band: 0px; }
-html.in-frame .shell .studio-detail { --studio-top: 0px; }
+html.in-frame .shell main:has(> .studio-detail) { padding: var(--main-pad-top); }
+html.in-frame .shell .studio-detail { --studio-top: 0px; --studio-col-h: calc(100vh - 2 * var(--main-pad-top)); }
 .studio-detail > .form.keyform { height: var(--studio-col-h); overflow-y: auto; display: flex; flex-direction: column; }
 .studio-detail > .form.keyform > .fieldset:only-child { flex: 1 0 auto; display: flex; flex-direction: column; min-height: 100%; }
 .studio-detail > .form.keyform:has(#rssSec .feed-items-list),
@@ -194,13 +195,6 @@ html.in-frame .shell .studio-detail { --studio-top: 0px; }
 }
 .check-chip-box svg { width: 10px; height: 10px; }
 .check-chip.on .check-chip-box { background: var(--accent-fill); border-color: var(--accent-fill); color: #fff; }
-.chip-joined { flex: none; display: flex; align-items: stretch; }
-.chip-joined.on .check-chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.chip-pos { display: flex; align-items: center; gap: 2px; padding: 0 2px; height: 26px; border: 1px solid var(--accent); border-left: 0; border-radius: 0 var(--r-control) var(--r-control) 0; background: var(--accent-soft); }
-.chip-pos button { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 20px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--ink-faint); cursor: pointer; }
-.chip-pos button svg { width: 16px; height: 12px; }
-.chip-pos button:hover { color: var(--ink); }
-.chip-pos button.on { background: var(--panel); color: var(--accent); box-shadow: var(--shadow-segment); }
 .cs-lines { display: flex; flex-direction: column; gap: 10px; }
 .cs-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .cs-label { flex: none; width: 88px; font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--ink-faint); white-space: nowrap; }
@@ -464,6 +458,8 @@ html.in-frame .shell .studio-detail { --studio-top: 0px; }
 .tool-fmt button:hover { background: var(--menu-hover); color: var(--ink); }
 .tool-fmt button.on { background: var(--accent-soft); color: var(--accent); }
 .tool-fmt button svg { width: 15px; height: 15px; }
+.tool-pos button svg { width: 18px; height: 14px; }
+.tool-pos button:disabled { opacity: .4; cursor: default; }
 .tool-fmt b, .tool-fmt i, .tool-fmt u { font-family: Georgia, 'Times New Roman', serif; }
 .tool-fmt-sep { width: 1px; height: 16px; margin: 0 3px; background: var(--line); }
 .cs-pipe { width: 1px; height: 20px; margin: 0 6px; background: var(--line-strong); }

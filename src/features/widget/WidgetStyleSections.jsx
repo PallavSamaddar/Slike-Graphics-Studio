@@ -3,7 +3,8 @@ import { Field, Select, Tabs } from '../../ui-kit';
 import { TEXT_SPACING } from '../../constants/widgetTemplates.js';
 import ScrollRow from '../shared-editor/ScrollRow.jsx';
 import TextColorButton from '../shared-editor/TextColorButton.jsx';
-import { FontSelect, Stepper, TextFormat } from '../shared-editor/StyleControls.jsx';
+import { FontSelect, ImagePosition, Stepper, TextFormat } from '../shared-editor/StyleControls.jsx';
+import { feedMediaOn } from '../../constants/widgetTemplates.js';
 import { autoTextColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
 import { WIDGET_TRANSITIONS, widgetTransition } from '../../constants/textAnimations.js';
@@ -88,7 +89,31 @@ export default function WidgetStyleSections({ st, setSt }) {
   const customInList = uploadedVideos.some((m) => m.id === s.customVideoMediaId);
 
   const hasTexture = !!(s.texture && s.texture !== 'none');
+  const showsImage = st.src === 'rss' ? feedMediaOn(st) : (st.media?.manual || []).some((m) => m?.url) || !!s.badgeImage;
+  const noImage = st.src === 'rss' ? 'Tick Images/videos above the preview first' : 'Add an image to an item first';
+  const imagePos = (st.src === 'rss' && st.media?.rss?.find(Boolean)?.pos) || s.badgeImagePos || 'left';
+  const setImagePos = (pos) => setSt((state) => ({
+    ...state,
+    style: { ...state.style, badgeImagePos: pos },
+    media: { ...state.media, rss: (state.media?.rss || []).map((m) => (m ? { ...m, pos } : m)) },
+  }));
   const opacityPct = Math.round((s.textureOpacity ?? 1) * 100);
+  const opacitySlider = (label) => (
+    <div className="tool-group texture-opacity-group" title={`${label} opacity`}>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={opacityPct}
+        onChange={(e) => setStyle('textureOpacity', parseInt(e.target.value, 10) / 100)}
+        className="form-range"
+        aria-label={`${label} opacity`}
+        style={{ '--range-pct': `${opacityPct}%` }}
+      />
+      <span className="texture-opacity-val">{opacityPct}%</span>
+    </div>
+  );
 
   return (
     <>
@@ -154,12 +179,18 @@ export default function WidgetStyleSections({ st, setSt }) {
               <FontSelect tx={bt} setTx={setBt} label="Description" />
             </Field>
             <TextFormat tx={bt} setTx={setBt} path="bodyText" label="Description" />
-            <span className="cs-pipe" aria-hidden="true" />
-            <span className="cs-label cs-label-inline">Image</span>
-            <label className="cs-check" title="While an item is on screen, its image slowly zooms in">
-              <input type="checkbox" checked={!!s.imageSlowZoom} onChange={(e) => setStyle('imageSlowZoom', e.target.checked)} />
-              Slow zoom
-            </label>
+          </div>
+          <div className="cs-row">
+            <span className="cs-label">Image</span>
+            <Field path={['style.badgeImagePos', 'media']} off={!showsImage} offReason={noImage}>
+              <ImagePosition value={imagePos} onChange={setImagePos} disabled={!showsImage} title={showsImage ? undefined : noImage} />
+            </Field>
+            <Field path="style.imageSlowZoom" off={!showsImage} offReason={noImage}>
+              <label className="cs-check" title="While an item is on screen, its image slowly zooms in">
+                <input type="checkbox" checked={!!s.imageSlowZoom} disabled={!showsImage} onChange={(e) => setStyle('imageSlowZoom', e.target.checked)} />
+                Slow zoom
+              </label>
+            </Field>
           </div>
         </div>
       </div>
@@ -203,20 +234,7 @@ export default function WidgetStyleSections({ st, setSt }) {
                   <Stepper value={s.textureSpeed ?? 1} display={(v) => `${v}×`} step={0.5} min={0.5} max={3} onChange={(v) => setStyle('textureSpeed', v)} label="texture speed" title="Texture speed" />
                 </Field>
                 <Field path="style.textureOpacity" off={!hasTexture} offReason="Pick a background animation first">
-                  <div className="tool-group texture-opacity-group" title="Texture opacity">
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={opacityPct}
-                      onChange={(e) => setStyle('textureOpacity', parseInt(e.target.value, 10) / 100)}
-                      className="form-range"
-                      aria-label="Texture opacity"
-                      style={{ '--range-pct': `${opacityPct}%` }}
-                    />
-                    <span className="texture-opacity-val">{opacityPct}%</span>
-                  </div>
+                  {opacitySlider('Texture')}
                 </Field>
               </div>
             </div>
@@ -267,6 +285,14 @@ export default function WidgetStyleSections({ st, setSt }) {
                 );
               })}
             </ScrollRow>
+            <div className="cs-lines bg-texture">
+              <div className="cs-row">
+                <span className="cs-label">Video</span>
+                <Field path="style.textureOpacity" off={!isVideo} offReason="Pick a background video first">
+                  {opacitySlider('Video')}
+                </Field>
+              </div>
+            </div>
           </div>
         )}
         </div>

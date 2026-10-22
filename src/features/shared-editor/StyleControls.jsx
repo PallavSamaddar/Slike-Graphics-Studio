@@ -57,3 +57,29 @@ export function TextFormat({ tx, setTx, path, label, alignKey = 'align', alignDe
 export const FontSelect = ({ tx, setTx, label }) => (
   <Select value={tx.fontFamily} options={FONTS} onChange={(v) => setTx('fontFamily', v)} ariaLabel={`${label} font`} title={`${label} font`} />
 );
+export function ImagePosition({ value, onChange, disabled = false, title }) {
+  const icon = (side) => (
+    <svg viewBox="0 0 20 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+      <rect x={side === 'left' ? 1.5 : 11.5} y="3" width="7" height="10" rx="1.5" fill="currentColor" fillOpacity=".25" />
+      {[5, 8, 11].map((y) => <line key={y} x1={side === 'left' ? 11 : 1.5} x2={side === 'left' ? 18.5 : 9} y1={y} y2={y} />)}
+    </svg>
+  );
+  return (
+    <div className="tool-group tool-fmt tool-pos" role="radiogroup" aria-label="Image position" title={title}>
+      {['left', 'right'].map((side) => (
+        <button
+          key={side}
+          type="button"
+          role="radio"
+          aria-checked={value === side}
+          className={value === side ? 'on' : undefined}
+          disabled={disabled}
+          onClick={() => onChange(side)}
+          title={disabled ? title : side === 'left' ? 'Image on the left' : 'Image on the right'}
+        >
+          {icon(side)}
+        </button>
+      ))}
+    </div>
+  );
+}
