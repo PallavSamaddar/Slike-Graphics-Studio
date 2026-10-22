@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { autoTextColor, textShadowFor } from '../utils/color.js';
 import { TPLS } from '../constants/tickerTemplates.js';
 import TickerView from './TickerView.jsx';
-import CleoVideoBackground from './CleoVideoBackground.jsx';
+import GraphicVideo from './GraphicVideo.jsx';
 export default function JacketView({ st, setSt }) {
   const { style: s, headlineText: ht } = st;
   const logoTextColor = autoTextColor(s.logoColor);
@@ -81,7 +81,7 @@ export default function JacketView({ st, setSt }) {
         {st.mainVideoMediaId ? (
           <CleoVideoBackground mediaId={st.mainVideoMediaId} className="jacket-video-el" />
         ) : st.mainVideoUrl && !st.mainVideoPreset ? (
-          <CleoVideoBackground src={st.mainVideoUrl} className="jacket-video-el" />
+          <GraphicVideo src={st.mainVideoUrl} className="jacket-video-el" />
         ) : (
           <span className="jacket-live-hint">Live feed shows here</span>
         )}

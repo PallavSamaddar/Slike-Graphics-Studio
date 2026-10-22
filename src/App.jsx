@@ -20,7 +20,7 @@ import LiveFeedPreview from './features/shared-editor/LiveFeedPreview.jsx';
 export default function App() {
   const route = useRoute();
   const graphics = { ticker: useGraphic(GRAPHICS.ticker), widget: useGraphic(GRAPHICS.widget), jacket: useGraphic(GRAPHICS.jacket) };
-  const { setPick: setThemePick, theme } = useTheme();
+  const { setPick: setThemePick, theme } = useTheme({ followHost: inFrame });
   const user = useCurrentUser();
 
   // The studio once its graphic is loaded: { kind }; while it loads, null; or the failure.
@@ -146,7 +146,7 @@ export default function App() {
           user={user}
           menu={PROFILE_MENU}
           theme={theme}
-          onThemePick={setThemePick}
+          onThemePick={inFrame ? undefined : setThemePick}
         />}
         <main id="main" className="view-in" key={pageKey}>{page}</main>
       </div>

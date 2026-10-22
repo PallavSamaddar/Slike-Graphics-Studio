@@ -5,7 +5,7 @@ import { ago } from '../utils/time.js';
 import { ChangeReview, ChangeScope, Dialog, EditorHeader, FieldErrors, Status, Version, useToast } from '../ui-kit';
 import { GRAPHICS } from '../constants/graphics.js';
 import { liveStream } from '../services/air.js';
-import { announceToHost, onPublishRequest } from '../services/airSignal.js';
+import { announceCanPublish, announceToHost, onPublishRequest } from '../services/airSignal.js';
 import { inFrame } from '../utils/frame.js';
 import { withoutFeed } from '../services/feed.js';
 import { diffGraphic, changes } from '../utils/changeDiff.js';
@@ -150,15 +150,16 @@ export default function StudioPage({ kind, graphic, doc, stream, onBack, content
       return;
     }
     try {
-      const v = await onPublish('');
-      toast(<span>Published · <Version n={v} /></span>);
-      announceToHost({ id, v });
+      announceToHost({ id, v: await onPublish('') });
     } catch (err) {
       toast(err.message, 'bad');
       announceToHost({ id, error: err.message });
     }
   };
   useEffect(() => (inFrame ? onPublishRequest(() => hostPublish.current()) : undefined), []);
+  useEffect(() => {
+    if (inFrame && id) announceCanPublish(id, somethingToPublish);
+  }, [id, somethingToPublish]);
 
   const doReload = () => reload()
     .then(() => { setConfirm(null); toast('Reloaded'); })

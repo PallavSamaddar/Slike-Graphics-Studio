@@ -5,7 +5,7 @@ import { feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTe
 import { widgetTransition } from '../constants/textAnimations.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
-import CleoVideoBackground from './CleoVideoBackground.jsx';
+import GraphicVideo, { uploadStream } from './GraphicVideo.jsx';
 
 const TRANSITION_MS = 200;
 // Lines the headline and description are clamped to: 3 each, raised (headline first) while
@@ -143,9 +143,9 @@ export default function WidgetView({ st, preview = false }) {
   return (
     <div className="widget-frame widget-frame-card" style={bodyStyle}>
       {s.texture === 'video-custom' && s.customVideoMediaId ? (
-        <CleoVideoBackground mediaId={s.customVideoMediaId} opacity={s.textureOpacity ?? 1} />
+        <GraphicVideo src={uploadStream(s.customVideoBase)} mediaId={s.customVideoMediaId} opacity={s.textureOpacity ?? 1} />
       ) : s.texture === 'video-custom' && s.customVideoUrl ? (
-        <CleoVideoBackground src={s.customVideoUrl} opacity={s.textureOpacity ?? 1} />
+        <GraphicVideo src={s.customVideoUrl} opacity={s.textureOpacity ?? 1} />
       ) : s.texture === 'spiral' ? (
         <ParticleField color={s.textureColor || '#FFFFFF'} opacity={s.textureOpacity ?? 1} />
       ) : s.texture === 'globe' ? (

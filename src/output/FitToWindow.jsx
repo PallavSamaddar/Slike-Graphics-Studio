@@ -65,7 +65,7 @@ export function FillWindow({ width, height, children }) {
   const scale = fit > 0 ? fit : 1;
   return (
     <div className="player-fill" style={{ '--fill-scale': scale }}>
-      <div className="player-fit-inner" style={{ width: box.w / scale, height: box.h / scale, transform: `scale(${scale})` }}>
+      <div className="player-fit-inner" style={{ width: (box.w + 1) / scale, height: (box.h + 1) / scale, transform: `scale(${scale})` }}>
         {children}
       </div>
     </div>

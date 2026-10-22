@@ -2,13 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
     <script>
-      // The person's theme (Player Console ThemeSwitch): Light, Dark or Match device,
-      // kept in this browser as pc-theme and applied before the page draws.
       (function () {
+        var framed = true;
+        try { framed = window.self !== window.top; } catch (e) {}
+        var hostOrDeviceDark = !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
         var pick = 'light';
         try { pick = localStorage.getItem('pc-theme') || 'light'; } catch (e) {}
-        var dark = pick === 'dark' || (pick === 'device' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+        var dark = framed ? hostOrDeviceDark : pick === 'dark' || (pick === 'device' && hostOrDeviceDark);
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
       })();
     </script>

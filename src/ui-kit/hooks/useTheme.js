@@ -24,19 +24,29 @@ function apply(theme) {
   if (document.startViewTransition && !reduce) document.startViewTransition(paint);
   else paint();
 }
-export function useTheme() {
+export function useTheme({ followHost = false } = {}) {
   const [pick, setPick] = useState(readPick);
-  const [theme, setTheme] = useState(() => resolve(readPick()));
+  const [theme, setTheme] = useState(() => (followHost ? (deviceDark() ? 'dark' : 'light') : resolve(readPick())));
 
   useEffect(() => {
-    const show = () => { const t = resolve(pick); setTheme(t); apply(t); };
+    const show = () => {
+      const t = followHost ? (deviceDark() ? 'dark' : 'light') : resolve(pick);
+      setTheme(t);
+      apply(t);
+    };
     show();
-    try { localStorage.setItem(STORAGE_KEY, pick); } catch { /* ignore */ }
-    if (pick !== 'device' || !window.matchMedia) return undefined;
+    if (!followHost) {
+      try { localStorage.setItem(STORAGE_KEY, pick); } catch { /* ignore */ }
+    }
+    if ((!followHost && pick !== 'device') || !window.matchMedia) return undefined;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     mq.addEventListener('change', show);
-    return () => mq.removeEventListener('change', show);
-  }, [pick]);
+    const timer = followHost ? setInterval(show, 1000) : null;
+    return () => {
+      mq.removeEventListener('change', show);
+      clearInterval(timer);
+    };
+  }, [pick, followHost]);
 
   return { pick, setPick, theme };
 }

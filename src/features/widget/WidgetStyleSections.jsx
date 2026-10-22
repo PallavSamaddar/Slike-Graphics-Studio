@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Field, Select, Tabs } from '../../ui-kit';
 import { TEXT_SPACING } from '../../constants/widgetTemplates.js';
 import ScrollRow from '../shared-editor/ScrollRow.jsx';
@@ -61,22 +61,30 @@ export default function WidgetStyleSections({ st, setSt }) {
     upload({
       file, label: name, setSt, path: 'style.customVideoUrl', local: url,
       uploader: uploadVideoWithSdk, resultPath: 'style.customVideoMediaId',
-      fields: { 'style.texture': 'video-custom', 'style.customVideoUrl': url, 'style.customVideoName': name, 'style.customVideoMediaId': null },
+      fields: { 'style.texture': 'video-custom', 'style.customVideoUrl': url, 'style.customVideoName': name, 'style.customVideoMediaId': null, 'style.customVideoBase': null },
     }).then(refreshUploaded);
   };
 
-  // An earlier upload, picked from the list: the Cleo player plays it from its media id.
+  // An earlier upload, picked from the list: on air it streams from its CDN folder
+  // (<base>/hls/master.m3u8, output/GraphicVideo.jsx); the media id is the Cleo fallback.
   const pickUploadedVideo = (media) => setSt((state) => ({
     ...state,
     style: {
       ...state.style,
       texture: 'video-custom',
       customVideoMediaId: media.id,
+      customVideoBase: media.cdn?.[0]?.base || null,
       customVideoUrl: null,
       customVideoName: media.title || 'Untitled video',
     },
   }));
   const pickedUploaded = (media) => s.texture === 'video-custom' && s.customVideoMediaId === media.id;
+  // A just-finished upload (or a graphic saved before the base was kept) learns its CDN base
+  // once the uploaded list holds it, so on air it streams instead of loading the Cleo player.
+  const pickedBase = uploadedVideos.find((m) => m.id === s.customVideoMediaId)?.cdn?.[0]?.base;
+  useEffect(() => {
+    if (pickedBase && !s.customVideoBase) setStyle('customVideoBase', pickedBase);
+  }, [pickedBase]); // eslint-disable-line react-hooks/exhaustive-deps
   const customInList = uploadedVideos.some((m) => m.id === s.customVideoMediaId);
 
   const hasTexture = !!(s.texture && s.texture !== 'none');

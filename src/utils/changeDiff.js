@@ -87,7 +87,7 @@ const MAPS = {
   },
   widget: {
     order: ['Content', 'Details', 'Style', 'Background'],
-    skip: ['drafts', 'headings', 'descriptions', 'publishedAt', 'style.customVideoUrl', 'style.badgeImage'],
+    skip: ['drafts', 'headings', 'descriptions', 'publishedAt', 'style.customVideoUrl', 'style.customVideoBase', 'style.badgeImage'],
     keys: {
       template: ['Style', 'Template', tplName(WIDGET_TPLS)],
       src: ['Content', 'Source', (v) => SRC[v] ?? v],

@@ -12,6 +12,7 @@ export function announceAirChange(id) {
 const HOST_ORIGIN = /^https:\/\/([a-z0-9-]+\.)*sli\.ke(:\d+)?$/i;
 const HOST_MESSAGE = 'slike-graphic:air';
 const PUBLISH_REQUEST = 'slike-graphic:publish';
+const STATE_MESSAGE = 'slike-graphic:state';
 
 function embeddingOrigin() {
   if (!inFrame) return null;
@@ -20,13 +21,19 @@ function embeddingOrigin() {
   return origin && HOST_ORIGIN.test(origin) ? origin : null;
 }
 
-export function announceToHost({ id, v, error }) {
+function postToHost(message) {
   const origin = embeddingOrigin();
   if (!origin) return;
   try {
-    window.parent.postMessage({ type: HOST_MESSAGE, id, v, ...(error && { error }) }, origin);
-  } catch { /* the studio re-checks the graphic when its editor closes */ }
+    window.parent.postMessage(message, origin);
+  } catch { /* the host re-reads the graphic when its editor closes */ }
 }
+
+export const announceToHost = ({ id, v, error }) => postToHost({ type: HOST_MESSAGE, id, v, ...(error && { error }) });
+
+// Whether there is anything to publish, so the host's button can follow it.
+export const announceCanPublish = (id, canPublish) => postToHost({ type: STATE_MESSAGE, id, canPublish });
+
 export function onPublishRequest(fn) {
   const onMessage = (e) => {
     if (e.source === window.parent && HOST_ORIGIN.test(e.origin) && e.data?.type === PUBLISH_REQUEST) fn();
