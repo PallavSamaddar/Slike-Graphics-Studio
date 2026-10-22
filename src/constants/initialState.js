@@ -108,6 +108,7 @@ export const initialJacketState = {
   showLogo: true,
   showHeadline: true,
   mainVideoUrl: null,
+  mainVideoMediaId: null,
   mainVideoName: '',
   mainVideoPreset: null,
   logoImage: null,

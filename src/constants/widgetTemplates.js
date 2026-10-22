@@ -186,7 +186,7 @@ export const TEXT_SPACING = [
 ];
 
 const LINE_HEIGHT = {
-  heading: { compact: 1.05, default: 1.15, comfortable: 1.3 },
+  heading: { compact: 1.05, default: 1.25, comfortable: 1.4 },
   body: { compact: 1.3, default: 1.5, comfortable: 1.75 },
 };
 export const lineHeightFor = (part, spacing, tx) => LINE_HEIGHT[part][spacing ?? tx?.spacing] ?? tx?.lineHeight ?? LINE_HEIGHT[part].default;

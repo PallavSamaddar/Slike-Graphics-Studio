@@ -2,15 +2,16 @@ import { useState } from 'react';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
 import ScrollRow from '../shared-editor/ScrollRow.jsx';
 import { TPLS } from '../../constants/tickerTemplates.js';
-import { VIDEO_PRESETS } from '../../constants/videoPresets.js';
 import { baseName, readAsDataUrl, takeFile } from '../../utils/files.js';
 import ImageUpload from '../shared-editor/ImageUpload.jsx';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
+import useUploadedVideos from '../../hooks/useUploadedVideos.js';
+import { isMediaReady, mediaThumbUrl } from '../../services/media.js';
 import { Field, Row, Section, SegmentedControl, Select, Toggle } from '../../ui-kit';
 import ContentTitle from '../shared-editor/ContentTitle.jsx';
 
 // Left-panel form for the Jacket: logo/brand text, a scrolling headline,
-// time/weather, a main-video upload (or stock preset pick), and an
+// time/weather, a main video (picked from the uploaded videos), and an
 // optional left/right vertical image panel. No content-source machinery
 // like the widget — a jacket is a live-feed overlay, not a card with a
 // data source.
@@ -30,9 +31,15 @@ export default function JacketContentSections({ st, setSt }) {
   const confirmMainVideo = (name) => {
     const { url, file } = pendingMainVideo;
     setPendingMainVideo(null);
-    upload({ file, label: name, setSt, path: 'mainVideoUrl', local: url, fields: { mainVideoUrl: url, mainVideoName: name, mainVideoPreset: null } });
+    upload({ file, label: name, setSt, path: 'mainVideoUrl', local: url, fields: { mainVideoUrl: url, mainVideoName: name, mainVideoMediaId: null, mainVideoPreset: null } });
   };
-  const pickPreset = (v) => setSt((s) => ({ ...s, mainVideoUrl: v.src, mainVideoName: v.label, mainVideoPreset: v.id }));
+
+  // The videos uploaded to Slike (the widget's background videos too): the Cleo player plays
+  // the picked one from its media id.
+  const { videos: uploadedVideos } = useUploadedVideos(true);
+  const pickVideo = (media) => setSt((s) => ({
+    ...s, mainVideoMediaId: media?.id || null, mainVideoName: media ? media.title || 'Untitled video' : '', mainVideoUrl: null, mainVideoPreset: null,
+  }));
 
   // Logo and side image: shown from a local data: URL at once, then uploaded; the uploaded
   // URL replaces the local one when the upload ends.
@@ -122,8 +129,17 @@ export default function JacketContentSections({ st, setSt }) {
       </Section>
 
       <Section title="Main video">
-        <Field label="Choose a preset" grow path="mainVideoName">
+        <Field label="Choose a video" grow path="mainVideoName">
           <ScrollRow hideNav>
+            <button
+              type="button"
+              className={'texture-swatch' + (!st.mainVideoMediaId && !st.mainVideoUrl ? ' active' : '')}
+              onClick={() => pickVideo(null)}
+              title="No video — the live feed shows here"
+            >
+              <span className="texture-swatch-preview texture-swatch-preview-video" />
+              <span className="texture-swatch-label">None</span>
+            </button>
             {st.mainVideoUrl && !st.mainVideoPreset && (
               <div className="badge-img-thumb-wrap">
                 <video className="badge-img-thumb" src={st.mainVideoUrl} muted />
@@ -144,20 +160,25 @@ export default function JacketContentSections({ st, setSt }) {
               <input type="file" accept="video/*" hidden onChange={handleMainVideoUpload} />
             </label>
             */}
-            {VIDEO_PRESETS.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                className={'texture-swatch' + (st.mainVideoPreset === v.id ? ' active' : '')}
-                onClick={() => pickPreset(v)}
-                title={v.label}
-              >
-                <span className="texture-swatch-preview texture-swatch-preview-video">
-                  <video className="texture-swatch-video-thumb" src={v.src + '#t=0.5'} muted preload="metadata" />
-                </span>
-                <span className="texture-swatch-label">{v.label}</span>
-              </button>
-            ))}
+            {uploadedVideos.map((m) => {
+              const ready = isMediaReady(m);
+              const thumb = mediaThumbUrl(m);
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={'texture-swatch' + (st.mainVideoMediaId === m.id ? ' active' : '')}
+                  onClick={() => pickVideo(m)}
+                  disabled={!ready}
+                  title={ready ? m.title : `${m.title} — still processing`}
+                >
+                  <span className="texture-swatch-preview texture-swatch-preview-video">
+                    {thumb && <img className="texture-swatch-video-thumb" src={thumb} alt="" loading="lazy" />}
+                  </span>
+                  <span className="texture-swatch-label">{ready ? m.title : 'Processing…'}</span>
+                </button>
+              );
+            })}
           </ScrollRow>
         </Field>
       </Section>

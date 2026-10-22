@@ -20,8 +20,7 @@ const POS = { left: 'Left', right: 'Right', top: 'Top', 'top-left': 'Top left', 
 const TEXTURE = {
   none: 'None', spiral: 'Spiral Dots', globe: 'Earth Orbit', 'wave-flow': 'Wave Flow', 'light-trails': 'Light Trails',
   'circular-sweep': 'Circular Sweep', 'arrow-motion': 'Arrow Motion', 'radar-sweep': 'Radar Sweep', 'grid-pulse': 'Grid Pulse',
-  'data-stream': 'Data Stream', 'bokeh-glow': 'Bokeh Glow', 'video-news': 'News Background', 'video-rede': 'Rede BG',
-  'video-red': 'Red Background', 'video-custom': 'Uploaded video',
+  'data-stream': 'Data Stream', 'bokeh-glow': 'Bokeh Glow', 'video-custom': 'Uploaded video',
 };
 const onOff = (v) => (v ? 'On' : 'Off');
 const tplName = (list) => (v) => {
@@ -126,7 +125,7 @@ const MAPS = {
   },
   jacket: {
     order: ['Content', 'Main video', 'Side image panel', 'Logo image', 'Style'],
-    skip: ['mainVideoUrl', 'mainVideoPreset', 'logoImage', 'sideImage'],
+    skip: ['mainVideoUrl', 'mainVideoMediaId', 'mainVideoPreset', 'logoImage', 'sideImage'],
     keys: {
       template: ['Style', 'Template', tplName(JACKET_TPLS)],
       logoText: ['Content', 'Logo text'],

@@ -7,7 +7,6 @@ import { FontSelect, Stepper, TextFormat } from '../shared-editor/StyleControls.
 import { autoTextColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
 import { WIDGET_TRANSITIONS, widgetTransition } from '../../constants/textAnimations.js';
-import { VIDEO_PRESETS } from '../../constants/videoPresets.js';
 import { baseName, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { uploadVideoWithSdk } from '../../services/uploadSdk.js';
@@ -259,20 +258,6 @@ export default function WidgetStyleSections({ st, setSt }) {
                   </button>
                 );
               })}
-              {VIDEO_PRESETS.map((v) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  className={'texture-swatch' + (s.texture === v.id ? ' active' : '')}
-                  onClick={() => setStyle('texture', v.id)}
-                  title={v.label}
-                >
-                  <span className="texture-swatch-preview texture-swatch-preview-video">
-                    <video className="texture-swatch-video-thumb" src={v.src + '#t=0.5'} muted preload="metadata" />
-                  </span>
-                  <span className="texture-swatch-label">{v.label}</span>
-                </button>
-              ))}
             </ScrollRow>
           </div>
         )}

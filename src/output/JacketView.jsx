@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { autoTextColor, textShadowFor } from '../utils/color.js';
 import { TPLS } from '../constants/tickerTemplates.js';
 import TickerView from './TickerView.jsx';
+import CleoVideoBackground from './CleoVideoBackground.jsx';
 export default function JacketView({ st, setSt }) {
   const { style: s, headlineText: ht } = st;
   const logoTextColor = autoTextColor(s.logoColor);
@@ -16,23 +17,8 @@ export default function JacketView({ st, setSt }) {
     textShadow: textShadowFor('#FFD400'), // the headline's yellow on the black bar
   };
 
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const clockText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-  const dateText = now.toLocaleDateString([], { day: '2-digit', month: 'short' });
-
   const showTime = !!st.showTime;
   const showWeather = !!st.showWeather && !!st.weather;
-  const [showingWeather, setShowingWeather] = useState(false);
-  useEffect(() => {
-    if (!(showTime && showWeather)) { setShowingWeather(false); return undefined; }
-    const id = setInterval(() => setShowingWeather((v) => !v), 4000);
-    return () => clearInterval(id);
-  }, [showTime, showWeather]);
-  const faceIsWeather = showWeather && (!showTime || showingWeather);
 
   const tickerTpl = st.tickerTemplate && TPLS.find((t) => t.id === st.tickerTemplate);
   const tickerSt = tickerTpl ? {
@@ -90,8 +76,12 @@ export default function JacketView({ st, setSt }) {
         className={'jacket-video-area' + (st.sideImage ? ' jacket-video-area-' + st.imagePanelPos : '')}
         style={st.sideImage ? { '--jacket-panel-size': `${panelSize}%` } : undefined}
       >
-        {st.mainVideoUrl ? (
-          <video className="jacket-video-el" src={st.mainVideoUrl} autoPlay loop muted playsInline />
+        {/* A video picked from the uploads plays from its media id; one uploaded here, from its URL.
+            (mainVideoPreset marks the stock videos the app used to bundle — gone now.) */}
+        {st.mainVideoMediaId ? (
+          <CleoVideoBackground mediaId={st.mainVideoMediaId} className="jacket-video-el" />
+        ) : st.mainVideoUrl && !st.mainVideoPreset ? (
+          <CleoVideoBackground src={st.mainVideoUrl} className="jacket-video-el" />
         ) : (
           <span className="jacket-live-hint">Live feed shows here</span>
         )}
@@ -141,20 +131,52 @@ export default function JacketView({ st, setSt }) {
 
         {(showTime || showWeather) && (
           <div className="jacket-time-box" style={{ background: s.timeColor, color: autoTextColor(s.timeColor), textShadow: textShadowFor(autoTextColor(s.timeColor)) }}>
-            {faceIsWeather ? (
-              <>
-                <span className="jacket-time-main">{st.weather}</span>
-                <span className="jacket-time-zone">WEATHER</span>
-              </>
-            ) : (
-              <>
-                <span className="jacket-time-main">{clockText}</span>
-                <span className="jacket-time-zone">{dateText}</span>
-              </>
-            )}
+            <TimeBoxFace showTime={showTime} weather={showWeather ? st.weather : ''} />
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+const clockNow = () => {
+  const now = new Date();
+  return {
+    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+    date: now.toLocaleDateString([], { day: '2-digit', month: 'short' }),
+  };
+};
+
+// The time box's face: the clock, the weather, or the two taking turns every 4s. Its own
+// component, so its ticks redraw only this box, not the whole jacket (ticker, video, panel);
+// the clock is kept as its text, so a tick redraws only when the minute changes.
+function TimeBoxFace({ showTime, weather }) {
+  const [clock, setClock] = useState(clockNow);
+  useEffect(() => {
+    if (!showTime) return undefined;
+    const id = setInterval(() => setClock((c) => {
+      const next = clockNow();
+      return next.time === c.time && next.date === c.date ? c : next;
+    }), 1000);
+    return () => clearInterval(id);
+  }, [showTime]);
+
+  const [showingWeather, setShowingWeather] = useState(false);
+  useEffect(() => {
+    if (!(showTime && weather)) { setShowingWeather(false); return undefined; }
+    const id = setInterval(() => setShowingWeather((v) => !v), 4000);
+    return () => clearInterval(id);
+  }, [showTime, weather]);
+
+  return weather && (!showTime || showingWeather) ? (
+    <>
+      <span className="jacket-time-main">{weather}</span>
+      <span className="jacket-time-zone">WEATHER</span>
+    </>
+  ) : (
+    <>
+      <span className="jacket-time-main">{clock.time}</span>
+      <span className="jacket-time-zone">{clock.date}</span>
+    </>
   );
 }

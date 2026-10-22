@@ -5,6 +5,7 @@ import { fromGraphic } from '../services/graphicMapper.js';
 import usePoll from '../hooks/usePoll.js';
 import { onAirChange } from '../services/airSignal.js';
 import { inFrame } from '../utils/frame.js';
+import { loadFontsFor } from './fonts.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
 import JacketView from './JacketView.jsx';
@@ -49,7 +50,9 @@ function OnAirGraphic({ id }) {
         const spec = GRAPHICS[g.kind];
         if (isStopped() || !spec) return;
         shownV.current = g.v || 0;
-        setOnAir({ kind: g.kind, st: fromGraphic(g, spec.initial) });
+        const st = fromGraphic(g, spec.initial);
+        loadFontsFor(st);
+        setOnAir({ kind: g.kind, st });
       })
       .catch((err) => { if (!isStopped()) setOnAir((cur) => (err.code === 404 || !cur ? { gone: true } : cur)); });
   }, ON_AIR_POLL_MS, [id, nudged], { immediate: true });

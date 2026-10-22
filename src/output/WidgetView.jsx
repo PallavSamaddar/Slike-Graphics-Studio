@@ -5,11 +5,7 @@ import { feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTe
 import { widgetTransition } from '../constants/textAnimations.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
-import VideoBackground from './VideoBackground.jsx';
 import CleoVideoBackground from './CleoVideoBackground.jsx';
-import newsBackgroundVideo from '../assets/news-background.mp4';
-import redeBgVideo from '../assets/rede-bg.mp4';
-import redBackgroundVideo from '../assets/red-background.mp4';
 
 const TRANSITION_MS = 200;
 // Lines the headline and description are clamped to: 3 each, raised (headline first) while
@@ -17,12 +13,6 @@ const TRANSITION_MS = 200;
 const MIN_LINES = 3;
 const MAX_HEAD_LINES = 6;
 const MAX_SUMMARY_LINES = 12;
-
-const VIDEO_TEXTURES = {
-  'video-news': newsBackgroundVideo,
-  'video-rede': redeBgVideo,
-  'video-red': redBackgroundVideo,
-};
 
 // Each item — a feed's, or a manual one typed in — is a title, an optional description and an
 // optional image; they cycle together. In the editor, a widget with no items yet shows a
@@ -155,9 +145,7 @@ export default function WidgetView({ st, preview = false }) {
       {s.texture === 'video-custom' && s.customVideoMediaId ? (
         <CleoVideoBackground mediaId={s.customVideoMediaId} opacity={s.textureOpacity ?? 1} />
       ) : s.texture === 'video-custom' && s.customVideoUrl ? (
-        <VideoBackground src={s.customVideoUrl} opacity={s.textureOpacity ?? 1} />
-      ) : VIDEO_TEXTURES[s.texture] ? (
-        <VideoBackground src={VIDEO_TEXTURES[s.texture]} opacity={s.textureOpacity ?? 1} />
+        <CleoVideoBackground src={s.customVideoUrl} opacity={s.textureOpacity ?? 1} />
       ) : s.texture === 'spiral' ? (
         <ParticleField color={s.textureColor || '#FFFFFF'} opacity={s.textureOpacity ?? 1} />
       ) : s.texture === 'globe' ? (
@@ -222,6 +210,8 @@ function useFitLines(stageRef, st) {
     };
     const fits = (head, summary) => { set(head, summary); return tallest() <= stage.clientHeight; };
     const fit = () => {
+      // Most cards (short text) fit even at the most lines: one measure, done.
+      if (fits(MAX_HEAD_LINES, MAX_SUMMARY_LINES)) return;
       let head = MIN_LINES;
       let summary = MIN_LINES;
       while (summary > 1 && !fits(head, summary)) summary--;

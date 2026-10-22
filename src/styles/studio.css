@@ -309,8 +309,6 @@ html.in-frame .shell .studio-detail { --studio-top: 0px; }
 .lib-pages .btn.small { min-width: var(--ctl-h-sm); padding: 0 8px; font-variant-numeric: tabular-nums; }
 .lib-page-gap { padding: 0 2px; color: var(--ink-faint); }
 .saved-sum { color: var(--ink-faint); font-size: var(--fs-base); font-variant-numeric: tabular-nums; }
-.saved-status { display: flex; align-items: center; gap: var(--space-12); padding: var(--space-16) 0; color: var(--ink-soft); }
-.saved-status.bad { color: var(--accent); }
 
 .lc-menu-wrap { position: relative; display: inline-flex; }
 .lc-sort {
@@ -434,7 +432,6 @@ html.in-frame .shell .studio-detail { --studio-top: 0px; }
 .mini-thumb { --thumb-w: 104; flex: none; display: block; position: relative; width: calc(var(--thumb-w) * 1px); aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; box-shadow: 0 0 0 1px var(--line); background: var(--surface-soft); }
 .glist-row .mini-thumb { --thumb-w: inherit; }
 .mini-thumb-in { position: absolute; top: 0; left: 0; width: 240px; transform: scale(calc(var(--thumb-w) / 240)); transform-origin: 0 0; pointer-events: none; }
-.mini-thumb-sm { --thumb-w: 72; }
 .start-panel { background: var(--panel); border: 1px solid var(--card-line); border-radius: var(--r-card); box-shadow: var(--shadow-1); padding: 16px 16px 12px; }
 .start-panel-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
 .start-panel-sub { font-size: var(--fs-sm); color: var(--ink-faint); }

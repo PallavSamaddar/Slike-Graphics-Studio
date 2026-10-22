@@ -8,9 +8,7 @@ const METHOD = {
   CREATE: 'graphic.create',
   GET: 'graphic.get',
   UPDATE: 'graphic.update',
-  LIST: 'graphic.list',
   ARCHIVE: 'graphic.archive',
-  DELETE: 'graphic.delete',
   DUPLICATE: 'graphic.duplicate',
   STATS: 'graphic.stats',
   PREVIEW: 'graphic.preview',
@@ -18,7 +16,6 @@ const METHOD = {
   UNPUBLISH: 'graphic.unpublish',
 };
 
-const LIST_FIELDS = ['id', 'title', 'kind', 'template_id', 'source', 'mt', 'ctby'];
 const DEFAULT_PAGE_SIZE = 24;
 const SEARCH_FIELDS = [{ field: 'title', boost: 3 }, { field: 'source.items' }];
 const ID_PATTERN = /^[a-z0-9]{10}$/i;
@@ -58,12 +55,7 @@ export const getOnAirGraphic = (id, { fresh = false } = {}) =>
 export const updateGraphic = (id, mt, changes) =>
   callRpc(METHOD.UPDATE, { ...changes, id, if_match: { field: 'mt', value: mt } });
 
-export const listGraphics = (filters) =>
-  callRpc(METHOD.LIST, { ...buildQuery(filters), fields: LIST_FIELDS });
-
 export const archiveGraphic = (id) => callRpc(METHOD.ARCHIVE, { id });
-export const unarchiveGraphic = (id) => callRpc(METHOD.ARCHIVE, { id, archive: 0 });
-export const deleteGraphic = (id) => callRpc(METHOD.DELETE, { id });
 
 export const duplicateGraphic = (id) => callRpc(METHOD.DUPLICATE, { id });
 

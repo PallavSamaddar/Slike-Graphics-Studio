@@ -250,35 +250,6 @@ input, select, textarea { font-family: inherit; }
 
 /* Form controls */
 
-.badge-img-combo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 33px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-panel);
-}
-.badge-img-combo .badge-img-upload,
-.badge-img-combo .badge-img-thumb-wrap { border: none; padding: 0; background: none; height: auto; }
-.badge-img-combo-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
-.badge-img-combo-pos {
-  border: none;
-  height: 27px;
-  margin-bottom: 0;
-  width: 120px;
-  flex-shrink: 0;
-}
-
-.form-lbl {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.025em;
-}
-.form-lbl-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; line-height: 1; min-height: 13px; }
-
 .form-range {
   width: 100%;
   height: 33px;
@@ -324,19 +295,6 @@ input, select, textarea { font-family: inherit; }
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
-.form-inp {
-  height: 33px;
-  padding: 0 9px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 12.5px;
-  outline: none;
-  width: 100%;
-  transition: border-color 0.13s;
-}
-.form-inp:focus { border-color: var(--toi-red); }
 
 /* Color field */
 .color-field {
@@ -571,7 +529,6 @@ input, select, textarea { font-family: inherit; }
 /* Badge type grid */
 
 .rss-row { display: flex; gap: 6px; }
-.rss-row .form-inp { flex: 1; }
 
 /* ============================================================
    PANEL — PREVIEW (RIGHT)
@@ -871,180 +828,6 @@ input, select, textarea { font-family: inherit; }
 /* Preview info */
 
 /* ============================================================
-   BOTTOM LIVE BAR
-   ============================================================ */
-.live-bar {
-  height: var(--bottom-h);
-  min-height: var(--bottom-h);
-  background: #0E0F11;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  display: flex;
-  align-items: stretch;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.live-meta {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 14px 0 15px;
-  border-right: 1px solid rgba(255,255,255,0.07);
-  flex-shrink: 0;
-}
-.live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #4ADE80;
-  animation: pulse 2s ease-in-out infinite;
-}
-.live-meta-text {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255,255,255,0.35);
-  white-space: nowrap;
-}
-.live-ticker-widget {
-  flex: 1;
-  display: flex;
-  align-items: stretch;
-  overflow: hidden;
-}
-.live-badge {
-  display: flex;
-  align-items: center;
-  /* padding/gap in em so --badge-scale (via font-size) scales the whole badge, not just its text */
-  padding: 0 1.1em;
-  font-size: calc(11px * var(--badge-scale, 1));
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  white-space: nowrap;
-  gap: 0.45em;
-  flex-shrink: 0;
-}
-.live-badge-dot {
-  width: 0.45em;
-  height: 0.45em;
-  border-radius: 50%;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-.live-badge-wedge {
-  padding-right: 26px;
-  margin-right: -14px;
-  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-  font-style: italic;
-  z-index: 1;
-}
-.live-track {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-.live-badge-wedge + .live-track { padding-left: 10px; }
-.live-track::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 24px;
-  z-index: 1;
-  pointer-events: none;
-}
-.live-track::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 24px;
-  z-index: 1;
-  pointer-events: none;
-}
-.live-inner {
-  display: inline-flex;
-  white-space: nowrap;
-  align-items: center;
-  animation: tickerScroll 35s linear infinite;
-}
-.live-item { display: inline-block; padding: 0 16px; }
-.live-sep { display: inline-block; padding: 0 4px; opacity: 0.55; }
-
-/* Double-decker — editor live preview. Same chevron treatment as the
-   main preview (.p-ticker-dd): top banner and tag share one cut angle
-   so their diagonal edges always line up. */
-.live-ticker-widget-dd {
-  flex-direction: column;
-  align-items: stretch;
-  --dd-cut: 18px;
-}
-.live-dd-top {
-  flex: 0 0 42%;
-  display: flex;
-  align-items: center;
-  padding: 0 20px 0 16px;
-  clip-path: polygon(0 0, 100% 0, calc(100% - var(--dd-cut)) 100%, 0 100%);
-  z-index: 2;
-}
-.live-dd-top-text {
-  font-size: 14px;
-  font-weight: 800;
-  font-style: italic;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.live-dd-bottom {
-  flex: 1;
-  display: flex;
-  align-items: stretch;
-  min-height: 0;
-}
-.live-dd-tag {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  padding: 0 18px 0 16px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  clip-path: polygon(0 0, 100% 0, calc(100% - var(--dd-cut)) 100%, 0 100%);
-  margin-right: calc(-1 * var(--dd-cut));
-  z-index: 1;
-}
-.live-dd-bottom .live-track { flex: 1; min-width: 0; padding-left: calc(var(--dd-cut) + 8px); }
-
-/* Split block preset — flat rectangular banner, no shared diagonal. */
-.live-dd-split.live-ticker-widget-dd { --dd-cut: 0px; }
-.live-dd-split .live-dd-top,
-.live-dd-split .live-dd-tag { clip-path: none; margin-right: 0; }
-.live-dd-split .live-dd-bottom { margin-top: 0; border-top: 1px solid rgba(0,0,0,0.1); }
-.live-dd-split .live-dd-bottom .live-track { padding-left: 10px; }
-
-/* Diagonal stripes accent preset — flat banner + angled stripe marks. */
-.live-dd-stripes.live-ticker-widget-dd { --dd-cut: 0px; }
-.live-dd-stripes .live-dd-top,
-.live-dd-stripes .live-dd-tag { clip-path: none; margin-right: 0; }
-.live-dd-stripes .live-dd-bottom { margin-top: 0; border-top: 1px solid rgba(0,0,0,0.1); }
-.live-dd-stripes .live-dd-bottom .live-track { padding-left: 10px; }
-.live-dd-stripes-mark { display: inline-flex; align-items: stretch; gap: 2px; margin-right: 8px; flex-shrink: 0; height: 55%; }
-.live-dd-stripes-mark span { width: 2px; background: currentColor; opacity: 0.55; transform: skewX(-14deg); }
-
-/* Rounded pill tag preset — flat banner, pill-shaped tag. */
-.live-dd-pill.live-ticker-widget-dd { --dd-cut: 0px; }
-.live-dd-pill .live-dd-top { clip-path: none; }
-.live-dd-pill .live-dd-bottom { margin-top: 0; align-items: center; border-top: 1px solid rgba(0,0,0,0.1); padding: 4px 0; }
-.live-dd-pill .live-dd-tag { clip-path: none; margin-right: 8px; margin-left: 10px; border-radius: 999px; padding: 4px 14px; }
-.live-dd-pill .live-dd-bottom .live-track { padding-left: 0; }
-
-/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes tickerScroll {
@@ -1065,8 +848,8 @@ input, select, textarea { font-family: inherit; }
    RESPONSIVE
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .live-inner, .p-inner { animation: none !important; }
-  .live-dot, .live-badge-dot, .p-badge-dot, .mini-dot { animation: none !important; }
+  .p-inner { animation: none !important; }
+  .p-badge-dot, .mini-dot { animation: none !important; }
   .single-item { transition: none !important; animation: none !important; }
 }
 
@@ -1261,7 +1044,7 @@ input, select, textarea { font-family: inherit; }
   font-family: 'Playfair Display', Georgia, serif;
   font-size: clamp(14px, 5cqi, 24px);
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.25;
   text-align: center;
   padding: 0.35em 0.6em;
   border-radius: var(--radius-sm);
