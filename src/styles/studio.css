@@ -209,6 +209,7 @@ html.in-frame .shell .studio-detail { --studio-top: 0px; --studio-col-h: calc(10
 .cs-lines .chg::before { left: -4px; top: 5px; bottom: 5px; }
 .cs-check { display: inline-flex; align-items: center; gap: 7px; margin-left: 2px; font-size: var(--fs-md); color: var(--ink-soft); cursor: pointer; user-select: none; white-space: nowrap; }
 .cs-check input { margin: 0; }
+.cs-lines .cs-text.cs-text-wide { width: 150px; }
 .cs-lines .cs-text { width: 92px; height: 30px; min-height: 30px; padding: 0 10px; font-size: var(--fs-md); }
 .tool-case { font-size: 12px; font-weight: 700; letter-spacing: .2px; }
 .tool-fmt button:disabled { opacity: .35; cursor: default; }

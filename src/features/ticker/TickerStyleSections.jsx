@@ -10,6 +10,8 @@ const HEIGHTS = [
   { value: '48px', label: 'Standard · 48px' },
   { value: '56px', label: 'Tall · 56px' },
   { value: '64px', label: 'Large · 64px' },
+  { value: '96px', label: 'Extra large · 96px' },
+  { value: '140px', label: 'Extra extra large · 140px' },
 ];
 const BANNERS = [
   { value: 'chevron', label: 'Chevron' },
@@ -23,6 +25,8 @@ const SIZES = [
   { value: 1.3, label: 'Large' },
   { value: 1.6, label: 'Extra large' },
 ];
+// The animations that show a sting between headlines.
+const STINGS = ['breaking', 'shatter'];
 const SPEEDS = [
   { value: 1, label: 'Slow' },
   { value: 2, label: 'Medium' },
@@ -67,10 +71,16 @@ export default function TickerStyleSections({ st, setSt }) {
             label="Text"
             alignKey="textAlign"
             alignDefault="left"
-            alignOff={loop}
-            alignReason="Alignment only applies to Sequential"
+            alignOff={loop || STINGS.includes(behavior.animation)}
+            alignReason={loop ? 'Alignment only applies to Sequential' : 'The sting animations centre the headline'}
             withCase
           />
+          <Field path="text.autoFit" off={loop} offReason="Only for Sequential — a scrolling ticker never cuts its text">
+            <label className="cs-check" title="On: a long headline gets smaller to fit the bar. Off: it keeps its size and ends in …">
+              <input type="checkbox" checked={!!tx.autoFit} disabled={loop} onChange={(e) => setTx('autoFit', e.target.checked)} />
+              Shrink to fit
+            </label>
+          </Field>
         </div>
 
         <div className="cs-row">
@@ -117,6 +127,18 @@ export default function TickerStyleSections({ st, setSt }) {
           </Field>
           <Field path="behavior.animation" off={loop} offReason="Only for Sequential">
             <Select value={behavior.animation || 'fade'} options={TEXT_ANIMATIONS} onChange={(v) => setBehavior('animation', v)} ariaLabel="Text animation" title="Text animation" />
+          </Field>
+          <Field path="behavior.stingText" off={loop || !STINGS.includes(behavior.animation)} offReason="Only for the Breaking News and Shatter stings">
+            <input
+              type="text"
+              className="cs-text cs-text-wide"
+              placeholder="BREAKING NEWS"
+              maxLength={30}
+              value={behavior.stingText ?? ''}
+              onChange={(e) => setBehavior('stingText', e.target.value)}
+              aria-label="Sting text"
+              title="The words the sting shows between headlines"
+            />
           </Field>
           <Field path="behavior.itemDuration" off={loop} offReason="Only for Sequential">
             <Stepper value={behavior.itemDuration || 5} display={(v) => `${v}s`} step={1} min={1} max={30} onChange={(v) => setBehavior('itemDuration', v)} label="duration" title="How long each headline stays on screen" />

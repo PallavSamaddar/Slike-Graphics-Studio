@@ -1,4 +1,20 @@
 export const TPLS = [
+  { id: 'shatter-sting', name: 'Breaking shatter', desc: 'Red · BREAKING NEWS assembles from broken glass',
+    style: { bgColor: '#B3101A', textColor: '#FFFFFF', accentColor: '#FFD400', separatorColor: 'rgba(255,255,255,0.35)', height: '56px', cornerRadius: '0px', bgGradient: null },
+    badge: { show: true, type: 'BREAKING', bgColor: '#FFD400', textColor: '#1A1714', fontWeight: '800' },
+    text: { fontFamily: 'Inter, sans-serif', fontSize: '16px', fontWeight: '700', letterSpacing: '0em', textTransform: 'none' },
+    // One headline at a time; between them BREAKING NEWS shatters into place.
+    behavior: { mode: 'single', animation: 'shatter', itemDuration: 5 },
+    mini: { bg: '#B3101A', tc: '#fff', bb: '#FFD400', bt: '#1A1714', border: 'none', badge: 'BREAKING' },
+  },
+  { id: 'breaking-sting', name: 'Breaking sting', desc: 'Red · BREAKING NEWS sting between headlines',
+    style: { bgColor: '#C8141D', textColor: '#FFFFFF', accentColor: '#FFD400', separatorColor: 'rgba(255,255,255,0.35)', height: '56px', cornerRadius: '0px', bgGradient: null },
+    badge: { show: true, type: 'BREAKING', bgColor: '#FFD400', textColor: '#1A1714', fontWeight: '800' },
+    text: { fontFamily: 'Inter, sans-serif', fontSize: '16px', fontWeight: '700', letterSpacing: '0em', textTransform: 'none' },
+    // One headline at a time, with the gold BREAKING NEWS sting between them.
+    behavior: { mode: 'single', animation: 'breaking', itemDuration: 5 },
+    mini: { bg: '#C8141D', tc: '#fff', bb: '#FFD400', bt: '#1A1714', border: 'none', badge: 'BREAKING' },
+  },
   { id: 'classic', name: 'Classic', desc: 'White · Red LIVE badge',
     style: { bgColor: '#FFFFFF', textColor: '#1A1714', accentColor: '#D7282F', separatorColor: '#D7282F', height: '48px', cornerRadius: '0px', bgGradient: null },
     badge: { show: true, type: 'LIVE', bgColor: '#D7282F', textColor: '#FFFFFF', fontWeight: '700' },

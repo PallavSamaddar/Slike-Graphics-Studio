@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import ShatterText from './ShatterText.jsx';
 
-// Cycles through items one at a time, holding each for `durationSec`,
-// transitioning between them with the chosen `animation`. Stops after the last item.
 const ALIGN_JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end' };
 const VERTICAL_ALIGN_ITEMS = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
 
-export default function SingleItemTicker({ items, animation, durationSec, itemStyle, className, align = 'left', verticalAlign, onIndexChange }) {
+// How long the change between two headlines takes, sting included.
+const STING_MS = { breaking: 1500, shatter: 2000 };
+
+// Shrink to fit: never smaller than this share of the bar's own text size.
+const MIN_FIT = 0.35;
+
+export default function SingleItemTicker({ items, animation, durationSec, itemStyle, className, align = 'left', verticalAlign, onIndexChange, stingText = 'BREAKING NEWS', autoFit = false }) {
   const [index, setIndex] = useState(0);
+  const wrapRef = useRef(null);
+  const textRef = useRef(null);
   const [phase, setPhase] = useState('in'); // 'in' | 'hold' | 'out'
   const key = items.join('|');
   const safeIndex = items.length ? Math.min(index, items.length - 1) : 0;
@@ -25,7 +32,9 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
     if (items.length === 0) return undefined;
 
     const holdMs = Math.max(1, durationSec) * 1000;
-    const transMs = 420;
+    // The Breaking News sting plays between two headlines: the old one shrinks away, the
+    // sting assembles and shrinks to the centre, then the next one lands.
+    const transMs = STING_MS[animation] || 420;
     const timers = [];
 
     // Fade/slide/flip are CSS *transitions* — they just need the 'in' class applied
@@ -37,13 +46,33 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
     setPhase('in');
     timers.push(setTimeout(() => setPhase('hold'), inMs));
 
-    if (safeIndex < items.length - 1) {
+    if (items.length > 1) {
       timers.push(setTimeout(() => setPhase('out'), holdMs));
-      timers.push(setTimeout(() => setIndex((i) => Math.min(i + 1, items.length - 1)), holdMs + transMs));
+      timers.push(setTimeout(() => setIndex((i) => (i + 1) % items.length), holdMs + transMs));
     }
 
     return () => timers.forEach(clearTimeout);
   }, [safeIndex, key, durationSec, animation]);
+
+  // With autoFit the headline is measured at its full size and scaled down (--fit) just
+  // enough to fit the bar's width; without it, it keeps its size and ends in an ellipsis.
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    const text = textRef.current;
+    if (!wrap || !text) return undefined;
+    const fit = () => {
+      if (!autoFit) { wrap.style.removeProperty('--fit'); return; }
+      wrap.style.setProperty('--fit', '1');
+      const cs = getComputedStyle(wrap);
+      const room = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const needed = text.scrollWidth;
+      wrap.style.setProperty('--fit', String(needed > room && needed > 0 ? Math.max(MIN_FIT, room / needed) : 1));
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, [autoFit, safeIndex, key, itemStyle?.fontSize, itemStyle?.fontFamily, itemStyle?.fontWeight]);
 
   if (items.length === 0) return null;
 
@@ -51,13 +80,24 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
 
   return (
     <div
+      ref={wrapRef}
       className="single-item-wrap"
       style={{
         justifyContent: ALIGN_JUSTIFY[align] || 'flex-start',
         ...(verticalAlign ? { alignItems: VERTICAL_ALIGN_ITEMS[verticalAlign] || 'center' } : {}),
       }}
     >
-      <span key={safeIndex} className={cls} style={itemStyle}>{items[safeIndex]}</span>
+      <span key={safeIndex} ref={textRef} className={cls} style={autoFit ? { ...itemStyle, fontSize: `calc(${itemStyle?.fontSize || '1em'} * var(--fit, 1))` } : itemStyle}>{items[safeIndex]}</span>
+      {STING_MS[animation] && phase === 'out' && (
+        <span
+          key={`sting-${safeIndex}`}
+          className={'breaking-sting' + (animation === 'shatter' ? ' breaking-sting-shatter' : '')}
+          style={{ fontFamily: itemStyle?.fontFamily, fontSize: itemStyle?.fontSize }}
+          aria-hidden="true"
+        >
+          {animation === 'shatter' ? <ShatterText text={stingText} /> : stingText}
+        </span>
+      )}
     </div>
   );
 }

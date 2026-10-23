@@ -19,6 +19,7 @@ export const GRAPHICS = {
         style: clone(t.style),
         badge: { ...s.badge, ...clone(t.badge), customText: t.badge.type },
         text: clone(t.text),
+        ...(t.behavior && { behavior: { ...s.behavior, ...clone(t.behavior) } }),
       };
     },
   },
@@ -35,6 +36,9 @@ export const GRAPHICS = {
         style: clone(t.style),
         showFeedDescription: t.layout.desc,
         showFeedMedia: t.layout.img,
+        // A design may start with its own heading and item change (Breaking News).
+        ...(t.preset?.category && { category: t.preset.category }),
+        ...(t.preset?.behavior && { behavior: { ...s.behavior, ...clone(t.preset.behavior) } }),
       };
     },
   },

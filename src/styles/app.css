@@ -788,6 +788,47 @@ input, select, textarea { font-family: inherit; }
   padding: 0 10px;
   perspective: 600px;
 }
+/* Breaking News sting (Sequential): the headline lands from big, soft letters and leaves
+   by shrinking; between the two, a gold BREAKING NEWS assembles, holds, and shrinks away. */
+.single-item-wrap { position: relative; }
+.single-item:is(.anim-breaking, .anim-shatter) { transform-origin: center; }
+.single-item:is(.anim-breaking, .anim-shatter).phase-in { opacity: 0; transform: scale(1.6); filter: blur(6px); }
+.single-item:is(.anim-breaking, .anim-shatter).phase-hold { opacity: 1; transform: none; filter: none; transition: opacity .45s ease, transform .55s cubic-bezier(.2, .8, .2, 1), filter .45s ease; }
+.single-item:is(.anim-breaking, .anim-shatter).phase-out { opacity: 0; transform: scale(.6); transition: opacity .3s ease, transform .3s ease; }
+.breaking-sting {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #FFD400; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .6), 0 0 10px rgba(0, 0, 0, .35);
+  pointer-events: none; animation: breakingSting 1.2s cubic-bezier(.2, .8, .2, 1) .3s both;
+}
+/* Shatter sting: the same, but BREAKING NEWS assembles from broken glass (ShatterText) —
+   gold shards fly in from all round and land in place, then the whole sting shrinks away. */
+.breaking-sting-shatter { text-shadow: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); animation: breakingStingOut 1.7s ease-in .3s both; }
+.shatter-text { position: relative; display: inline-block; white-space: nowrap; line-height: 1.2; }
+.shatter-text-size { visibility: hidden; }
+.shatter-shard {
+  position: absolute; inset: 0; white-space: nowrap;
+  background: linear-gradient(180deg, #FFF6B8 0%, #FFD400 48%, #E2A400 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shardIn .7s cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: var(--d, 0s);
+}
+.breaking-sting-shatter .shatter-shard { animation-delay: calc(.3s + var(--d, 0s)); }
+@keyframes shardIn {
+  from { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1.3); }
+  50% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+@keyframes breakingStingOut {
+  0%, 78% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(.2); }
+}
+@keyframes breakingSting {
+  0% { opacity: 0; transform: scale(1.4); filter: blur(8px); letter-spacing: .35em; }
+  30% { opacity: 1; transform: scale(1); filter: blur(0); letter-spacing: .04em; }
+  75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(.2); }
+}
 .single-item {
   display: inline-block;
   white-space: nowrap;
@@ -1118,6 +1159,21 @@ input, select, textarea { font-family: inherit; }
   pointer-events: none;
 }
 @keyframes widgetShine { to { transform: translateX(100%); } }
+
+/* Page sweep: as one item gives way to the next, a glass sheet crosses the card from its
+   top-left corner (a broad translucent sheet with a bright folded edge),
+   while the old item fades out and the new one fades in under it. The layers are 3× the
+   card with the sheet across their middle; a sixth of their size either way puts it on the
+   card's top-left corner at the start and its bottom-right corner at the end. */
+.widget-sweep { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+.widget-sweep::before {
+  content: ''; position: absolute; left: -100%; top: -100%; width: 300%; height: 300%;
+  background: linear-gradient(135deg, transparent 0 38%, rgba(255, 255, 255, .14) 38%, rgba(255, 255, 255, .42) 49%, rgba(255, 255, 255, .78) 50%, transparent 50.6%);
+  animation: widgetSweep .45s cubic-bezier(.4, .1, .3, 1) both;
+}
+@keyframes widgetSweep { from { transform: translate(-16.7%, -16.7%); } to { transform: translate(28%, 28%); } }
+.widget-card-main.anim-sweep.phase-hold { transition: opacity .2s ease; }
+@media (prefers-reduced-motion: reduce) { .widget-sweep, .breaking-sting { display: none; } .shatter-shard { animation: none; } }
 
 /* Animations that build the item up part by part: the card itself stays put while
    its title, divider, image and description come in on their own. */

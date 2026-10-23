@@ -1,5 +1,18 @@
 const DESIGNS = [
   {
+    id: 'breaking-red',
+    name: 'Breaking News',
+    desc: 'Broadcast red · page sweep',
+    // Starts with the BREAKING NEWS heading and the page-sweep change between items.
+    preset: { category: 'BREAKING NEWS', behavior: { transition: 'sweep', itemDuration: 5 } },
+    style: {
+      bg: '#B3101A',
+      bgGradient: 'linear-gradient(160deg, #E3262F 0%, #8E0E14 62%)',
+      headingBg: '#C8141D',
+      headingBgGradient: 'linear-gradient(180deg, #E52A33 0%, #B3101A 100%)',
+    },
+  },
+  {
     id: 'crimson-dots',
     name: 'Crimson',
     desc: 'Red gradient · dotted texture',

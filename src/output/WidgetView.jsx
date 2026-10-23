@@ -49,6 +49,9 @@ export default function WidgetView({ st, preview = false }) {
     return () => timers.forEach(clearTimeout);
   }, [activeIndex, items.length, itemsKey, durationSec]);
   const summaryIndex = items.length ? Math.min(activeIndex, items.length - 1) : 0;
+  // Page sweep: a glass sheet crosses the card each time one item gives way to the next.
+  const [sweeps, setSweeps] = useState(0);
+  useEffect(() => { if (phase === 'out' && transition === 'sweep') setSweeps((n) => n + 1); }, [phase, transition]);
   const stageRef = useRef(null);
   useFitLines(stageRef, st);
 
@@ -164,6 +167,7 @@ export default function WidgetView({ st, preview = false }) {
         </>
       )}
 
+      {transition === 'sweep' && sweeps > 0 && <span key={sweeps} className="widget-sweep" aria-hidden="true" />}
       <div className="widget-card-content">
         {fromFeed && st.category?.trim() && (
           <span className="widget-card-category">

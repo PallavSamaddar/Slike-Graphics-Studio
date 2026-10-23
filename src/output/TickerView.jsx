@@ -3,12 +3,22 @@ import useTickerScrollDuration from '../hooks/useTickerScrollDuration.js';
 import SingleItemTicker from './SingleItemTicker.jsx';
 import { autoTextColor, textShadowFor } from '../utils/color.js';
 const BASE_HEIGHT_PX = 48;
+// A bar this tall (Extra large and up) is a broadcast headline bar: its text fills it — at
+// least 60% of its height — and is at least extra bold, as on news channels; its badge grows
+// with it.
+const HEADLINE_BAR_PX = 90;
+const HEADLINE_TEXT_SHARE = 0.6;
+const isHeadlineBar = (st) => (parseFloat(st.style?.height) || 0) >= HEADLINE_BAR_PX;
 function fontSizeFor(st) {
   const base = parseFloat(st.text?.fontSize) || 14;
   const height = parseFloat(st.style?.height) || BASE_HEIGHT_PX;
   const designedFor = parseFloat(TPLS.find((t) => t.id === st.template)?.style?.height) || BASE_HEIGHT_PX;
-  return Math.round(base * (height / designedFor) * 10) / 10;
+  const scaled = base * (height / designedFor);
+  const size = isHeadlineBar(st) ? Math.max(scaled, height * HEADLINE_TEXT_SHARE) : scaled;
+  return Math.round(size * 10) / 10;
 }
+const badgeScaleFor = (st) => (st.badge?.scale || 1) * (isHeadlineBar(st) ? (parseFloat(st.style.height) || BASE_HEIGHT_PX) / 56 : 1);
+const fontWeightFor = (st) => (isHeadlineBar(st) ? String(Math.max(800, parseInt(st.text?.fontWeight, 10) || 400)) : st.text?.fontWeight);
 
 function badgeLabel(badge) {
   return badge.customText || badge.type || 'LIVE';
@@ -45,7 +55,7 @@ export default function TickerView({ st, scaled = false }) {
   const itemStyle = {
     fontFamily: tx.fontFamily,
     fontSize: scaled ? cqPlus(fontSizeFor(st) + 'px', 6) : fontSizeFor(st) + 'px',
-    fontWeight: tx.fontWeight,
+    fontWeight: fontWeightFor(st),
     fontStyle: tx.fontStyle || 'normal',
     textDecoration: tx.textDecoration || 'none',
     textTransform: tx.textTransform,
@@ -62,7 +72,9 @@ export default function TickerView({ st, scaled = false }) {
           animation={behavior.animation || 'fade'}
           durationSec={behavior.itemDuration || 5}
           itemStyle={itemStyle}
-          align={tx.textAlign || 'left'}
+          align={['breaking', 'shatter'].includes(behavior.animation) ? 'center' : tx.textAlign || 'left'}
+          stingText={behavior.stingText?.trim() || undefined}
+          autoFit={!!tx.autoFit}
         />
       ) : (
         <div
@@ -110,7 +122,7 @@ export default function TickerView({ st, scaled = false }) {
   return (
     <div className={'p-ticker' + (scaled ? '' : ' p-ticker-real')} style={tickerStyle}>
       {b.show && (
-        <div className={'p-badge p-badge-' + ddStyle + (s.badgeShape === 'wedge' ? ' p-badge-wedge' : '')} style={{ background: b.bgColor, color: badgeAutoColor, textShadow: textShadowFor(badgeAutoColor), fontWeight: b.fontWeight, '--badge-scale': b.scale || 1 }}>
+        <div className={'p-badge p-badge-' + ddStyle + (s.badgeShape === 'wedge' ? ' p-badge-wedge' : '')} style={{ background: b.bgColor, color: badgeAutoColor, textShadow: textShadowFor(badgeAutoColor), fontWeight: b.fontWeight, '--badge-scale': badgeScaleFor(st) }}>
           {ddStyle === 'stripes' && (
             <span className="p-dd-stripes-mark" aria-hidden="true"><span /><span /><span /></span>
           )}
