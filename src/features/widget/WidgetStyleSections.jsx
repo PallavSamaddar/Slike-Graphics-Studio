@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Field, Select, Tabs } from '../../ui-kit';
-import { TEXT_SPACING } from '../../constants/widgetTemplates.js';
+import { MIN_ITEM_SECONDS, TEXT_SPACING } from '../../constants/widgetTemplates.js';
+
 import ScrollRow from '../shared-editor/ScrollRow.jsx';
 import TextColorButton from '../shared-editor/TextColorButton.jsx';
 import { FontSelect, ImagePosition, Stepper, TextFormat } from '../shared-editor/StyleControls.jsx';
 import { feedMediaOn } from '../../constants/widgetTemplates.js';
 import { autoTextColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
-import { PART_ANIMATIONS, WIDGET_TRANSITIONS, partAnimation, widgetTransition } from '../../constants/textAnimations.js';
+import { DESC_ANIMATIONS, HEADING_ANIMATIONS, STATIC_ANIMATIONS, WIDGET_TRANSITIONS, descAnimation, headingAnimation, staticAnimation, widgetTransition } from '../../constants/textAnimations.js';
 import { baseName, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { uploadVideoWithSdk } from '../../services/uploadSdk.js';
 import { isMediaReady, mediaThumbUrl } from '../../services/media.js';
 import useUploadedVideos from '../../hooks/useUploadedVideos.js';
+
+const CENTRED = 'Animated text is always centred — set the animation to No animation to align it';
 
 const TEXTURES = [
   { id: 'none', label: 'None' },
@@ -30,6 +33,9 @@ const TEXTURES = [
 
 export default function WidgetStyleSections({ st, setSt }) {
   const { style: s, headingText: ht, bodyText: bt, behavior } = st;
+  const staticTitle = !!st.staticTitle && st.showFeedDescription === false; // only while descriptions are off
+  // Animated text is always centred (WidgetView): its alignment greys out while it's animated.
+  const headingAnimOn = (staticTitle ? descAnimation(behavior.headingAnim) : headingAnimation(behavior.headingAnim)) !== 'none';
   const isVideo = !!(s.texture && s.texture.startsWith('video'));
   const setStyle = (k, v) => setSt((state) => ({ ...state, style: { ...state.style, [k]: v } }));
   const setHt = (k, v) => setSt((state) => ({ ...state, headingText: { ...state.headingText, [k]: v } }));
@@ -89,7 +95,7 @@ export default function WidgetStyleSections({ st, setSt }) {
   const customInList = uploadedVideos.some((m) => m.id === s.customVideoMediaId);
 
   const hasTexture = !!(s.texture && s.texture !== 'none');
-  const showsImage = st.src === 'rss' ? feedMediaOn(st) : (st.media?.manual || []).some((m) => m?.url) || !!s.badgeImage;
+  const showsImage = st.src === 'rss' ? feedMediaOn(st) : st.showFeedMedia !== false && ((st.media?.manual || []).some((m) => m?.url) || !!s.badgeImage);
   const noImage = st.src === 'rss' ? 'Tick Images/videos above the preview first' : 'Add an image to an item first';
   const imagePos = (st.src === 'rss' && st.media?.rss?.find(Boolean)?.pos) || s.badgeImagePos || 'left';
   const setImagePos = (pos) => setSt((state) => ({
@@ -128,7 +134,7 @@ export default function WidgetStyleSections({ st, setSt }) {
               <Select value={widgetTransition(behavior.transition)} options={WIDGET_TRANSITIONS} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" title="Transition between items" />
             </Field>
             <Field path="behavior.itemDuration">
-              <Stepper value={behavior.itemDuration || 4} display={(v) => `${v}s`} step={1} min={1} max={30} onChange={(v) => setBehavior('itemDuration', v)} label="duration" title="How long each item stays on screen" />
+              <Stepper value={Math.max(MIN_ITEM_SECONDS, behavior.itemDuration || MIN_ITEM_SECONDS)} display={(v) => `${v}s`} step={1} min={MIN_ITEM_SECONDS} max={30} onChange={(v) => setBehavior('itemDuration', v)} label="duration" title="How long each item stays on screen" />
             </Field>
             <Field path="style.textSpacing">
               <Select value={s.textSpacing || 'default'} options={TEXT_SPACING} onChange={(v) => setStyle('textSpacing', v)} ariaLabel="Text spacing" title="Spacing of the heading and description text" />
@@ -155,7 +161,7 @@ export default function WidgetStyleSections({ st, setSt }) {
             <Field path="headingText.fontFamily" className="cs-wide">
               <FontSelect tx={ht} setTx={setHt} label="Heading" />
             </Field>
-            <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" />
+            <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" alignOff={headingAnimOn} alignReason={CENTRED} />
             <Field path="style.topLight">
               <label className="cs-check" title="A light glides slowly along the top edge of the heading bar (or of the card, when the heading has no background), again and again">
                 <input type="checkbox" checked={!!s.topLight} onChange={(e) => setStyle('topLight', e.target.checked)} />
@@ -163,40 +169,80 @@ export default function WidgetStyleSections({ st, setSt }) {
               </label>
             </Field>
           </div>
-          <div className="cs-row">
-            <span className="cs-label">Description</span>
-            <Field path={['style.descBg', 'style.descBgGradient']}>
-              <TextColorButton
-                kind="fill"
-                value={s.descBg}
-                fallback="transparent"
-                bar={s.descBgGradient || s.descBg}
-                onChange={setDescBgColor}
-                allowGradient
-                gradientValue={s.descBgGradient}
-                onChangeGradient={(css) => setStyle('descBgGradient', css)}
-                label="Description background"
-              />
-            </Field>
-            <Field path="bodyText.color">
-              <TextColorButton value={bt.color} auto={autoTextColor(s.bg)} onChange={(v) => setBt('color', v)} label="Description" />
-            </Field>
-            <Field path="bodyText.fontFamily" className="cs-wide">
-              <FontSelect tx={bt} setTx={setBt} label="Description" />
-            </Field>
-            <TextFormat tx={bt} setTx={setBt} path="bodyText" label="Description" />
-          </div>
+          {/* With a static title (no descriptions), its own colours take the description's row. */}
+          {staticTitle ? (
+            <div className="cs-row">
+              <span className="cs-label">Static title</span>
+              <Field path="staticText">
+                <input
+                  type="text"
+                  className="cs-text cs-text-wide"
+                  value={st.staticText ?? ''}
+                  placeholder={st.category?.trim() || 'BREAKING NEWS'}
+                  onChange={(e) => setSt((state) => ({ ...state, staticText: e.target.value }))}
+                  aria-label="Static title text"
+                  title="The static title's words (empty: the Heading text, or BREAKING NEWS)"
+                />
+              </Field>
+              <Field path="style.staticBg">
+                <TextColorButton kind="fill" value={s.staticBg || '#FFFFFF'} fallback="#FFFFFF" bar={s.staticBg || '#FFFFFF'} onChange={(v) => setStyle('staticBg', v)} label="Static title background" />
+              </Field>
+              <Field path="style.staticColor">
+                <TextColorButton value={s.staticColor || '#B5000F'} auto={autoTextColor(s.staticBg || '#FFFFFF')} onChange={(v) => setStyle('staticColor', v)} label="Static title" />
+              </Field>
+            </div>
+          ) : (
+            <div className="cs-row">
+              <span className="cs-label">Description</span>
+              <Field path={['style.descBg', 'style.descBgGradient']}>
+                <TextColorButton
+                  kind="fill"
+                  value={s.descBg}
+                  fallback="transparent"
+                  bar={s.descBgGradient || s.descBg}
+                  onChange={setDescBgColor}
+                  allowGradient
+                  gradientValue={s.descBgGradient}
+                  onChangeGradient={(css) => setStyle('descBgGradient', css)}
+                  label="Description background"
+                />
+              </Field>
+              <Field path="bodyText.color">
+                <TextColorButton value={bt.color} auto={autoTextColor(s.bg)} onChange={(v) => setBt('color', v)} label="Description" />
+              </Field>
+              <Field path="bodyText.fontFamily" className="cs-wide">
+                <FontSelect tx={bt} setTx={setBt} label="Description" />
+              </Field>
+              <TextFormat tx={bt} setTx={setBt} path="bodyText" label="Description" alignOff={descAnimation(behavior.descAnim) !== 'none'} alignReason={CENTRED} />
+            </div>
+          )}
           {/* How the heading and the description come in and go out on their own (PartText). */}
           <div className="cs-row">
             <span className="cs-label">Text animation</span>
             <span className="cs-label cs-label-inline">Heading</span>
             <Field path="behavior.headingAnim" className="cs-wide">
-              <Select value={partAnimation(behavior.headingAnim)} options={PART_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How the heading comes in and goes out" />
+              {/* With a static title the items' titles sit in the body: the body's animations. */}
+              {staticTitle ? (
+                <Select value={descAnimation(behavior.headingAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How each item's title comes in and goes out" />
+              ) : (
+                <Select value={headingAnimation(behavior.headingAnim)} options={HEADING_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How the heading comes in and goes out" />
+              )}
             </Field>
-            <span className="cs-label cs-label-inline">Description</span>
-            <Field path="behavior.descAnim" className="cs-wide">
-              <Select value={partAnimation(behavior.descAnim)} options={PART_ANIMATIONS} onChange={(v) => setBehavior('descAnim', v)} ariaLabel="Description animation" title="How the description comes in and goes out" />
-            </Field>
+            {staticTitle ? (
+              <>
+                <span className="cs-label cs-label-inline">Static title</span>
+                <Field path="behavior.staticAnim" className="cs-wide">
+                  <Select value={staticAnimation(behavior.staticAnim)} options={STATIC_ANIMATIONS} onChange={(v) => setBehavior('staticAnim', v)} ariaLabel="Static title animation" title="How the static title is animated, over and over" />
+                </Field>
+              </>
+            ) : (
+              <>
+                <span className="cs-label cs-label-inline">Description</span>
+                <Field path="behavior.descAnim" className="cs-wide">
+                  <Select value={descAnimation(behavior.descAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('descAnim', v)} ariaLabel="Description animation" title="How the description comes in and goes out" />
+                </Field>
+              </>
+            )}
           </div>
           <div className="cs-row">
             <span className="cs-label">Image</span>

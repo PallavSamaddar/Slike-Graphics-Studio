@@ -40,3 +40,17 @@ export const PART_ANIMATIONS = [
   { value: 'shine', label: 'Shine' },
 ];
 export const partAnimation = (v) => (PART_ANIMATIONS.some((a) => a.value === v) ? v : 'none');
+export const HEADING_ANIMATIONS = [
+  ...PART_ANIMATIONS,
+  { value: 'flash', label: 'Flash + light sweep' },
+  { value: 'glintflash', label: 'Glitch + fire flash' },
+];
+export const headingAnimation = (v) => (HEADING_ANIMATIONS.some((a) => a.value === v) ? v : 'none');
+export const DESC_ANIMATIONS = [...PART_ANIMATIONS, { value: 'flashwrite', label: 'Flash + write on' }];
+export const descAnimation = (v) => (DESC_ANIMATIONS.some((a) => a.value === v) ? v : 'none');
+export const STATIC_ANIMATIONS = [
+  { value: 'none', label: 'No animation' },
+  { value: 'shine', label: 'Shine' },
+  { value: 'glintflash', label: 'Glitch + fire flash' },
+];
+export const staticAnimation = (v) => (STATIC_ANIMATIONS.some((a) => a.value === v) ? v : 'glintflash');

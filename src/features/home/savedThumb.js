@@ -38,7 +38,7 @@ export function savedThumb(g) {
   if (g.kind === 'widget') {
     const src = g.source_type || g.source?.type || 'rss';
     const legacy = src === 'manual' && config.heading && !Array.isArray(config.descriptions?.manual);
-    const hideDescriptions = src === 'rss' && config.showFeedDescription === false;
+    const hideDescriptions = config.showFeedDescription === false;
     const synced = src === 'rss' && Array.isArray(g.descriptions) && g.descriptions.length > 0;
     const descriptions = hideDescriptions ? [] : synced ? g.descriptions : config.descriptions?.[src] || [];
     const titles = synced ? (g.items || []) : config.drafts?.[src]?.length ? config.drafts[src] : lines;

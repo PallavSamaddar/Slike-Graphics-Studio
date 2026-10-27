@@ -191,6 +191,7 @@ export const WIDGET_TPLS = DESIGNS.flatMap((design) => WIDGET_LAYOUTS
 export const feedMediaOn = (st) => st.showFeedMedia ?? (st.media?.rss || []).length > 0;
 
 export const usesFeedMedia = (st) => st.src === 'rss' && (st.media?.rss || []).some(Boolean);
+export const MIN_ITEM_SECONDS = 5;
 
 export const TEXT_SPACING = [
   { value: 'compact', label: 'Compact' },

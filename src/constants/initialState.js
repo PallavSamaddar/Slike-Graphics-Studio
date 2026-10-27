@@ -84,7 +84,7 @@ export const initialWidgetState = {
   },
   behavior: {
     animation: 'fade',
-    itemDuration: 4,
+    itemDuration: 5,
   },
 };
 

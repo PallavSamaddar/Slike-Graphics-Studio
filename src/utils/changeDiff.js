@@ -2,7 +2,7 @@ import { TPLS } from '../constants/tickerTemplates.js';
 import { TEXT_SPACING, WIDGET_TPLS } from '../constants/widgetTemplates.js';
 import { JACKET_TPLS } from '../constants/jacketTemplates.js';
 import { FONT_NAME } from '../constants/fonts.js';
-import { PART_ANIMATIONS, WIDGET_TRANSITIONS } from '../constants/textAnimations.js';
+import { DESC_ANIMATIONS, HEADING_ANIMATIONS, STATIC_ANIMATIONS, WIDGET_TRANSITIONS } from '../constants/textAnimations.js';
 import { REFRESH_OPTIONS } from '../services/feed.js';
 import { SOURCE_LABEL } from '../services/graphics.js';
 
@@ -13,7 +13,8 @@ const SPEED = { 1: 'Slow', 2: 'Medium', 3: 'Fast' };
 const ANIM = { fade: 'Fade', flip: 'Flip', slide: 'Slide', typewriter: 'Typewriter', breaking: 'Breaking News sting', shatter: 'Shatter sting', gold: 'Gold sting' };
 const SPACING = Object.fromEntries(TEXT_SPACING.map((o) => [o.value, o.label]));
 const WIDGET_TRANSITION = Object.fromEntries(WIDGET_TRANSITIONS.map((a) => [a.value, a.label]));
-const PART_ANIMATION = Object.fromEntries(PART_ANIMATIONS.map((a) => [a.value, a.label]));
+const PART_ANIMATION = Object.fromEntries([...HEADING_ANIMATIONS, ...DESC_ANIMATIONS].map((a) => [a.value, a.label]));
+const STATIC_ANIMATION = Object.fromEntries(STATIC_ANIMATIONS.map((a) => [a.value, a.label]));
 const CASE = { none: 'As typed', uppercase: 'UPPERCASE', lowercase: 'lowercase', capitalize: 'Title Case' };
 const SRC = SOURCE_LABEL;
 const ALIGN = { left: 'Left', center: 'Centre', right: 'Right', top: 'Top', middle: 'Middle', bottom: 'Bottom' };
@@ -101,6 +102,8 @@ const MAPS = {
       media: ['Details', 'Feed images/videos', (v) => (v && v.length ? 'Included' : 'Off')],
       showFeedMedia: ['Details', 'Show feed images/videos', onOff],
       showFeedDescription: ['Details', 'Feed descriptions', onOff],
+      staticTitle: ['Details', 'Static title', onOff],
+      staticText: ['Details', 'Static title text'],
       category: ['Content', 'Heading'],
       showTime: ['Details', 'Show time posted', onOff],
       showProduct: ['Details', 'Show publisher', onOff],
@@ -111,6 +114,9 @@ const MAPS = {
       'style.descBgGradient': ['Style', 'Description background gradient'],
       'style.headingBg': ['Style', 'Heading background'],
       'style.headingBgGradient': ['Style', 'Heading background gradient'],
+      'style.staticBg': ['Style', 'Static title background'],
+      'style.staticColor': ['Style', 'Static title colour'],
+      'behavior.staticAnim': ['Style', 'Static title animation', (v) => STATIC_ANIMATION[v] ?? 'Glitch + fire flash'],
       'style.topLight': ['Style', 'Top light', onOff],
       'style.badgeImageName': ['Style', 'Image'],
       'style.badgeImagePos': ['Style', 'Image position', (v) => POS[v] ?? v],

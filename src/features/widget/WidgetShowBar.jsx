@@ -2,9 +2,12 @@ import { CheckChip } from '../../ui-kit';
 import { feedMediaOn } from '../../constants/widgetTemplates.js';
 import { loadFeed, withFeedItems } from '../../services/feed.js';
 
-// What the widget shows, ticked on or off — one line above the preview, always in view.
 export default function WidgetShowBar({ st, setSt }) {
   const setFeedMedia = (on) => {
+    if (st.src !== 'rss') {
+      setSt((state) => ({ ...state, showFeedMedia: on }));
+      return;
+    }
     setSt((state) => ({
       ...state,
       showFeedMedia: on,
@@ -17,7 +20,7 @@ export default function WidgetShowBar({ st, setSt }) {
       .catch(() => {});
   };
 
-  const mediaOn = feedMediaOn(st);
+  const mediaOn = st.src === 'rss' ? feedMediaOn(st) : st.showFeedMedia !== false;
   return (
     <div className="show-bar" role="group" aria-label="Show on the widget">
       <div className="show-bar-checks">
@@ -32,11 +35,10 @@ export default function WidgetShowBar({ st, setSt }) {
           Time posted
         </CheckChip>
         <CheckChip on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Publisher</CheckChip>
-        {st.src === 'rss' && (
-          <>
-            <CheckChip on={mediaOn} onChange={setFeedMedia}>Images/videos</CheckChip>
-            <CheckChip on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v }))}>Descriptions</CheckChip>
-          </>
+        <CheckChip on={mediaOn} onChange={setFeedMedia}>Images/videos</CheckChip>
+        <CheckChip on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v, ...(v && { staticTitle: false }) }))}>Descriptions</CheckChip>
+        {st.showFeedDescription === false && (
+          <CheckChip on={!!st.staticTitle} onChange={(v) => setSt((state) => ({ ...state, staticTitle: v }))}>Static title</CheckChip>
         )}
       </div>
     </div>

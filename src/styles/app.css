@@ -101,6 +101,7 @@ body.player-body {
 .player-widget .widget-frame-card { container-type: size; }
 .player-widget .widget-card-headline { font-size: max(clamp(24px, 5cqh, 60px), calc(26px / var(--fill-scale, 1))); }
 .player-widget .widget-card-summary { font-size: max(clamp(16px, 3.4cqh, 38px), calc(22px / var(--fill-scale, 1))); }
+.player-widget .widget-card-title-body { font-size: max(clamp(24px, 5cqh, 60px), calc(26px / var(--fill-scale, 1))); }
 .player-widget .widget-card-category { font-size: max(clamp(11.5px, 1.8cqh, 20px), calc(18px / var(--fill-scale, 1))); }
 .player-widget .widget-card-footer { font-size: max(clamp(12.5px, 2cqh, 22px), calc(18px / var(--fill-scale, 1))); }
 .player-widget .widget-card-thumb { max-height: clamp(150px, 30cqh, 420px); }
@@ -1197,6 +1198,16 @@ input, select, textarea { font-family: inherit; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+/* With a description under it, the heading keeps to one line, … at its end; after a moment
+   (WidgetView's useHeadlineScroll sets data-scrolling, the distance and the time) its words slide
+   as one piece until their end shows — a transform, so it's smooth — and stay there. */
+.headline-scroll { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.headline-scroll > .headline-scroll-text { display: inline; overflow: visible; -webkit-line-clamp: none; line-clamp: none; }
+.headline-scroll[data-scrolling] > .headline-scroll-text {
+  display: inline-block; will-change: transform;
+  animation: headlineScroll var(--scroll-ms, 0ms) linear forwards;
+}
+@keyframes headlineScroll { to { transform: translateX(calc(-1 * var(--scroll-dist, 0px))); } }
 .widget-card-divider {
   align-self: center;
   width: 64px;
@@ -1213,6 +1224,11 @@ input, select, textarea { font-family: inherit; }
 }
 /* with a background of its own, the description sits in a padded box like the heading's */
 .widget-card-summary.has-bg { padding: 0.35em 0.6em; border-radius: var(--radius-sm); }
+/* Static title: the fixed title label (as wide as the title under it and over it — WidgetView lays it
+   out like the body — its words centred), and each item's title
+   under it in the description's place — at the heading's size, full strength. */
+.widget-static-title { align-self: stretch; }
+.widget-card-summary.widget-card-title-body { font-size: clamp(14px, 5cqi, 24px); opacity: 1; }
 /* clamped inside any padding, so a line past the clamp can't peek out under it */
 .widget-card-summary-text {
   display: -webkit-box;
@@ -1221,7 +1237,7 @@ input, select, textarea { font-family: inherit; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.widget-card-stage { flex: 1; min-height: 0; display: grid; overflow: hidden; }
+.widget-card-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
 .widget-card-stage > .widget-card-main { grid-area: 1 / 1; }
 .widget-card-main.widget-card-ghost { visibility: hidden; pointer-events: none; }
 .widget-card-main { transition: opacity 0.2s ease, transform 0.2s ease, clip-path 0.2s ease, filter 0.2s ease; }
@@ -1271,7 +1287,7 @@ input, select, textarea { font-family: inherit; }
 
 .part-anim, .part-shine { position: relative; }
 .part-w { display: inline-block; padding: .3em .15em; margin: -.3em -.15em; }
-:is(.part-write, .part-flare) .part-w {
+:is(.part-write, .part-flare, .part-flash, .part-flashwrite) .part-w {
   -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
   mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
   -webkit-mask-size: 250% 100%;
@@ -1279,8 +1295,8 @@ input, select, textarea { font-family: inherit; }
   -webkit-mask-position: 100% 0;
   mask-position: 100% 0;
 }
-.phase-hold :is(.part-write, .part-flare) .part-w { animation: partWrite var(--t) var(--d) linear both; }
-.parts-erase :is(.part-write, .part-flare) .part-w { animation: partErase var(--et) var(--ed) linear both; }
+.phase-hold :is(.part-write, .part-flare, .part-flash, .part-flashwrite) .part-w { animation: partWrite var(--t) var(--d) linear both; }
+.parts-erase :is(.part-write, .part-flare, .part-flash, .part-flashwrite) .part-w { animation: partErase var(--et) var(--ed) linear both; }
 @keyframes partWrite { from { -webkit-mask-position: 100% 0; mask-position: 100% 0; } to { -webkit-mask-position: 0 0; mask-position: 0 0; } }
 @keyframes partErase { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 100% 0; mask-position: 100% 0; } }
 /* Word by word */
@@ -1312,9 +1328,200 @@ input, select, textarea { font-family: inherit; }
   animation: partShine 3.2s ease-in-out infinite;
 }
 @keyframes partShine { 0% { background-position: 100% 0; } 45%, 100% { background-position: 0 0; } }
+.widget-card-headline.has-flash { position: relative; overflow: hidden; }
+.widget-card-headline.heading-label { border-radius: 2px; box-shadow: 0 .12em 0 currentColor; }
+.heading-flash {
+  position: absolute; top: 50%; left: 0; width: 7em; height: 3.4em; margin: -1.7em 0 0 -3.5em; opacity: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255, 170, 110, .75) 0%, rgba(255, 90, 50, .35) 32%, transparent 68%);
+  mix-blend-mode: screen;
+}
+.heading-flash::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 1.5em; height: 1.5em; margin: -.75em 0 0 -.75em; border-radius: 50%;
+  background: radial-gradient(circle, #FFF 0 22%, rgba(255, 248, 235, .9) 34%, rgba(255, 210, 170, .4) 55%, transparent 72%);
+}
+.heading-flash::after {
+  content: ''; position: absolute; left: -3em; right: -3em; top: 50%; height: .1em; margin-top: -.05em;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .85) 50%, transparent);
+}
+.phase-hold .heading-flash { animation: headingFlash var(--t) var(--d) ease-in-out both; }
+@keyframes headingFlash { 0% { left: 0; opacity: 0; } 10%, 85% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+/* The description's Flash + write on (WidgetView's DescFlash): a big warm glow round a white-hot
+   core crosses the description along its first line as the words are written on behind it. The
+   description shows at full strength with it; inside a box of its own, the flash stays in the box. */
+.widget-card-summary.has-descflash { position: relative; opacity: 1; }
+.widget-card-summary.has-descflash.has-bg { overflow: hidden; }
+.desc-flash {
+  position: absolute; top: .75em; left: 0; z-index: 1; width: 12em; height: 6em; margin: -3em 0 0 -6em;
+  opacity: 0; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(ellipse at center, rgba(255, 215, 170, .95) 0%, rgba(255, 130, 60, .6) 18%, rgba(255, 70, 30, .28) 40%, transparent 68%);
+}
+.desc-flash::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 1.9em; height: 1.9em; margin: -.95em 0 0 -.95em; border-radius: 50%;
+  background: radial-gradient(circle, #FFF 0 22%, rgba(255, 248, 235, .9) 34%, rgba(255, 210, 170, .4) 55%, transparent 72%);
+}
+.phase-hold .desc-flash { animation: headingFlash var(--t) var(--d) ease-in-out both; }
+/* The light sweep: a soft band of white light, slanted, crossing the bar left to right over 1.1s
+   every 3.5s, once the words are on — it brightens the bar and the letters alike. */
+.heading-sweep {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .5) 50%, transparent 58%) no-repeat;
+  background-size: 250% 100%; background-position: 100% 0;
+  mix-blend-mode: screen;
+}
+.phase-hold .heading-sweep { animation: headingSweep 3.5s var(--d) ease-in-out infinite; }
+.parts-erase .heading-sweep { animation: none; }
+@keyframes headingSweep { 0% { background-position: 100% 0; } 32%, 100% { background-position: 0 0; } }
+.part-glintflash-box { position: relative; }
+.part-glintflash {
+  --dot-y: 40%;
+  text-shadow: none;
+  -webkit-text-fill-color: transparent;
+  background-image: radial-gradient(closest-side, #FFFDE0 0, #FFF35A 26%, #FFE41A 52%, rgba(255, 222, 0, .6) 76%, rgba(255, 215, 0, 0) 100%), radial-gradient(closest-side, #FFFDE0 0, #FFF35A 26%, #FFE41A 52%, rgba(255, 222, 0, .6) 76%, rgba(255, 215, 0, 0) 100%), linear-gradient(currentColor, currentColor);
+  background-size: .85em .85em, .85em .85em, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: -400% var(--dot-y), 500% var(--dot-y), 0 0;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.phase-hold .part-glintflash { animation: glintTitle 3.6s .4s linear infinite; }
+@keyframes glintTitle {
+  0.00% { background-position: -400% var(--dot-y), 500% var(--dot-y), 0 0; }
+  33.31% { background-position: -400% var(--dot-y), 500% var(--dot-y), 0 0; }
+  33.33% { background-position: 0.0% var(--dot-y), 100.0% var(--dot-y), 0 0; }
+  34.72% { background-position: 0.6% var(--dot-y), 99.4% var(--dot-y), 0 0; }
+  36.11% { background-position: 2.1% var(--dot-y), 97.9% var(--dot-y), 0 0; }
+  37.50% { background-position: 4.7% var(--dot-y), 95.3% var(--dot-y), 0 0; }
+  38.89% { background-position: 8.0% var(--dot-y), 92.0% var(--dot-y), 0 0; }
+  40.28% { background-position: 12.1% var(--dot-y), 87.9% var(--dot-y), 0 0; }
+  41.67% { background-position: 16.9% var(--dot-y), 83.1% var(--dot-y), 0 0; }
+  43.06% { background-position: 22.2% var(--dot-y), 77.8% var(--dot-y), 0 0; }
+  44.44% { background-position: 27.9% var(--dot-y), 72.1% var(--dot-y), 0 0; }
+  45.83% { background-position: 34.0% var(--dot-y), 66.0% var(--dot-y), 0 0; }
+  47.22% { background-position: 40.3% var(--dot-y), 59.7% var(--dot-y), 0 0; }
+  48.61% { background-position: 46.7% var(--dot-y), 53.3% var(--dot-y), 0 0; }
+  50.00% { background-position: 53.3% var(--dot-y), 46.7% var(--dot-y), 0 0; }
+  51.39% { background-position: 59.7% var(--dot-y), 40.3% var(--dot-y), 0 0; }
+  52.78% { background-position: 66.0% var(--dot-y), 34.0% var(--dot-y), 0 0; }
+  54.17% { background-position: 72.1% var(--dot-y), 27.9% var(--dot-y), 0 0; }
+  55.56% { background-position: 77.8% var(--dot-y), 22.2% var(--dot-y), 0 0; }
+  56.94% { background-position: 83.1% var(--dot-y), 16.9% var(--dot-y), 0 0; }
+  58.33% { background-position: 87.9% var(--dot-y), 12.1% var(--dot-y), 0 0; }
+  59.72% { background-position: 92.0% var(--dot-y), 8.0% var(--dot-y), 0 0; }
+  61.11% { background-position: 95.3% var(--dot-y), 4.7% var(--dot-y), 0 0; }
+  62.50% { background-position: 97.9% var(--dot-y), 2.1% var(--dot-y), 0 0; }
+  63.89% { background-position: 99.4% var(--dot-y), 0.6% var(--dot-y), 0 0; }
+  65.28% { background-position: 100.0% var(--dot-y), 0.0% var(--dot-y), 0 0; }
+  65.31% { background-position: -400% var(--dot-y), 500% var(--dot-y), 0 0; }
+  100% { background-position: -400% var(--dot-y), 500% var(--dot-y), 0 0; }
+}
+/* On a one-line heading that scrolls (.headline-scroll), most of the words are out of sight, so
+   the glows run across the visible box instead of the words: a layer of yellow light over the box,
+   screened — on the white label it leaves white, on the red letters it shows yellow. Same timing. */
+.heading-label .headline-scroll { position: relative; }
+.heading-label .headline-scroll .part-glintflash { background-size: 0 0, 0 0, 100% 100%; }
+.heading-label .headline-scroll::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  background-image: radial-gradient(closest-side, #FFFDE0 0, #FFF35A 26%, #FFE41A 52%, rgba(255, 222, 0, .6) 76%, rgba(255, 215, 0, 0) 100%), radial-gradient(closest-side, #FFFDE0 0, #FFF35A 26%, #FFE41A 52%, rgba(255, 222, 0, .6) 76%, rgba(255, 215, 0, 0) 100%);
+  background-size: .85em .85em, .85em .85em; background-repeat: no-repeat;
+  background-position: -400% 50%, 500% 50%;
+}
+.phase-hold .heading-label .headline-scroll::after { animation: glintBoxDots 3.6s .4s linear infinite; }
+@keyframes glintBoxDots {
+  0.00% { background-position: -400% 50%, 500% 50%; }
+  33.31% { background-position: -400% 50%, 500% 50%; }
+  33.33% { background-position: 0.0% 50%, 100.0% 50%; }
+  34.72% { background-position: 0.6% 50%, 99.4% 50%; }
+  36.11% { background-position: 2.1% 50%, 97.9% 50%; }
+  37.50% { background-position: 4.7% 50%, 95.3% 50%; }
+  38.89% { background-position: 8.0% 50%, 92.0% 50%; }
+  40.28% { background-position: 12.1% 50%, 87.9% 50%; }
+  41.67% { background-position: 16.9% 50%, 83.1% 50%; }
+  43.06% { background-position: 22.2% 50%, 77.8% 50%; }
+  44.44% { background-position: 27.9% 50%, 72.1% 50%; }
+  45.83% { background-position: 34.0% 50%, 66.0% 50%; }
+  47.22% { background-position: 40.3% 50%, 59.7% 50%; }
+  48.61% { background-position: 46.7% 50%, 53.3% 50%; }
+  50.00% { background-position: 53.3% 50%, 46.7% 50%; }
+  51.39% { background-position: 59.7% 50%, 40.3% 50%; }
+  52.78% { background-position: 66.0% 50%, 34.0% 50%; }
+  54.17% { background-position: 72.1% 50%, 27.9% 50%; }
+  55.56% { background-position: 77.8% 50%, 22.2% 50%; }
+  56.94% { background-position: 83.1% 50%, 16.9% 50%; }
+  58.33% { background-position: 87.9% 50%, 12.1% 50%; }
+  59.72% { background-position: 92.0% 50%, 8.0% 50%; }
+  61.11% { background-position: 95.3% 50%, 4.7% 50%; }
+  62.50% { background-position: 97.9% 50%, 2.1% 50%; }
+  63.89% { background-position: 99.4% 50%, 0.6% 50%; }
+  65.28% { background-position: 100.0% 50%, 0.0% 50%; }
+  65.31% { background-position: -400% 50%, 500% 50%; }
+  100% { background-position: -400% 50%, 500% 50%; }
+}
+.part-glintflash::before, .part-glintflash::after {
+  content: attr(data-text); position: absolute; inset: 0; pointer-events: none;
+  /* the label's own colour (--label-bg), whatever it is */
+  -webkit-text-fill-color: color-mix(in srgb, currentColor 38%, var(--label-bg, #FFFFFF));
+  background: color-mix(in srgb, var(--label-bg, #FFFFFF) 88%, transparent);
+  clip-path: inset(0 100% 0 0);
+}
+.part-glintflash::before { transform: translateX(.1em); }
+.part-glintflash::after { transform: translateX(-.1em); }
+.phase-hold .part-glintflash::before { animation: glassFromLeft 3.6s .4s linear infinite; }
+.phase-hold .part-glintflash::after { animation: glassFromRight 3.6s .4s linear infinite; }
+@keyframes glassFromLeft {
+  0.00% { clip-path: inset(0 100.0% 0 0.0%); }
+  1.39% { clip-path: inset(0 94.7% 0 0.0%); }
+  2.78% { clip-path: inset(0 89.4% 0 0.0%); }
+  4.17% { clip-path: inset(0 84.1% 0 4.9%); }
+  5.56% { clip-path: inset(0 78.9% 0 10.1%); }
+  6.94% { clip-path: inset(0 73.6% 0 15.4%); }
+  8.33% { clip-path: inset(0 68.3% 0 20.7%); }
+  9.72% { clip-path: inset(0 63.0% 0 26.0%); }
+  11.11% { clip-path: inset(0 57.7% 0 31.3%); }
+  12.50% { clip-path: inset(0 52.4% 0 36.6%); }
+  13.89% { clip-path: inset(0 47.1% 0 41.9%); }
+  15.28% { clip-path: inset(0 41.9% 0 47.1%); }
+  16.67% { clip-path: inset(0 36.6% 0 52.4%); }
+  18.06% { clip-path: inset(0 31.3% 0 57.7%); }
+  19.44% { clip-path: inset(0 26.0% 0 63.0%); }
+  20.83% { clip-path: inset(0 20.7% 0 68.3%); }
+  22.22% { clip-path: inset(0 15.4% 0 73.6%); }
+  23.61% { clip-path: inset(0 10.1% 0 78.9%); }
+  25.00% { clip-path: inset(0 4.9% 0 84.1%); }
+  26.39% { clip-path: inset(0 0.0% 0 89.4%); }
+  27.78% { clip-path: inset(0 0.0% 0 94.7%); }
+  29.17% { clip-path: inset(0 0.0% 0 100.0%); }
+  29.19%, 100% { clip-path: inset(0 100% 0 0); }
+}
+@keyframes glassFromRight {
+  0.00% { clip-path: inset(0 0.0% 0 100.0%); }
+  1.39% { clip-path: inset(0 0.0% 0 94.7%); }
+  2.78% { clip-path: inset(0 0.0% 0 89.4%); }
+  4.17% { clip-path: inset(0 4.9% 0 84.1%); }
+  5.56% { clip-path: inset(0 10.1% 0 78.9%); }
+  6.94% { clip-path: inset(0 15.4% 0 73.6%); }
+  8.33% { clip-path: inset(0 20.7% 0 68.3%); }
+  9.72% { clip-path: inset(0 26.0% 0 63.0%); }
+  11.11% { clip-path: inset(0 31.3% 0 57.7%); }
+  12.50% { clip-path: inset(0 36.6% 0 52.4%); }
+  13.89% { clip-path: inset(0 41.9% 0 47.1%); }
+  15.28% { clip-path: inset(0 47.1% 0 41.9%); }
+  16.67% { clip-path: inset(0 52.4% 0 36.6%); }
+  18.06% { clip-path: inset(0 57.7% 0 31.3%); }
+  19.44% { clip-path: inset(0 63.0% 0 26.0%); }
+  20.83% { clip-path: inset(0 68.3% 0 20.7%); }
+  22.22% { clip-path: inset(0 73.6% 0 15.4%); }
+  23.61% { clip-path: inset(0 78.9% 0 10.1%); }
+  25.00% { clip-path: inset(0 84.1% 0 4.9%); }
+  26.39% { clip-path: inset(0 89.4% 0 0.0%); }
+  27.78% { clip-path: inset(0 94.7% 0 0.0%); }
+  29.17% { clip-path: inset(0 100.0% 0 0.0%); }
+  29.19%, 100% { clip-path: inset(0 100% 0 0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .part-w { animation: none !important; opacity: 1 !important; -webkit-mask-image: none !important; mask-image: none !important; }
-  .part-light, .part-shine::after { display: none; }
+  .part-light, .part-shine::after, .heading-flash, .heading-sweep, .desc-flash, .part-glintflash::before, .part-glintflash::after, .heading-label .headline-scroll::after { display: none; }
+  .headline-scroll-text { animation: none !important; }
+  .part-glintflash { animation: none !important; }
 }
 
 /* Animations that build the item up part by part: the card itself stays put while
