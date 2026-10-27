@@ -139,6 +139,12 @@ export default function WidgetStyleSections({ st, setSt }) {
             <Field path="style.textSpacing">
               <Select value={s.textSpacing || 'default'} options={TEXT_SPACING} onChange={(v) => setStyle('textSpacing', v)} ariaLabel="Text spacing" title="Spacing of the heading and description text" />
             </Field>
+            <Field path="style.topLight">
+              <label className="cs-check" title="A light glides slowly along the top edge of the heading bar (or of the card, when the heading has no background), again and again">
+                <input type="checkbox" checked={!!s.topLight} onChange={(e) => setStyle('topLight', e.target.checked)} />
+                Top light
+              </label>
+            </Field>
           </div>
           <div className="cs-row">
             <span className="cs-label">Heading</span>
@@ -161,18 +167,26 @@ export default function WidgetStyleSections({ st, setSt }) {
             <Field path="headingText.fontFamily" className="cs-wide">
               <FontSelect tx={ht} setTx={setHt} label="Heading" />
             </Field>
-            <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" alignOff={headingAnimOn} alignReason={CENTRED} />
-            <Field path="style.topLight">
-              <label className="cs-check" title="A light glides slowly along the top edge of the heading bar (or of the card, when the heading has no background), again and again">
-                <input type="checkbox" checked={!!s.topLight} onChange={(e) => setStyle('topLight', e.target.checked)} />
-                Top light
-              </label>
+            {/* How it comes in and goes out (PartText) — with a static title the items' titles sit in the body: the body's animations. */}
+            <Field path="behavior.headingAnim" className="cs-wide">
+              {staticTitle ? (
+                <Select value={descAnimation(behavior.headingAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How each item's title comes in and goes out" />
+              ) : (
+                <Select value={headingAnimation(behavior.headingAnim)} options={HEADING_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How the heading comes in and goes out" />
+              )}
             </Field>
+            <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" alignOff={headingAnimOn} alignReason={CENTRED} />
           </div>
           {/* With a static title (no descriptions), its own colours take the description's row. */}
           {staticTitle ? (
             <div className="cs-row">
               <span className="cs-label">Static title</span>
+              <Field path="style.staticBg">
+                <TextColorButton kind="fill" value={s.staticBg || '#FFFFFF'} fallback="#FFFFFF" bar={s.staticBg || '#FFFFFF'} onChange={(v) => setStyle('staticBg', v)} label="Static title background" />
+              </Field>
+              <Field path="style.staticColor">
+                <TextColorButton value={s.staticColor || '#B5000F'} auto={autoTextColor(s.staticBg || '#FFFFFF')} onChange={(v) => setStyle('staticColor', v)} label="Static title" />
+              </Field>
               <Field path="staticText">
                 <input
                   type="text"
@@ -184,11 +198,8 @@ export default function WidgetStyleSections({ st, setSt }) {
                   title="The static title's words (empty: the Heading text, or BREAKING NEWS)"
                 />
               </Field>
-              <Field path="style.staticBg">
-                <TextColorButton kind="fill" value={s.staticBg || '#FFFFFF'} fallback="#FFFFFF" bar={s.staticBg || '#FFFFFF'} onChange={(v) => setStyle('staticBg', v)} label="Static title background" />
-              </Field>
-              <Field path="style.staticColor">
-                <TextColorButton value={s.staticColor || '#B5000F'} auto={autoTextColor(s.staticBg || '#FFFFFF')} onChange={(v) => setStyle('staticColor', v)} label="Static title" />
+              <Field path="behavior.staticAnim" className="cs-wide">
+                <Select value={staticAnimation(behavior.staticAnim)} options={STATIC_ANIMATIONS} onChange={(v) => setBehavior('staticAnim', v)} ariaLabel="Static title animation" title="How the static title is animated, over and over" />
               </Field>
             </div>
           ) : (
@@ -213,37 +224,12 @@ export default function WidgetStyleSections({ st, setSt }) {
               <Field path="bodyText.fontFamily" className="cs-wide">
                 <FontSelect tx={bt} setTx={setBt} label="Description" />
               </Field>
+              <Field path="behavior.descAnim" className="cs-wide">
+                <Select value={descAnimation(behavior.descAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('descAnim', v)} ariaLabel="Description animation" title="How the description comes in and goes out" />
+              </Field>
               <TextFormat tx={bt} setTx={setBt} path="bodyText" label="Description" alignOff={descAnimation(behavior.descAnim) !== 'none'} alignReason={CENTRED} />
             </div>
           )}
-          {/* How the heading and the description come in and go out on their own (PartText). */}
-          <div className="cs-row">
-            <span className="cs-label">Text animation</span>
-            <span className="cs-label cs-label-inline">Heading</span>
-            <Field path="behavior.headingAnim" className="cs-wide">
-              {/* With a static title the items' titles sit in the body: the body's animations. */}
-              {staticTitle ? (
-                <Select value={descAnimation(behavior.headingAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How each item's title comes in and goes out" />
-              ) : (
-                <Select value={headingAnimation(behavior.headingAnim)} options={HEADING_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How the heading comes in and goes out" />
-              )}
-            </Field>
-            {staticTitle ? (
-              <>
-                <span className="cs-label cs-label-inline">Static title</span>
-                <Field path="behavior.staticAnim" className="cs-wide">
-                  <Select value={staticAnimation(behavior.staticAnim)} options={STATIC_ANIMATIONS} onChange={(v) => setBehavior('staticAnim', v)} ariaLabel="Static title animation" title="How the static title is animated, over and over" />
-                </Field>
-              </>
-            ) : (
-              <>
-                <span className="cs-label cs-label-inline">Description</span>
-                <Field path="behavior.descAnim" className="cs-wide">
-                  <Select value={descAnimation(behavior.descAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('descAnim', v)} ariaLabel="Description animation" title="How the description comes in and goes out" />
-                </Field>
-              </>
-            )}
-          </div>
           <div className="cs-row">
             <span className="cs-label">Image</span>
             <Field path={['style.badgeImagePos', 'media']} off={!showsImage} offReason={noImage}>
