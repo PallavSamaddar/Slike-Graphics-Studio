@@ -143,7 +143,7 @@ export default function WidgetStyleSections({ st, setSt }) {
           </div>
           <div className="cs-row">
             <span className="cs-label">Heading</span>
-            <Field path={['style.headingBg', 'style.headingBgGradient']}>
+            <Field path={['style.headingBg', 'style.headingBgGradient']} off={!staticTitle && headingAnimation(behavior.headingAnim) === 'glintflash'} offReason="Glitch + fire flash puts the heading on a white label — pick another animation to colour its bar">
               <TextColorButton
                 kind="fill"
                 value={s.headingBg}

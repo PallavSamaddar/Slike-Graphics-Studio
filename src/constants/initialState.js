@@ -60,7 +60,7 @@ export const initialWidgetState = {
     bg: '#8A1B12',
     bgGradient: 'linear-gradient(160deg, #E8432B 0%, #6E140D 55%)',
     texture: 'spiral',
-    textureOpacity: 0.28,
+    textureOpacity: 1,
     headingBg: 'rgba(194,47,30,0)',
     headingBgGradient: null,
     fontFamily: 'Inter, sans-serif',

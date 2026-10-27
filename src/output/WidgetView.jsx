@@ -97,7 +97,7 @@ export default function WidgetView({ st, preview = false }) {
     fontWeight: ht.fontWeight,
     fontStyle: ht.fontStyle,
     textDecoration: ht.textDecoration,
-    ...(headingAnim === 'glintflash' && { background: '#FFFFFF', color: '#B5000F', textShadow: 'none' }),
+    ...(headingAnim === 'glintflash' && { background: '#FFFFFF', '--label-bg': '#FFFFFF', color: ht.color || '#B5000F', textShadow: 'none' }),
   };
   const staticAnim = staticAnimation(st.behavior?.staticAnim);
   const staticStyle = {
