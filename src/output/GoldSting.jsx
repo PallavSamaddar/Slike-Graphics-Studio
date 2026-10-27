@@ -20,7 +20,7 @@ function bars() {
       width: `${width.toFixed(2)}%`,
       height: '100%',
       bottom: 0,
-      '--d': `${(along * 0.22 + rand() * 0.03).toFixed(2)}s`,
+      '--d': `${(along * 0.05 + rand() * 0.01).toFixed(3)}s`,
       '--tilt': `${((rand() - 0.5) * 36).toFixed(0)}deg`,
     };
   });
@@ -29,9 +29,9 @@ function bars() {
 const BARS = bars();
 
 const ARROWS = [
-  { top: 20, size: 60, left: '4%', '--d': '.3s' },
-  { top: 20, size: 60, left: '36%', '--d': '.45s' },
-  { top: 20, size: 60, left: '64%', '--d': '.6s' },
+  { top: 20, size: 60, left: '4%', '--d': '.12s' },
+  { top: 20, size: 60, left: '36%', '--d': '.2s' },
+  { top: 20, size: 60, left: '64%', '--d': '.28s' },
 ];
 
 export default function GoldSting({ text, style }) {
@@ -56,9 +56,9 @@ export default function GoldSting({ text, style }) {
 }
 
 const FLASHES = [
-  { top: '56%', height: '26%', '--d': '.3s', '--from': '0%', '--to': '4%' },
-  { top: '40%', height: '18%', '--d': '.38s', '--from': '-25%', '--to': '12%' },
-  { top: '64%', height: '30%', '--d': '.46s', '--from': '20%', '--to': '-8%' },
+  { top: '56%', height: '26%', '--d': '.2s', '--from': '0%', '--to': '4%' },
+  { top: '40%', height: '18%', '--d': '.25s', '--from': '-25%', '--to': '12%' },
+  { top: '64%', height: '30%', '--d': '.3s', '--from': '20%', '--to': '-8%' },
 ];
 
 export function GoldLanding() {

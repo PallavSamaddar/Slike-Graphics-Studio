@@ -5,7 +5,7 @@ import GoldSting, { GoldLanding } from './GoldSting.jsx';
 const ALIGN_JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end' };
 const VERTICAL_ALIGN_ITEMS = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
 
-const STING_MS = { breaking: 1500, shatter: 2000, gold: 1900 };
+const STING_MS = { breaking: 1500, shatter: 1400, gold: 1500 };
 const GOLD_TAIL_MS = 450;
 
 const MIN_FIT = 0.35;

@@ -37,7 +37,7 @@ function shards() {
           dx: `${((cx - 50) * (1.2 + rand())).toFixed(1)}%`,
           dy: `${((cy - 50) * (3 + rand() * 3)).toFixed(1)}%`,
           rot: `${((rand() - 0.5) * 140).toFixed(0)}deg`,
-          delay: `${(rand() * 0.14).toFixed(2)}s`,
+          delay: `${(rand() * 0.1).toFixed(2)}s`,
         });
       }
     }
