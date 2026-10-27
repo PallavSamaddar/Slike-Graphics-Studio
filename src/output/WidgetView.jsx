@@ -13,15 +13,10 @@ const TRANSITION_MS = 200;
 const MIN_LINES = 3;
 const MAX_HEAD_LINES = 6;
 const MAX_SUMMARY_LINES = 12;
-
-// Each item — a feed's, or a manual one typed in — is a title, an optional description and an
-// optional image; they cycle together. In the editor, a widget with no items yet shows a
-// sample description and image where its layout has them.
 export default function WidgetView({ st, preview = false }) {
   const { style: s, headingText: ht, bodyText: bt } = st;
   const fromFeed = st.src !== 'manual';
   const previewItems = st.drafts?.[st.src] || st.items;
-  // The Descriptions and Images/videos ticks hold for both sources (a design may start with them off).
   const hideDescriptions = st.showFeedDescription === false;
   const descriptions = hideDescriptions ? [] : st.descriptions?.[st.src] || [];
   const imagesOff = !fromFeed && st.showFeedMedia === false;
@@ -35,7 +30,6 @@ export default function WidgetView({ st, preview = false }) {
   const durationSec = Math.max(MIN_ITEM_SECONDS, st.behavior?.itemDuration || MIN_ITEM_SECONDS);
   const headingAnim = headingAnimation(st.behavior?.headingAnim);
   const descAnim = descAnimation(st.behavior?.descAnim);
-  // With a static title the items' titles sit in the body: the heading's animation is one of the body's.
   const bodyTitleAnim = descAnimation(st.behavior?.headingAnim);
   // Static title only while descriptions are off.
   const staticTitle = !!st.staticTitle && st.showFeedDescription === false;
@@ -44,13 +38,11 @@ export default function WidgetView({ st, preview = false }) {
   const [phase, setPhase] = useState('in');
   const [erasing, setErasing] = useState(false);
   const itemsKey = items.join('|');
-  // How long this item's heading takes to scroll (useHeadlineScroll measures it before the timers start).
   const headlineScroll = useRef({ ms: 0 });
   useEffect(() => { setActiveIndex(0); setPhase('in'); setErasing(false); }, [itemsKey]);
   useEffect(() => {
     const timers = [setTimeout(() => setPhase('hold'), 30)];
     if (items.length > 1) {
-      // A heading that scrolls gets the time for it: read, scroll, a moment at its end, then out.
       const scrollMs = headlineScroll.current.ms;
       const holdMs = Math.max(durationSec * 1000, scrollMs ? SCROLL_READ_MS + scrollMs + SCROLL_END_MS + eraseMs : 0);
       if (eraseMs) timers.push(setTimeout(() => setErasing(true), holdMs - eraseMs));
@@ -68,7 +60,7 @@ export default function WidgetView({ st, preview = false }) {
   useEffect(() => { if (phase === 'out' && transition === 'sweep') setSweeps((n) => n + 1); }, [phase, transition]);
   const stageRef = useRef(null);
   useFitLines(stageRef, st);
-  useHeadlineScroll(stageRef, headlineScroll, [summaryIndex, st]);
+  useItemScroll(stageRef, headlineScroll, [summaryIndex, st]);
 
   const bodyTextColor = autoTextColor(s.bg);
   const headingTextColor = autoTextColor(s.headingBg);
@@ -79,7 +71,6 @@ export default function WidgetView({ st, preview = false }) {
     '--tex-speed': s.textureSpeed ?? 1,
   };
   const headingBar = !!s.headingBgGradient || (!!s.headingBg && s.headingBg !== 'transparent' && parseColor(s.headingBg).a > 0);
-  // Top light: along the heading bar's top edge, or the card's when the heading has no bar.
   const lightOnHeading = !!s.topLight && headingBar;
   const descBg = s.descBgGradient || s.descBg;
   const itemStyle = {
@@ -103,14 +94,8 @@ export default function WidgetView({ st, preview = false }) {
     fontWeight: ht.fontWeight,
     fontStyle: ht.fontStyle,
     textDecoration: ht.textDecoration,
-    // Glitch + fire flash is light on coloured letters (India TV's title): a white label, red letters.
     ...(headingAnim === 'glintflash' && { background: '#FFFFFF', color: '#B5000F', textShadow: 'none' }),
   };
-  // "Static title" (st.staticTitle, for items with no description): the Heading text (category) as
-  // a fixed title label above the items — BREAKING NEWS if none is set — with its own colours and
-  // looping animation (style.staticBg / staticColor, behavior.staticAnim), and each item's title
-  // under it in the description's place, large, in the heading's colours, font and animation; as
-  // on a breaking-news box.
   const staticAnim = staticAnimation(st.behavior?.staticAnim);
   const staticStyle = {
     background: s.staticBg || '#FFFFFF',
@@ -136,13 +121,6 @@ export default function WidgetView({ st, preview = false }) {
 
   const feedMedia = fromFeed && itemMedia;
   const badgePos = (feedMedia ? itemMedia.find(Boolean)?.pos : s.badgeImagePos) || 'left';
-  // The image an item shows, if any (the item's own, or the stand-in / badge image).
-  const imageFor = (index) => {
-    if (imagesOff) return null;
-    const line = lines[index];
-    const standIn = s.badgeImage || placeholderThumb(line?.title || '');
-    return line?.media?.url || (feedMedia ? standIn : s.badgeImage) || (preview && !line && feedMediaOn(st) ? standIn : null);
-  };
 
   const relativeTime = (ts) => {
     if (!ts) return 'Just now';
@@ -154,7 +132,6 @@ export default function WidgetView({ st, preview = false }) {
     const days = Math.round(hrs / 24);
     return `${days} day${days === 1 ? '' : 's'} ago`;
   };
-  // Its own string, not inside the template below, so the on-air build's CSS pruning sees it.
   const eraseClass = erasing ? ' parts-erase' : '';
   const renderItem = (index, phase, ghost = false) => {
     const line = lines[index];
@@ -174,7 +151,6 @@ export default function WidgetView({ st, preview = false }) {
         aria-hidden={ghost || phase === 'out' || undefined}
       >
         {!asBody && <div className={'widget-card-headline' + (lightOnHeading ? ' has-top-light' : '') + (headingAnim === 'flash' && !ghost ? ' has-flash' : '') + (headingAnim === 'glintflash' ? ' heading-label' : '')} style={headingStyle}>
-          {/* With a description under it, the heading keeps to one line and scrolls (useHeadlineScroll). */}
           {hasDescription ? (
             <span className="headline-scroll">
               <PartText className="widget-card-headline-text headline-scroll-text" text={headline} anim={ghost ? 'none' : headingAnim} pace={pace} />
@@ -248,21 +224,12 @@ export default function WidgetView({ st, preview = false }) {
       {s.topLight && !headingBar && <span className="p-top-light" aria-hidden="true" />}
       {transition === 'sweep' && sweeps > 0 && <span key={sweeps} className="widget-sweep" aria-hidden="true" />}
       <div className="widget-card-content">
-        {staticTitle ? (
-          // Outside the items, so it stays put while they change; phase-hold runs its looping animation.
-          // Laid out like the body under it, so it sits over the title and is centred on it: beside
-          // the image's room when the item shows one.
-          <div className={'widget-static-title phase-hold' + (imageFor(summaryIndex) ? ` widget-card-body widget-card-body-${badgePos}` : '')}>
-            {imageFor(summaryIndex) && <div className="widget-card-thumb-wrap" aria-hidden="true" />}
+        {staticTitle && (
+          <div className="widget-static-title phase-hold">
             <div className={'widget-card-headline' + (staticAnim === 'glintflash' ? ' heading-label' : '')} style={staticStyle}>
-              <PartText className="widget-card-headline-text" text={st.staticText?.trim() || st.category?.trim() || 'BREAKING NEWS'} anim={staticAnim} />
+              <PartText className="widget-card-headline-text" text={(st.staticText ?? st.category)?.trim() || 'BREAKING NEWS'} anim={staticAnim} />
             </div>
           </div>
-        ) : fromFeed && st.category?.trim() && (
-          <span className="widget-card-category">
-            <span className="widget-card-category-dot" />
-            {st.category}
-          </span>
         )}
         <div className="widget-card-stage" ref={stageRef}>
           {lines.map((_, i) => (i === summaryIndex ? null : renderItem(i, 'hold', true)))}
@@ -313,7 +280,7 @@ function useFitLines(stageRef, st) {
     document.fonts?.ready.then(() => { if (live) fit(); });
     const observer = new ResizeObserver(fit);
     observer.observe(stage);
-    stage.addEventListener('load', fit, true); // an image's height arrives when it loads
+    stage.addEventListener('load', fit, true); 
     return () => {
       live = false;
       observer.disconnect();
@@ -322,10 +289,6 @@ function useFitLines(stageRef, st) {
   }, [stageRef, st]);
 }
 
-// The heading's "Flash + light sweep" (behavior.headingAnim 'flash'), across its whole bar: as the
-// words are written on (from `start`, over `seconds`), a flash of light — a white-hot core in a
-// warm glow, with a streak through it — crosses the bar just ahead of them; once they are on, a
-// band of white light sweeps across the bar every few seconds until the heading goes.
 function HeadingFlash({ start, seconds }) {
   return (
     <>
@@ -335,41 +298,57 @@ function HeadingFlash({ start, seconds }) {
   );
 }
 
-// The description's "Flash + write on" (behavior.descAnim 'flashwrite', as in the body of India TV's
-// breaking-news box): as its words are written on (from `start`, over `seconds`), a big flash of
-// light — a warm glow round a white-hot core — crosses it, ahead of the words.
 function DescFlash({ start, seconds }) {
   return <span className="desc-flash" aria-hidden="true" style={{ '--d': `${start.toFixed(3)}s`, '--t': `${Math.max(0.5, Math.min(1, seconds * 0.6)).toFixed(3)}s` }} />;
 }
 
-// A heading with a description under it keeps to one line, a longer one ending in …; once it has
-// been read a moment (SCROLL_READ_MS) it scrolls, like the ticker, until its end shows, at
-// SCROLL_EMS of its font size a second — the item staying on screen long enough for that and
-// SCROLL_END_MS at its end. Measured as each item comes in, into `scrollRef` for the timers. It
-// shows its … until the scroll starts; then (data-scrolling) the words slide as one piece — a
-// transform, so the scroll is smooth.
 const SCROLL_READ_MS = 2000;
 const SCROLL_END_MS = 1200;
 const SCROLL_EMS = 2.5;
-function useHeadlineScroll(stageRef, scrollRef, deps) {
+const SCROLL_LINES = 0.8;
+function useItemScroll(stageRef, scrollRef, deps) {
   useLayoutEffect(() => {
     scrollRef.current = { ms: 0 };
-    const box = stageRef.current?.querySelector('.widget-card-main:not(.widget-card-ghost) .headline-scroll');
-    if (!box) return undefined;
+    const item = stageRef.current?.querySelector('.widget-card-main:not(.widget-card-ghost)');
+    if (!item) return undefined;
+    const line = item.querySelector('.headline-scroll');
+    const boxes = [...item.querySelectorAll('.widget-card-headline, .widget-card-summary')].filter((el) => !el.querySelector('.headline-scroll'));
+    let tall = [];
     const measure = () => {
-      const dist = Math.max(0, Math.ceil(box.scrollWidth - box.clientWidth));
-      const fontPx = parseFloat(getComputedStyle(box).fontSize) || 16;
-      const ms = dist ? Math.max(600, (dist / (fontPx * SCROLL_EMS)) * 1000) : 0;
+      let ms = 0;
+      if (line) {
+        const dist = Math.max(0, Math.ceil(line.scrollWidth - line.clientWidth));
+        const fontPx = parseFloat(getComputedStyle(line).fontSize) || 16;
+        const lineMs = dist ? Math.max(600, (dist / (fontPx * SCROLL_EMS)) * 1000) : 0;
+        line.style.setProperty('--scroll-dist', `${dist}px`);
+        line.style.setProperty('--scroll-ms', `${Math.round(lineMs)}ms`);
+        ms = lineMs;
+      }
+      tall = boxes.filter((box) => {
+        const text = box.querySelector('.widget-card-headline-text, .widget-card-summary-text');
+        const dist = text ? Math.ceil(text.scrollHeight - text.clientHeight) : 0;
+        if (dist <= 1) return false;
+        const cs = getComputedStyle(text);
+        const linePx = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 16) * 1.3;
+        const boxMs = Math.max(600, (dist / (linePx * SCROLL_LINES)) * 1000);
+        box.style.setProperty('--vdist', `${dist}px`);
+        box.style.setProperty('--vms', `${Math.round(boxMs)}ms`);
+        box.style.setProperty('--vbox', `${box.offsetHeight}px`);
+        ms = Math.max(ms, boxMs);
+        return true;
+      });
       scrollRef.current = { ms };
-      box.style.setProperty('--scroll-dist', `${dist}px`);
-      box.style.setProperty('--scroll-ms', `${Math.round(ms)}ms`);
-      return dist;
     };
-    const dist = measure();
+    measure();
     let live = true;
-    document.fonts?.ready.then(() => { if (live && !box.dataset.scrolling) measure(); });
+    let started = false;
+    document.fonts?.ready.then(() => { if (live && !started) measure(); });
     // From the item's hold (30ms in) plus the read.
-    const start = dist ? setTimeout(() => { box.dataset.scrolling = ''; }, 30 + SCROLL_READ_MS) : null;
+    const start = setTimeout(() => {
+      started = true;
+      if (line && parseFloat(line.style.getPropertyValue('--scroll-dist')) > 0) line.dataset.scrolling = '';
+      tall.forEach((box) => { box.dataset.vscroll = ''; });
+    }, 30 + SCROLL_READ_MS);
     return () => { live = false; clearTimeout(start); };
   }, [stageRef, scrollRef, ...deps]); // eslint-disable-line react-hooks/exhaustive-deps
 }

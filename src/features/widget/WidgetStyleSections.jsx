@@ -177,32 +177,20 @@ export default function WidgetStyleSections({ st, setSt }) {
             </Field>
             <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" alignOff={headingAnimOn} alignReason={CENTRED} />
           </div>
-          {/* With a static title (no descriptions), its own colours take the description's row. */}
           {staticTitle ? (
             <div className="cs-row">
-              <span className="cs-label">Static title</span>
+              <span className="cs-label">Static heading</span>
               <Field path="style.staticBg">
-                <TextColorButton kind="fill" value={s.staticBg || '#FFFFFF'} fallback="#FFFFFF" bar={s.staticBg || '#FFFFFF'} onChange={(v) => setStyle('staticBg', v)} label="Static title background" />
+                <TextColorButton kind="fill" value={s.staticBg || '#FFFFFF'} fallback="#FFFFFF" bar={s.staticBg || '#FFFFFF'} onChange={(v) => setStyle('staticBg', v)} label="Static heading background" />
               </Field>
               <Field path="style.staticColor">
-                <TextColorButton value={s.staticColor || '#B5000F'} auto={autoTextColor(s.staticBg || '#FFFFFF')} onChange={(v) => setStyle('staticColor', v)} label="Static title" />
-              </Field>
-              <Field path="staticText">
-                <input
-                  type="text"
-                  className="cs-text cs-text-wide"
-                  value={st.staticText ?? ''}
-                  placeholder={st.category?.trim() || 'BREAKING NEWS'}
-                  onChange={(e) => setSt((state) => ({ ...state, staticText: e.target.value }))}
-                  aria-label="Static title text"
-                  title="The static title's words (empty: the Heading text, or BREAKING NEWS)"
-                />
+                <TextColorButton value={s.staticColor || '#B5000F'} auto={autoTextColor(s.staticBg || '#FFFFFF')} onChange={(v) => setStyle('staticColor', v)} label="Static heading" />
               </Field>
               <Field path="behavior.staticAnim" className="cs-wide">
-                <Select value={staticAnimation(behavior.staticAnim)} options={STATIC_ANIMATIONS} onChange={(v) => setBehavior('staticAnim', v)} ariaLabel="Static title animation" title="How the static title is animated, over and over" />
+                <Select value={staticAnimation(behavior.staticAnim)} options={STATIC_ANIMATIONS} onChange={(v) => setBehavior('staticAnim', v)} ariaLabel="Static heading animation" title="How the static heading is animated, over and over" />
               </Field>
             </div>
-          ) : (
+          ) : st.showFeedDescription !== false && (
             <div className="cs-row">
               <span className="cs-label">Description</span>
               <Field path={['style.descBg', 'style.descBgGradient']}>

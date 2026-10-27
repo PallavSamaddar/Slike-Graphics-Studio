@@ -38,7 +38,7 @@ export default function WidgetShowBar({ st, setSt }) {
         <CheckChip on={mediaOn} onChange={setFeedMedia}>Images/videos</CheckChip>
         <CheckChip on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v, ...(v && { staticTitle: false }) }))}>Descriptions</CheckChip>
         {st.showFeedDescription === false && (
-          <CheckChip on={!!st.staticTitle} onChange={(v) => setSt((state) => ({ ...state, staticTitle: v }))}>Static title</CheckChip>
+          <CheckChip on={!!st.staticTitle} onChange={(v) => setSt((state) => ({ ...state, staticTitle: v }))}>Static heading</CheckChip>
         )}
       </div>
     </div>

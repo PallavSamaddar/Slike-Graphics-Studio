@@ -4,21 +4,33 @@ import WidgetManualItems from './WidgetManualItems.jsx';
 import ContentTitle from '../shared-editor/ContentTitle.jsx';
 
 export default function WidgetContentSection({ st, setSt }) {
-  const feedHeadingField = (
+  const staticOn = !!st.staticTitle && st.showFeedDescription === false;
+  const staticTitleField = (
     <Row>
-      <Field label="Heading" grow path="category">
-        <input type="text" placeholder="e.g. News (optional)" value={st.category || ''} onChange={(e) => setSt((s) => ({ ...s, category: e.target.value }))} />
+      <Field label="Static heading" grow path="staticText" off={!staticOn} offReason="Untick Descriptions and tick Static heading (above the preview) to show it">
+        <input
+          type="text"
+          placeholder="BREAKING NEWS"
+          value={st.staticText ?? st.category ?? ''}
+          disabled={!staticOn}
+          onChange={(e) => setSt((s) => ({ ...s, staticText: e.target.value }))}
+        />
       </Field>
     </Row>
   );
 
   return (
     <Section title={<ContentTitle />} action={<ContentSourceSwitch st={st} setSt={setSt} />}>
-      {st.src === 'manual' && <WidgetManualItems st={st} setSt={setSt} />}
+      {st.src === 'manual' && (
+        <>
+          {staticTitleField}
+          <WidgetManualItems st={st} setSt={setSt} />
+        </>
+      )}
 
       {st.src !== 'manual' && (
         <div className="widget-desc-items">
-          <ContentSource st={st} setSt={setSt} bare kind="widget" afterUrl={feedHeadingField} />
+          <ContentSource st={st} setSt={setSt} bare kind="widget" afterUrl={staticTitleField} />
         </div>
       )}
     </Section>

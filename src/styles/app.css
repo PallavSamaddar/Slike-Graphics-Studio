@@ -1208,6 +1208,12 @@ input, select, textarea { font-family: inherit; }
   animation: headlineScroll var(--scroll-ms, 0ms) linear forwards;
 }
 @keyframes headlineScroll { to { transform: translateX(calc(-1 * var(--scroll-dist, 0px))); } }
+:is(.widget-card-headline, .widget-card-summary)[data-vscroll] { box-sizing: border-box; height: var(--vbox); overflow: hidden; }
+:is(.widget-card-headline, .widget-card-summary)[data-vscroll] > :is(.widget-card-headline-text, .widget-card-summary-text) {
+  display: block; -webkit-line-clamp: none; line-clamp: none; overflow: visible; will-change: transform;
+  animation: textScrollUp var(--vms, 0ms) linear forwards;
+}
+@keyframes textScrollUp { to { transform: translateY(calc(-1 * var(--vdist, 0px))); } }
 .widget-card-divider {
   align-self: center;
   width: 64px;
@@ -1224,8 +1230,7 @@ input, select, textarea { font-family: inherit; }
 }
 /* with a background of its own, the description sits in a padded box like the heading's */
 .widget-card-summary.has-bg { padding: 0.35em 0.6em; border-radius: var(--radius-sm); }
-/* Static title: the fixed title label (as wide as the title under it and over it — WidgetView lays it
-   out like the body — its words centred), and each item's title
+/* Static title: the fixed title label (the card's full width, its words centred), and each item's title
    under it in the description's place — at the heading's size, full strength. */
 .widget-static-title { align-self: stretch; }
 .widget-card-summary.widget-card-title-body { font-size: clamp(14px, 5cqi, 24px); opacity: 1; }
@@ -1520,7 +1525,7 @@ input, select, textarea { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .part-w { animation: none !important; opacity: 1 !important; -webkit-mask-image: none !important; mask-image: none !important; }
   .part-light, .part-shine::after, .heading-flash, .heading-sweep, .desc-flash, .part-glintflash::before, .part-glintflash::after, .heading-label .headline-scroll::after { display: none; }
-  .headline-scroll-text { animation: none !important; }
+  .headline-scroll-text, [data-vscroll] > * { animation: none !important; }
   .part-glintflash { animation: none !important; }
 }
 
