@@ -8,12 +8,17 @@ const VERTICAL_ALIGN_ITEMS = { top: 'flex-start', middle: 'center', bottom: 'fle
 const STING_MS = { breaking: 1500, shatter: 1400, gold: 1500 };
 const GOLD_TAIL_MS = 450;
 
-const MIN_FIT = 0.35;
+const READ_MS = 2000;
+const END_MS = 1500;
+const SCROLL_EMS = 4;
 
-export default function SingleItemTicker({ items, animation, durationSec, itemStyle, className, align = 'left', verticalAlign, onIndexChange, stingText = 'BREAKING NEWS', autoFit = false }) {
+export default function SingleItemTicker({ items, animation, durationSec, itemStyle, className, align = 'left', verticalAlign, onIndexChange, stingText = 'BREAKING NEWS', minFit = 1 }) {
   const [index, setIndex] = useState(0);
+  // Bumped to play a lone headline again (one that scrolls), since its index never changes.
+  const [cycle, setCycle] = useState(0);
   const wrapRef = useRef(null);
   const textRef = useRef(null);
+  const scrollRef = useRef({ ms: 0 }); // the current headline's scroll, measured before its timers start
   const [phase, setPhase] = useState('in'); // 'in' | 'hold' | 'out'
   const [goldSting, setGoldSting] = useState(null);
   const key = items.join('|');
@@ -33,11 +38,12 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
   useEffect(() => {
     if (items.length === 0) return undefined;
 
-    const holdMs = Math.max(1, durationSec) * 1000;
     const transMs = STING_MS[animation] || 420;
     const timers = [];
 
     const inMs = animation === 'typewriter' ? 620 : 30;
+    const scrollMs = scrollRef.current.ms;
+    const holdMs = Math.max(Math.max(1, durationSec) * 1000, scrollMs ? inMs + READ_MS + scrollMs + END_MS : 0);
 
     setPhase('in');
     timers.push(setTimeout(() => setPhase('hold'), inMs));
@@ -49,28 +55,38 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
         if (animation === 'gold') setGoldSting(safeIndex);
       }, holdMs));
       timers.push(setTimeout(() => setIndex((i) => (i + 1) % items.length), holdMs + transMs));
+    } else if (scrollMs) {
+      timers.push(setTimeout(() => setCycle((c) => c + 1), holdMs));
     }
 
     return () => timers.forEach(clearTimeout);
-  }, [safeIndex, key, durationSec, animation]);
+  }, [safeIndex, cycle, key, durationSec, animation]);
 
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
     const text = textRef.current;
     if (!wrap || !text) return undefined;
+    // Runs before the timers' effect, so they know how long this headline's scroll takes.
     const fit = () => {
-      if (!autoFit) { wrap.style.removeProperty('--fit'); return; }
       wrap.style.setProperty('--fit', '1');
       const cs = getComputedStyle(wrap);
       const room = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-      const needed = text.scrollWidth;
-      wrap.style.setProperty('--fit', String(needed > room && needed > 0 ? Math.max(MIN_FIT, room / needed) : 1));
+      const needed = text.offsetWidth;
+      const scale = needed > room && needed > 0 ? Math.max(minFit, room / needed) : 1;
+      wrap.style.setProperty('--fit', String(scale));
+      const dist = Math.max(0, Math.ceil(needed * scale - room));
+      const fontPx = parseFloat(getComputedStyle(text).fontSize) || 16;
+      const ms = dist ? Math.round((dist / (fontPx * SCROLL_EMS)) * 1000) : 0;
+      scrollRef.current = { ms };
+      text.style.setProperty('--scroll-dist', `${dist}px`);
+      text.style.setProperty('--scroll-ms', `${ms}ms`);
+      text.style.setProperty('--scroll-delay', `${READ_MS}ms`);
     };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(wrap);
     return () => observer.disconnect();
-  }, [autoFit, safeIndex, key, itemStyle?.fontSize, itemStyle?.fontFamily, itemStyle?.fontWeight]);
+  }, [safeIndex, cycle, key, minFit, itemStyle?.fontSize, itemStyle?.fontFamily, itemStyle?.fontWeight]);
 
   if (items.length === 0) return null;
 
@@ -85,7 +101,9 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
         ...(verticalAlign ? { alignItems: VERTICAL_ALIGN_ITEMS[verticalAlign] || 'center' } : {}),
       }}
     >
-      <span key={safeIndex} ref={textRef} className={cls} style={autoFit ? { ...itemStyle, fontSize: `calc(${itemStyle?.fontSize || '1em'} * var(--fit, 1))` } : itemStyle}>{items[safeIndex]}</span>
+      <span key={`${safeIndex}-${cycle}`} className={cls} style={{ ...itemStyle, fontSize: `calc(${itemStyle?.fontSize || '1em'} * var(--fit, 1))` }}>
+        <span ref={textRef} className="single-item-text">{items[safeIndex]}</span>
+      </span>
       {animation === 'gold' && phase !== 'out' && <GoldLanding key={`land-${safeIndex}`} />}
       {animation === 'gold' && goldSting !== null && (
         <GoldSting key={`sting-${goldSting}`} text={stingText} style={{ fontFamily: itemStyle?.fontFamily, fontSize: itemStyle?.fontSize }} />

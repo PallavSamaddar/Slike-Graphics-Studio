@@ -8,13 +8,18 @@ const BASE_HEIGHT_PX = 48;
 // with it.
 const HEADLINE_BAR_PX = 90;
 const HEADLINE_TEXT_SHARE = 0.6;
+// On TV (a 1080p frame — the units the bar's sizes are in) text smaller than this can't be read
+// from the sofa: the headline never goes below it, not even shrunk to fit.
+const TV_MIN_TEXT_PX = 24;
+// A long headline (Sequential) shrinks to fit down to this share of its size — but not below TV_MIN_TEXT_PX.
+const MIN_FIT = 0.8;
 const isHeadlineBar = (st) => (parseFloat(st.style?.height) || 0) >= HEADLINE_BAR_PX;
 function fontSizeFor(st) {
   const base = parseFloat(st.text?.fontSize) || 14;
   const height = parseFloat(st.style?.height) || BASE_HEIGHT_PX;
   const designedFor = parseFloat(TPLS.find((t) => t.id === st.template)?.style?.height) || BASE_HEIGHT_PX;
   const scaled = base * (height / designedFor);
-  const size = isHeadlineBar(st) ? Math.max(scaled, height * HEADLINE_TEXT_SHARE) : scaled;
+  const size = Math.max(isHeadlineBar(st) ? Math.max(scaled, height * HEADLINE_TEXT_SHARE) : scaled, TV_MIN_TEXT_PX);
   return Math.round(size * 10) / 10;
 }
 const badgeScaleFor = (st) => (st.badge?.scale || 1) * (isHeadlineBar(st) ? (parseFloat(st.style.height) || BASE_HEIGHT_PX) / 56 : 1);
@@ -74,7 +79,7 @@ export default function TickerView({ st, scaled = false }) {
           itemStyle={itemStyle}
           align={['breaking', 'shatter'].includes(behavior.animation) ? 'center' : tx.textAlign || 'left'}
           stingText={behavior.stingText?.trim() || undefined}
-          autoFit={!!tx.autoFit}
+          minFit={Math.max(MIN_FIT, TV_MIN_TEXT_PX / fontSizeFor(st))}
         />
       ) : (
         <div

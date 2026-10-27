@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { autoTextColor, textShadowFor } from '../utils/color.js';
+import { autoTextColor, parseColor, textShadowFor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
 import { feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTemplates.js';
 import { partAnimation, widgetTransition } from '../constants/textAnimations.js';
@@ -9,8 +9,7 @@ import GraphicVideo, { uploadStream } from './GraphicVideo.jsx';
 import PartText, { ERASE_MS, partSeconds, writesWords } from './PartText.jsx';
 
 const TRANSITION_MS = 200;
-// Lines the headline and description are clamped to: 3 each, raised (headline first) while
-// every item still fits the card, or lowered (description first) when even 3 don't.
+
 const MIN_LINES = 3;
 const MAX_HEAD_LINES = 6;
 const MAX_SUMMARY_LINES = 12;
@@ -34,9 +33,7 @@ export default function WidgetView({ st, preview = false }) {
   const durationSec = Math.max(1, st.behavior?.itemDuration || 4);
   const headingAnim = partAnimation(st.behavior?.headingAnim);
   const descAnim = partAnimation(st.behavior?.descAnim);
-  // Words written on by the heading or description are wiped off (erasing) before the card changes.
   const eraseMs = writesWords(headingAnim) || writesWords(descAnim) ? ERASE_MS : 0;
-  // One item at a time: the current one goes out, then the next comes in.
   const [activeIndex, setActiveIndex] = useState(0);
   const [phase, setPhase] = useState('in');
   const [erasing, setErasing] = useState(false);
@@ -57,7 +54,6 @@ export default function WidgetView({ st, preview = false }) {
     return () => timers.forEach(clearTimeout);
   }, [activeIndex, items.length, itemsKey, durationSec, eraseMs]);
   const summaryIndex = items.length ? Math.min(activeIndex, items.length - 1) : 0;
-  // Page sweep: a glass sheet crosses the card each time one item gives way to the next.
   const [sweeps, setSweeps] = useState(0);
   useEffect(() => { if (phase === 'out' && transition === 'sweep') setSweeps((n) => n + 1); }, [phase, transition]);
   const stageRef = useRef(null);
@@ -71,6 +67,9 @@ export default function WidgetView({ st, preview = false }) {
     textShadow: textShadowFor(bodyTextColor),
     '--tex-speed': s.textureSpeed ?? 1,
   };
+  const headingBar = !!s.headingBgGradient || (!!s.headingBg && s.headingBg !== 'transparent' && parseColor(s.headingBg).a > 0);
+  // Top light: along the heading bar's top edge, or the card's when the heading has no bar.
+  const lightOnHeading = !!s.topLight && headingBar;
   const descBg = s.descBgGradient || s.descBg;
   const itemStyle = {
     color: bt.color || bodyTextColor,
@@ -116,8 +115,6 @@ export default function WidgetView({ st, preview = false }) {
     const sample = preview && !line;
     const summary = line?.description || (sample && st.showFeedDescription !== false ? 'Enter description here' : '');
     const hasDescription = !!summary.trim();
-    // Writing the heading and description on takes at most half the item's time on screen, so
-    // they're read before their words come off again.
     const headingSec = partSeconds(headline, headingAnim);
     const pace = Math.max(1, (headingSec + (hasDescription ? partSeconds(summary, descAnim) : 0)) / (durationSec / 2));
     const standIn = s.badgeImage || placeholderThumb(line?.title || '');
@@ -128,8 +125,9 @@ export default function WidgetView({ st, preview = false }) {
         className={ghost ? 'widget-card-main widget-card-ghost' : `widget-card-main anim-${transition} phase-${phase}${eraseClass}`}
         aria-hidden={ghost || phase === 'out' || undefined}
       >
-        <div className="widget-card-headline" style={headingStyle}>
+        <div className={'widget-card-headline' + (lightOnHeading ? ' has-top-light' : '')} style={headingStyle}>
           <PartText className="widget-card-headline-text" text={headline} anim={ghost ? 'none' : headingAnim} pace={pace} />
+          {lightOnHeading && !ghost && <span className="p-top-light" aria-hidden="true" />}
         </div>
         {(hasDescription || image) && (
           <>
@@ -184,6 +182,7 @@ export default function WidgetView({ st, preview = false }) {
         </>
       )}
 
+      {s.topLight && !headingBar && <span className="p-top-light" aria-hidden="true" />}
       {transition === 'sweep' && sweeps > 0 && <span key={sweeps} className="widget-sweep" aria-hidden="true" />}
       <div className="widget-card-content">
         {fromFeed && st.category?.trim() && (
@@ -192,8 +191,6 @@ export default function WidgetView({ st, preview = false }) {
             {st.category}
           </span>
         )}
-        {/* Every item is laid out (hidden) in the same cell, so the card is always as tall as
-            its tallest item and doesn't change size from one item to the next. */}
         <div className="widget-card-stage" ref={stageRef}>
           {lines.map((_, i) => (i === summaryIndex ? null : renderItem(i, 'hold', true)))}
           {renderItem(summaryIndex, phase)}
@@ -213,9 +210,6 @@ export default function WidgetView({ st, preview = false }) {
   );
 }
 
-// Sets --head-lines / --summary-lines on the stage: as many as fit, at least one each.
-// An item's height is the sum of its parts (not its box, which the stage stretches or clips),
-// measured without transforms, so an item mid-animation measures the same as at rest.
 function useFitLines(stageRef, st) {
   useLayoutEffect(() => {
     const stage = stageRef.current;

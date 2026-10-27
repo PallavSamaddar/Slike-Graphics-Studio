@@ -82,12 +82,6 @@ export default function TickerStyleSections({ st, setSt }) {
             alignReason={loop ? 'Alignment only applies to Sequential' : 'The sting animations centre the headline'}
             withCase
           />
-          <Field path="text.autoFit" off={loop} offReason="Only for Sequential — a scrolling ticker never cuts its text">
-            <label className="cs-check" title="On: a long headline gets smaller to fit the bar. Off: it keeps its size and ends in …">
-              <input type="checkbox" checked={!!tx.autoFit} disabled={loop} onChange={(e) => setTx('autoFit', e.target.checked)} />
-              Shrink to fit
-            </label>
-          </Field>
         </div>
 
         <div className="cs-row">

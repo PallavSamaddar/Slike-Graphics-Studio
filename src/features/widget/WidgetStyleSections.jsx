@@ -156,6 +156,12 @@ export default function WidgetStyleSections({ st, setSt }) {
               <FontSelect tx={ht} setTx={setHt} label="Heading" />
             </Field>
             <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" />
+            <Field path="style.topLight">
+              <label className="cs-check" title="A light glides slowly along the top edge of the heading bar (or of the card, when the heading has no background), again and again">
+                <input type="checkbox" checked={!!s.topLight} onChange={(e) => setStyle('topLight', e.target.checked)} />
+                Top light
+              </label>
+            </Field>
           </div>
           <div className="cs-row">
             <span className="cs-label">Description</span>

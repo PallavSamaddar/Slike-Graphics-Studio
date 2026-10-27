@@ -98,15 +98,11 @@ body.player-body {
 .player-widget { height: 100vh; display: flex; align-items: center; justify-content: center; }
 .player-fill { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
 .player-widget .widget-frame { height: 100%; aspect-ratio: auto; border-radius: 0; box-shadow: none; }
-/* On air the card can be taller than 16:9 (a vertical frame): its text follows its height,
-   between the 16:9 sizes (the minimum, so a 16:9 card is unchanged) and a cap. In a small
-   frame it never drops below a readable size on screen (FillWindow's --fill-scale undoes the
-   card's scaling), so a small card shows fewer, bigger lines instead of many tiny ones. */
 .player-widget .widget-frame-card { container-type: size; }
-.player-widget .widget-card-headline { font-size: max(clamp(24px, 5cqh, 60px), calc(16px / var(--fill-scale, 1))); }
-.player-widget .widget-card-summary { font-size: max(clamp(16px, 3.4cqh, 38px), calc(13px / var(--fill-scale, 1))); }
-.player-widget .widget-card-category { font-size: max(clamp(11.5px, 1.8cqh, 20px), calc(9px / var(--fill-scale, 1))); }
-.player-widget .widget-card-footer { font-size: max(clamp(12.5px, 2cqh, 22px), calc(10px / var(--fill-scale, 1))); }
+.player-widget .widget-card-headline { font-size: max(clamp(24px, 5cqh, 60px), calc(26px / var(--fill-scale, 1))); }
+.player-widget .widget-card-summary { font-size: max(clamp(16px, 3.4cqh, 38px), calc(22px / var(--fill-scale, 1))); }
+.player-widget .widget-card-category { font-size: max(clamp(11.5px, 1.8cqh, 20px), calc(18px / var(--fill-scale, 1))); }
+.player-widget .widget-card-footer { font-size: max(clamp(12.5px, 2cqh, 22px), calc(18px / var(--fill-scale, 1))); }
 .player-widget .widget-card-thumb { max-height: clamp(150px, 30cqh, 420px); }
 #root {
   height: 100vh;
@@ -640,7 +636,8 @@ input, select, textarea { font-family: inherit; }
   padding: 0 0.9em;
   flex-shrink: 0;
   gap: 0.35em;
-  font-size: calc((9 / 1080 * 100cqh + 4px) * var(--badge-scale, 1));
+  /* never under 18px of a 1080p frame — readable on TV */
+  font-size: max(calc((9 / 1080 * 100cqh + 4px) * var(--badge-scale, 1)), calc(18 / 1080 * 100cqh));
   font-weight: 700;
   letter-spacing: 0.07em;
   white-space: nowrap;
@@ -952,6 +949,14 @@ input, select, textarea { font-family: inherit; }
   max-width: 100%;
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
+/* A headline too long for the bar even at its smallest (SingleItemTicker) scrolls left, after a
+   moment still, until its end shows, and stays there through its way out (the same animation
+   keeps running from hold to out, so it doesn't jump back). */
+.single-item-text { display: inline-block; }
+.single-item:is(.phase-hold, .phase-out) > .single-item-text {
+  animation: singleItemScroll var(--scroll-ms, 0ms) linear var(--scroll-delay, 0ms) forwards;
+}
+@keyframes singleItemScroll { from { transform: none; } to { transform: translateX(calc(-1 * var(--scroll-dist, 0px))); } }
 
 .anim-fade.phase-in { opacity: 0; }
 .anim-fade.phase-hold { opacity: 1; }
@@ -1183,6 +1188,8 @@ input, select, textarea { font-family: inherit; }
   padding: 0.35em 0.6em;
   border-radius: var(--radius-sm);
 }
+/* The ticker's top light (.p-top-light), along the heading bar's top edge, kept inside its corners. */
+.widget-card-headline.has-top-light { position: relative; overflow: hidden; }
 .widget-card-headline-text {
   display: -webkit-box;
   -webkit-line-clamp: var(--head-lines, 3);
