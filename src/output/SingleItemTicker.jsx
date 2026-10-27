@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ShatterText from './ShatterText.jsx';
+import GoldSting, { GoldLanding } from './GoldSting.jsx';
 
 const ALIGN_JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end' };
 const VERTICAL_ALIGN_ITEMS = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
 
-// How long the change between two headlines takes, sting included.
-const STING_MS = { breaking: 1500, shatter: 2000 };
+const STING_MS = { breaking: 1500, shatter: 2000, gold: 1900 };
+const GOLD_TAIL_MS = 450;
 
-// Shrink to fit: never smaller than this share of the bar's own text size.
 const MIN_FIT = 0.35;
 
 export default function SingleItemTicker({ items, animation, durationSec, itemStyle, className, align = 'left', verticalAlign, onIndexChange, stingText = 'BREAKING NEWS', autoFit = false }) {
@@ -15,6 +15,7 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
   const wrapRef = useRef(null);
   const textRef = useRef(null);
   const [phase, setPhase] = useState('in'); // 'in' | 'hold' | 'out'
+  const [goldSting, setGoldSting] = useState(null);
   const key = items.join('|');
   const safeIndex = items.length ? Math.min(index, items.length - 1) : 0;
 
@@ -22,6 +23,7 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
   useEffect(() => {
     setIndex(0);
     setPhase('in');
+    setGoldSting(null);
   }, [key, animation, durationSec]);
 
   useEffect(() => {
@@ -32,30 +34,26 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
     if (items.length === 0) return undefined;
 
     const holdMs = Math.max(1, durationSec) * 1000;
-    // The Breaking News sting plays between two headlines: the old one shrinks away, the
-    // sting assembles and shrinks to the centre, then the next one lands.
     const transMs = STING_MS[animation] || 420;
     const timers = [];
 
-    // Fade/slide/flip are CSS *transitions* — they just need the 'in' class applied
-    // for one tick before flipping to 'hold' so the transition fires. Typewriter is a
-    // discrete *keyframe animation* (steps reveal) — flipping to 'hold' early cancels
-    // it mid-reveal, so give it its full 0.6s to actually type out.
     const inMs = animation === 'typewriter' ? 620 : 30;
 
     setPhase('in');
     timers.push(setTimeout(() => setPhase('hold'), inMs));
+    if (animation === 'gold') timers.push(setTimeout(() => setGoldSting(null), GOLD_TAIL_MS));
 
     if (items.length > 1) {
-      timers.push(setTimeout(() => setPhase('out'), holdMs));
+      timers.push(setTimeout(() => {
+        setPhase('out');
+        if (animation === 'gold') setGoldSting(safeIndex);
+      }, holdMs));
       timers.push(setTimeout(() => setIndex((i) => (i + 1) % items.length), holdMs + transMs));
     }
 
     return () => timers.forEach(clearTimeout);
   }, [safeIndex, key, durationSec, animation]);
 
-  // With autoFit the headline is measured at its full size and scaled down (--fit) just
-  // enough to fit the bar's width; without it, it keeps its size and ends in an ellipsis.
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
     const text = textRef.current;
@@ -88,7 +86,11 @@ export default function SingleItemTicker({ items, animation, durationSec, itemSt
       }}
     >
       <span key={safeIndex} ref={textRef} className={cls} style={autoFit ? { ...itemStyle, fontSize: `calc(${itemStyle?.fontSize || '1em'} * var(--fit, 1))` } : itemStyle}>{items[safeIndex]}</span>
-      {STING_MS[animation] && phase === 'out' && (
+      {animation === 'gold' && phase !== 'out' && <GoldLanding key={`land-${safeIndex}`} />}
+      {animation === 'gold' && goldSting !== null && (
+        <GoldSting key={`sting-${goldSting}`} text={stingText} style={{ fontFamily: itemStyle?.fontFamily, fontSize: itemStyle?.fontSize }} />
+      )}
+      {(animation === 'breaking' || animation === 'shatter') && phase === 'out' && (
         <span
           key={`sting-${safeIndex}`}
           className={'breaking-sting' + (animation === 'shatter' ? ' breaking-sting-shatter' : '')}

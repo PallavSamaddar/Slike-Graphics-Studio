@@ -7,7 +7,7 @@ import { FontSelect, ImagePosition, Stepper, TextFormat } from '../shared-editor
 import { feedMediaOn } from '../../constants/widgetTemplates.js';
 import { autoTextColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
-import { WIDGET_TRANSITIONS, widgetTransition } from '../../constants/textAnimations.js';
+import { PART_ANIMATIONS, WIDGET_TRANSITIONS, partAnimation, widgetTransition } from '../../constants/textAnimations.js';
 import { baseName, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { uploadVideoWithSdk } from '../../services/uploadSdk.js';
@@ -179,6 +179,18 @@ export default function WidgetStyleSections({ st, setSt }) {
               <FontSelect tx={bt} setTx={setBt} label="Description" />
             </Field>
             <TextFormat tx={bt} setTx={setBt} path="bodyText" label="Description" />
+          </div>
+          {/* How the heading and the description come in and go out on their own (PartText). */}
+          <div className="cs-row">
+            <span className="cs-label">Text animation</span>
+            <span className="cs-label cs-label-inline">Heading</span>
+            <Field path="behavior.headingAnim" className="cs-wide">
+              <Select value={partAnimation(behavior.headingAnim)} options={PART_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How the heading comes in and goes out" />
+            </Field>
+            <span className="cs-label cs-label-inline">Description</span>
+            <Field path="behavior.descAnim" className="cs-wide">
+              <Select value={partAnimation(behavior.descAnim)} options={PART_ANIMATIONS} onChange={(v) => setBehavior('descAnim', v)} ariaLabel="Description animation" title="How the description comes in and goes out" />
+            </Field>
           </div>
           <div className="cs-row">
             <span className="cs-label">Image</span>

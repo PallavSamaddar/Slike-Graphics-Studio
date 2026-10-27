@@ -120,7 +120,7 @@ export default function TickerView({ st, scaled = false }) {
   const ddStyle = s.ddStyle || 'chevron';
 
   return (
-    <div className={'p-ticker' + (scaled ? '' : ' p-ticker-real')} style={tickerStyle}>
+    <div className={'p-ticker' + (scaled ? '' : ' p-ticker-real') + (s.topLight ? ' has-top-light' : '')} style={tickerStyle}>
       {b.show && (
         <div className={'p-badge p-badge-' + ddStyle + (s.badgeShape === 'wedge' ? ' p-badge-wedge' : '')} style={{ background: b.bgColor, color: badgeAutoColor, textShadow: textShadowFor(badgeAutoColor), fontWeight: b.fontWeight, '--badge-scale': badgeScaleFor(st) }}>
           {ddStyle === 'stripes' && (
@@ -131,6 +131,7 @@ export default function TickerView({ st, scaled = false }) {
         </div>
       )}
       {track}
+      {s.topLight && <span className="p-top-light" aria-hidden="true" />}
     </div>
   );
 }

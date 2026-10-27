@@ -1,4 +1,12 @@
 export const TPLS = [
+  { id: 'gold-sting', name: 'Breaking gold', desc: 'Red · gold BREAKING NEWS slides in between headlines',
+    style: { bgColor: '#D8111A', textColor: '#FFFFFF', accentColor: '#FFD84A', separatorColor: 'rgba(255,255,255,0.35)', height: '96px', cornerRadius: '0px', bgGradient: null },
+    badge: { show: true, type: 'BREAKING', bgColor: '#FFFFFF', textColor: '#D8111A', fontWeight: '800' },
+    text: { fontFamily: 'Inter, sans-serif', fontSize: '16px', fontWeight: '800', letterSpacing: '0em', textTransform: 'none' },
+    // One headline at a time; between them gold bars and a gold BREAKING NEWS sweep through.
+    behavior: { mode: 'single', animation: 'gold', itemDuration: 5 },
+    mini: { bg: '#D8111A', tc: '#fff', bb: '#FFFFFF', bt: '#D8111A', border: 'none', badge: 'BREAKING' },
+  },
   { id: 'shatter-sting', name: 'Breaking shatter', desc: 'Red · BREAKING NEWS assembles from broken glass',
     style: { bgColor: '#B3101A', textColor: '#FFFFFF', accentColor: '#FFD400', separatorColor: 'rgba(255,255,255,0.35)', height: '56px', cornerRadius: '0px', bgGradient: null },
     badge: { show: true, type: 'BREAKING', bgColor: '#FFD400', textColor: '#1A1714', fontWeight: '800' },

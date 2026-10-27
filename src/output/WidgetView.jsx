@@ -2,10 +2,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { autoTextColor, textShadowFor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
 import { feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTemplates.js';
-import { widgetTransition } from '../constants/textAnimations.js';
+import { partAnimation, widgetTransition } from '../constants/textAnimations.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
 import GraphicVideo, { uploadStream } from './GraphicVideo.jsx';
+import PartText, { ERASE_MS, partSeconds, writesWords } from './PartText.jsx';
 
 const TRANSITION_MS = 200;
 // Lines the headline and description are clamped to: 3 each, raised (headline first) while
@@ -31,23 +32,30 @@ export default function WidgetView({ st, preview = false }) {
 
   const transition = widgetTransition(st.behavior?.transition);
   const durationSec = Math.max(1, st.behavior?.itemDuration || 4);
+  const headingAnim = partAnimation(st.behavior?.headingAnim);
+  const descAnim = partAnimation(st.behavior?.descAnim);
+  // Words written on by the heading or description are wiped off (erasing) before the card changes.
+  const eraseMs = writesWords(headingAnim) || writesWords(descAnim) ? ERASE_MS : 0;
   // One item at a time: the current one goes out, then the next comes in.
   const [activeIndex, setActiveIndex] = useState(0);
   const [phase, setPhase] = useState('in');
+  const [erasing, setErasing] = useState(false);
   const itemsKey = items.join('|');
-  useEffect(() => { setActiveIndex(0); setPhase('in'); }, [itemsKey]);
+  useEffect(() => { setActiveIndex(0); setPhase('in'); setErasing(false); }, [itemsKey]);
   useEffect(() => {
     const timers = [setTimeout(() => setPhase('hold'), 30)];
     if (items.length > 1) {
       const holdMs = durationSec * 1000;
+      if (eraseMs) timers.push(setTimeout(() => setErasing(true), holdMs - eraseMs));
       timers.push(setTimeout(() => setPhase('out'), holdMs));
       timers.push(setTimeout(() => {
+        setErasing(false);
         setActiveIndex((i) => (i + 1) % items.length);
         setPhase('in');
       }, holdMs + TRANSITION_MS));
     }
     return () => timers.forEach(clearTimeout);
-  }, [activeIndex, items.length, itemsKey, durationSec]);
+  }, [activeIndex, items.length, itemsKey, durationSec, eraseMs]);
   const summaryIndex = items.length ? Math.min(activeIndex, items.length - 1) : 0;
   // Page sweep: a glass sheet crosses the card each time one item gives way to the next.
   const [sweeps, setSweeps] = useState(0);
@@ -100,21 +108,29 @@ export default function WidgetView({ st, preview = false }) {
     const days = Math.round(hrs / 24);
     return `${days} day${days === 1 ? '' : 's'} ago`;
   };
+  // Its own string, not inside the template below, so the on-air build's CSS pruning sees it.
+  const eraseClass = erasing ? ' parts-erase' : '';
   const renderItem = (index, phase, ghost = false) => {
     const line = lines[index];
     const headline = line?.title || (fromFeed ? 'Validate a feed to show its items here' : 'Enter title here');
     const sample = preview && !line;
     const summary = line?.description || (sample && st.showFeedDescription !== false ? 'Enter description here' : '');
     const hasDescription = !!summary.trim();
+    // Writing the heading and description on takes at most half the item's time on screen, so
+    // they're read before their words come off again.
+    const headingSec = partSeconds(headline, headingAnim);
+    const pace = Math.max(1, (headingSec + (hasDescription ? partSeconds(summary, descAnim) : 0)) / (durationSec / 2));
     const standIn = s.badgeImage || placeholderThumb(line?.title || '');
     const image = line?.media?.url || (feedMedia ? standIn : s.badgeImage) || (sample && feedMediaOn(st) ? standIn : null);
     return (
       <div
         key={ghost ? `ghost-${index}` : index}
-        className={ghost ? 'widget-card-main widget-card-ghost' : `widget-card-main anim-${transition} phase-${phase}`}
+        className={ghost ? 'widget-card-main widget-card-ghost' : `widget-card-main anim-${transition} phase-${phase}${eraseClass}`}
         aria-hidden={ghost || phase === 'out' || undefined}
       >
-        <div className="widget-card-headline" style={headingStyle}><span className="widget-card-headline-text">{headline}</span></div>
+        <div className="widget-card-headline" style={headingStyle}>
+          <PartText className="widget-card-headline-text" text={headline} anim={ghost ? 'none' : headingAnim} pace={pace} />
+        </div>
         {(hasDescription || image) && (
           <>
             <div className="widget-card-divider" />
@@ -133,7 +149,8 @@ export default function WidgetView({ st, preview = false }) {
               )}
               {hasDescription && (
                 <div className={'widget-card-summary' + (descBg ? ' has-bg' : '')} style={itemStyle}>
-                  <span className="widget-card-summary-text">{summary}</span>
+                  {/* Written on once its heading is. */}
+                  <PartText className="widget-card-summary-text" text={summary} anim={ghost ? 'none' : descAnim} delay={headingSec / pace} pace={pace} />
                 </div>
               )}
             </div>

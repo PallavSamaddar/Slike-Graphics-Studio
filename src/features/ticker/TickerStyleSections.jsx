@@ -25,8 +25,9 @@ const SIZES = [
   { value: 1.3, label: 'Large' },
   { value: 1.6, label: 'Extra large' },
 ];
-// The animations that show a sting between headlines.
-const STINGS = ['breaking', 'shatter'];
+// The animations that show a sting between headlines, and those of them that centre the headline.
+const STINGS = ['breaking', 'shatter', 'gold'];
+const CENTRED = ['breaking', 'shatter'];
 const SPEEDS = [
   { value: 1, label: 'Slow' },
   { value: 2, label: 'Medium' },
@@ -54,6 +55,12 @@ export default function TickerStyleSections({ st, setSt }) {
           <Field path="style.height" className="cs-wide">
             <Select value={s.height} options={HEIGHTS} onChange={(v) => setStyle('height', v)} ariaLabel="Height" title="Bar height — the text grows and shrinks with it" />
           </Field>
+          <Field path="style.topLight">
+            <label className="cs-check" title="A light glides slowly along the top edge of the bar, again and again">
+              <input type="checkbox" checked={!!s.topLight} onChange={(e) => setStyle('topLight', e.target.checked)} />
+              Top light
+            </label>
+          </Field>
         </div>
 
         <div className="cs-row">
@@ -71,7 +78,7 @@ export default function TickerStyleSections({ st, setSt }) {
             label="Text"
             alignKey="textAlign"
             alignDefault="left"
-            alignOff={loop || STINGS.includes(behavior.animation)}
+            alignOff={loop || CENTRED.includes(behavior.animation)}
             alignReason={loop ? 'Alignment only applies to Sequential' : 'The sting animations centre the headline'}
             withCase
           />
@@ -128,7 +135,7 @@ export default function TickerStyleSections({ st, setSt }) {
           <Field path="behavior.animation" off={loop} offReason="Only for Sequential">
             <Select value={behavior.animation || 'fade'} options={TEXT_ANIMATIONS} onChange={(v) => setBehavior('animation', v)} ariaLabel="Text animation" title="Text animation" />
           </Field>
-          <Field path="behavior.stingText" off={loop || !STINGS.includes(behavior.animation)} offReason="Only for the Breaking News and Shatter stings">
+          <Field path="behavior.stingText" off={loop || !STINGS.includes(behavior.animation)} offReason="Only for the sting animations">
             <input
               type="text"
               className="cs-text cs-text-wide"

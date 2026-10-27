@@ -2,7 +2,7 @@ import { TPLS } from '../constants/tickerTemplates.js';
 import { TEXT_SPACING, WIDGET_TPLS } from '../constants/widgetTemplates.js';
 import { JACKET_TPLS } from '../constants/jacketTemplates.js';
 import { FONT_NAME } from '../constants/fonts.js';
-import { WIDGET_TRANSITIONS } from '../constants/textAnimations.js';
+import { PART_ANIMATIONS, WIDGET_TRANSITIONS } from '../constants/textAnimations.js';
 import { REFRESH_OPTIONS } from '../services/feed.js';
 import { SOURCE_LABEL } from '../services/graphics.js';
 
@@ -10,9 +10,10 @@ const HEIGHTS = { '36px': 'Compact — 36px', '44px': 'Small — 44px', '48px': 
 const BANNER = { chevron: 'Chevron — angled banner + tag', split: 'Split block — solid + angled', stripes: 'Diagonal stripes accent', pill: 'Rounded pill tag' };
 const SCALE = { 0.8: 'Small', 1: 'Standard', 1.3: 'Large', 1.6: 'Extra large' };
 const SPEED = { 1: 'Slow', 2: 'Medium', 3: 'Fast' };
-const ANIM = { fade: 'Fade', flip: 'Flip', slide: 'Slide', typewriter: 'Typewriter', breaking: 'Breaking News sting', shatter: 'Shatter sting' };
+const ANIM = { fade: 'Fade', flip: 'Flip', slide: 'Slide', typewriter: 'Typewriter', breaking: 'Breaking News sting', shatter: 'Shatter sting', gold: 'Gold sting' };
 const SPACING = Object.fromEntries(TEXT_SPACING.map((o) => [o.value, o.label]));
 const WIDGET_TRANSITION = Object.fromEntries(WIDGET_TRANSITIONS.map((a) => [a.value, a.label]));
+const PART_ANIMATION = Object.fromEntries(PART_ANIMATIONS.map((a) => [a.value, a.label]));
 const CASE = { none: 'As typed', uppercase: 'UPPERCASE', lowercase: 'lowercase', capitalize: 'Title Case' };
 const SRC = SOURCE_LABEL;
 const ALIGN = { left: 'Left', center: 'Centre', right: 'Right', top: 'Top', middle: 'Middle', bottom: 'Bottom' };
@@ -85,6 +86,7 @@ const MAPS = {
       'behavior.itemDuration': ['Behaviour', 'Duration', (v) => `${v}s`],
       'behavior.stingText': ['Behaviour', 'Sting text', (v) => v || 'BREAKING NEWS'],
       'text.autoFit': ['Style', 'Shrink to fit', onOff],
+      'style.topLight': ['Style', 'Top light', onOff],
     },
   },
   widget: {
@@ -122,6 +124,8 @@ const MAPS = {
       ...Object.fromEntries(Object.entries(fmt('heading ')).map(([k, [l, f]]) => [`headingText.${k}`, ['Style', cap(l), f]])),
       ...Object.fromEntries(Object.entries(fmt('description ')).map(([k, [l, f]]) => [`bodyText.${k}`, ['Style', cap(l), f]])),
       'behavior.transition': ['Style', 'Transition', (v) => WIDGET_TRANSITION[v] ?? 'Fade in / out'],
+      'behavior.headingAnim': ['Style', 'Heading animation', (v) => PART_ANIMATION[v] ?? 'No animation'],
+      'behavior.descAnim': ['Style', 'Description animation', (v) => PART_ANIMATION[v] ?? 'No animation'],
       'behavior.itemDuration': ['Style', 'Duration', (v) => `${v}s`],
     },
   },

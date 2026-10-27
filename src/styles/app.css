@@ -651,7 +651,6 @@ input, select, textarea { font-family: inherit; }
   border-radius: 50%;
   animation: pulse 1.5s ease-in-out infinite;
 }
-/* Wedge badge — angled trailing edge, like a broadcast "breaking news" banner */
 .p-badge-wedge {
   padding-right: calc(9 / 1080 * 100cqh + 4px + 14px);
   margin-right: -14px;
@@ -660,8 +659,6 @@ input, select, textarea { font-family: inherit; }
   z-index: 1;
 }
 
-/* Banner Style — normal (single-row) badge variants, mirroring the
-   double-decker banner shapes but applied to the one badge chip. */
 .p-badge-chevron {
   padding-right: calc(9 / 1080 * 100cqh + 4px + 14px);
   margin-right: -14px;
@@ -682,6 +679,19 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   align-items: center;
 }
+.p-ticker.has-top-light { position: relative; }
+.p-top-light {
+  position: absolute; top: 0; left: 0; z-index: 2; width: 30%; height: 3px; opacity: 0; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 196, 70, .9) 28%, #FFF 50%, rgba(255, 196, 70, .9) 72%, transparent);
+  box-shadow: 0 0 6px 1px rgba(255, 200, 100, .6);
+  animation: topLight 6s linear infinite;
+}
+.p-top-light::after {
+  content: ''; position: absolute; left: 50%; top: 0; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+  background: radial-gradient(circle, #FFF 0 15%, rgba(255, 210, 120, .75) 35%, transparent 70%);
+}
+@keyframes topLight { 0% { opacity: 0; transform: translateX(-100%); } 6%, 70% { opacity: 1; } 78%, 100% { opacity: 0; transform: translateX(333%); } }
+@media (prefers-reduced-motion: reduce) { .p-top-light { display: none; } }
 /* Small gap after a wedge badge — its angled point otherwise touches the
    scrolling text with no breathing room. */
 .p-badge-wedge + .p-track { padding-left: calc(8 / 1080 * 100cqh + 6px); }
@@ -693,11 +703,6 @@ input, select, textarea { font-family: inherit; }
 .p-item { display: inline-block; padding: 0 calc(10 / 1080 * 100cqh + 4px); }
 .p-sep { display: inline-block; padding: 0 calc(6 / 1080 * 100cqh + 3px); font-size: calc(9 / 1080 * 100cqh + 4px); opacity: 0.7; }
 
-/* Double-decker layout — classic broadcast "chevron" lower-third:
-   BREAKING NEWS banner on top, a dark tag + scrolling row underneath.
-   Every angled piece cuts at the same slope (--dd-cut), so the top
-   banner's trailing edge and the tag's trailing edge always line up
-   into one continuous diagonal, regardless of bar height. */
 .p-ticker-dd {
   flex-direction: column;
   --dd-cut: calc(2.4cqh + 10px);
@@ -745,16 +750,14 @@ input, select, textarea { font-family: inherit; }
   padding-left: calc(var(--dd-cut) + 10px);
 }
 
-/* Split block — solid banner, no shared diagonal; the tag/track sit in a
-   plain rectangular row underneath (flush edges, no chevron). */
+
 .p-dd-split.p-ticker-dd { --dd-cut: 0px; }
 .p-dd-split .p-dd-top,
 .p-dd-split .p-dd-tag { clip-path: none; margin-right: 0; }
 .p-dd-split .p-dd-bottom { margin-top: 0; border-top: 1px solid rgba(0,0,0,0.1); }
 .p-dd-split .p-dd-bottom .p-track { padding-left: calc(10 / 1080 * 100cqh + 6px); }
 
-/* Diagonal stripes accent — flat rectangular banner with a few angled
-   racing-stripe marks on the leading edge, like a broadcast bug. */
+
 .p-dd-stripes.p-ticker-dd { --dd-cut: 0px; }
 .p-dd-stripes .p-dd-top,
 .p-dd-stripes .p-dd-tag { clip-path: none; margin-right: 0; }
@@ -764,8 +767,6 @@ input, select, textarea { font-family: inherit; }
 .p-dd-stripes-mark { display: inline-flex; align-items: stretch; gap: calc(2.5 / 1080 * 100cqh + 2px); margin-right: calc(8 / 1080 * 100cqh + 5px); flex-shrink: 0; height: 55%; }
 .p-dd-stripes-mark span { width: calc(2 / 1080 * 100cqh + 2px); background: currentColor; opacity: 0.55; transform: skewX(-14deg); }
 
-/* Rounded pill tag — the "24/7" tag becomes a soft rounded pill instead of
-   an angled cut; banner stays a plain rectangle. */
 .p-dd-pill.p-ticker-dd { --dd-cut: 0px; }
 .p-dd-pill .p-dd-top { clip-path: none; }
 .p-dd-pill .p-dd-bottom { margin-top: 0; align-items: center; border-top: 1px solid rgba(0,0,0,0.1); padding: calc(4 / 1080 * 100cqh + 2px) 0; }
@@ -788,9 +789,7 @@ input, select, textarea { font-family: inherit; }
   padding: 0 10px;
   perspective: 600px;
 }
-/* Breaking News sting (Sequential): the headline lands from big, soft letters and leaves
-   by shrinking; between the two, a gold BREAKING NEWS assembles, holds, and shrinks away. */
-.single-item-wrap { position: relative; }
+.single-item-wrap { position: relative; align-self: stretch; }
 .single-item:is(.anim-breaking, .anim-shatter) { transform-origin: center; }
 .single-item:is(.anim-breaking, .anim-shatter).phase-in { opacity: 0; transform: scale(1.6); filter: blur(6px); }
 .single-item:is(.anim-breaking, .anim-shatter).phase-hold { opacity: 1; transform: none; filter: none; transition: opacity .45s ease, transform .55s cubic-bezier(.2, .8, .2, 1), filter .45s ease; }
@@ -804,13 +803,15 @@ input, select, textarea { font-family: inherit; }
 /* Shatter sting: the same, but BREAKING NEWS assembles from broken glass (ShatterText) —
    gold shards fly in from all round and land in place, then the whole sting shrinks away. */
 .breaking-sting-shatter { text-shadow: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); animation: breakingStingOut 1.7s ease-in .3s both; }
-.shatter-text { position: relative; display: inline-block; white-space: nowrap; line-height: 1.2; }
+.shatter-text { position: relative; display: inline-block; white-space: nowrap; line-height: 1; }
+.breaking-sting-shatter { letter-spacing: .1em; }
+.breaking-sting-shatter .shatter-text { margin-right: -.1em; } 
 .shatter-text-size { visibility: hidden; }
 .shatter-shard {
   position: absolute; inset: 0; white-space: nowrap;
   background: linear-gradient(180deg, #FFF6B8 0%, #FFD400 48%, #E2A400 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: shardIn .7s cubic-bezier(.2, .8, .2, 1) both;
+  animation: shardIn .45s cubic-bezier(.2, .8, .2, 1) both;
   animation-delay: var(--d, 0s);
 }
 .breaking-sting-shatter .shatter-shard { animation-delay: calc(.3s + var(--d, 0s)); }
@@ -829,6 +830,122 @@ input, select, textarea { font-family: inherit; }
   75% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(.2); }
 }
+.single-item.anim-gold.phase-in { transform: translateX(-100%); }
+.single-item.anim-gold.phase-hold { transform: none; transition: transform .6s cubic-bezier(.4, .1, .2, 1); }
+.single-item.anim-gold.phase-out { opacity: 0; transform: translateX(-100%); transition: opacity .08s linear, transform 0s; }
+.gold-land { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.gold-glow {
+  position: absolute; top: 20%; left: 0; width: 50%; height: 60%; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 236, 140, .9) 0%, rgba(255, 176, 40, .45) 38%, transparent 70%);
+  animation: goldGlow .4s .03s ease-out both;
+}
+.gold-glow::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 46%; height: 8%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .95) 35%, #FFF 50%, rgba(255, 255, 255, .95) 65%, transparent);
+  filter: blur(1px);
+}
+@keyframes goldGlow { 0% { opacity: 0; transform: translateX(-100%); } 25%, 75% { opacity: 1; } 100% { opacity: 0; transform: translateX(200%); } }
+.gold-flash {
+  position: absolute; left: 10%; width: 80%; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .7) 18%, rgba(255, 255, 255, .85) 50%, rgba(255, 255, 255, .7) 82%, transparent);
+  filter: blur(1.5px);
+  animation: goldFlash .42s var(--d) ease-out both;
+}
+@keyframes goldFlash {
+  0% { opacity: 0; transform: translateX(var(--from)) scaleX(.15); }
+  25% { opacity: .75; }
+  70% { opacity: .7; }
+  100% { opacity: 0; transform: translateX(var(--to)) scaleX(1.1); }
+}
+.gold-band {
+  position: absolute; left: 0; top: 28%; width: 100%; height: 50%; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 214, 80, .85) 25%, rgba(255, 236, 140, .95) 50%, rgba(255, 214, 80, .85) 75%, transparent);
+  filter: blur(3px);
+  animation: goldBand .4s .62s ease-out both;
+}
+@keyframes goldBand { 0% { opacity: 0; transform: scaleX(.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: scaleX(1.05); } }
+.gold-topline {
+  position: absolute; top: 0; left: 0; width: 40%; height: 3px; opacity: 0;
+  background: linear-gradient(90deg, transparent, #FFF 50%, transparent);
+  box-shadow: 0 0 .5em .15em rgba(255, 225, 170, .6);
+  animation: goldTopLine 3s 1.2s ease-in-out infinite;
+}
+.gold-topline::after {
+  content: ''; position: absolute; left: 50%; top: 0; width: 1.4em; height: 1.4em; margin: -.7em 0 0 -.7em; border-radius: 50%;
+  background: radial-gradient(circle, #FFF 0 15%, rgba(255, 230, 190, .6) 35%, transparent 70%);
+}
+@keyframes goldTopLine { 0% { opacity: 0; transform: translateX(-100%); } 6%, 34% { opacity: 1; } 40%, 100% { opacity: 0; transform: translateX(250%); } }
+.gold-sting {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  overflow: hidden; pointer-events: none; white-space: nowrap; font-weight: 900; text-transform: uppercase;
+  container-type: size;
+}
+.gold-arrow-track {
+  position: absolute; inset: 0; opacity: 0;
+  animation: goldArrow 1.6s var(--d) linear both;
+}
+@keyframes goldArrow {
+  0% { opacity: 0; transform: translateX(0); }
+  20%, 70% { opacity: .7; }
+  100% { opacity: 0; transform: translateX(52%); }
+}
+.gold-arrow { position: absolute; display: flex; align-items: center; height: calc(var(--size) * 1cqh); }
+.gold-arrow-head {
+  width: calc(var(--size) * .62cqh); height: 100%;
+  background: linear-gradient(180deg, #FFF6C2 0%, #FFD84A 45%, #E0A10E 75%, #B87A06 100%);
+  clip-path: polygon(0 0, 48% 0, 100% 50%, 48% 100%, 0 100%, 52% 50%);
+}
+.gold-bars {
+  position: absolute; inset: 0; transform-origin: 50% 100%;
+  animation: goldPush .85s cubic-bezier(.4, 0, .8, .6) both;
+}
+@keyframes goldPush {
+  0% { transform: scale(.95); }
+  55% { opacity: 1; transform: scale(1.05); filter: blur(0); }
+  100% { opacity: 0; transform: scale(1.15); filter: blur(4px); }
+}
+.gold-bars::before {
+  content: ''; position: absolute; inset: -20% -10% 0;
+  background: radial-gradient(ellipse 60% 70% at 25% 100%, rgba(255, 205, 90, .55), rgba(255, 170, 40, .2) 45%, transparent 75%);
+}
+.gold-bar {
+  position: absolute; opacity: 0; transform-origin: 50% 100%; overflow: hidden;
+  background: linear-gradient(160deg, #FFF6C4 0%, #FFD24A 35%, #E5A814 70%, #B8820C 100%);
+  box-shadow: inset 0 .1em 0 rgba(255, 255, 255, .7), inset -.28em 0 0 rgba(150, 100, 0, .45), 0 0 .45em .08em rgba(255, 212, 90, .75);
+  animation: goldBar .7s var(--d) cubic-bezier(.3, .5, .5, 1) both;
+}
+/* The gleam: a band of white light across the slab, from its left to its right. */
+.gold-bar::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .95) 50%, transparent 65%) no-repeat;
+  background-size: 300% 100%;
+  animation: goldGleam .55s calc(var(--d) + .1s) ease-in-out both;
+}
+@keyframes goldBar {
+  0% { opacity: 0; transform: skewX(var(--tilt)) scaleY(.05); }
+  10% { opacity: 1; }
+  100% { opacity: 1; transform: skewX(var(--tilt)) scaleY(1); }
+}
+@keyframes goldGleam { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.gold-sting-text {
+  position: relative; display: inline-flex; align-items: center; gap: .18em; padding: .2em .08em; font-size: 1.15em; line-height: 1.2; letter-spacing: .02em;
+  background: linear-gradient(180deg, #FFF6C2 0%, #FFD84A 45%, #E0A10E 75%, #B87A06 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 .05em 0 #7A4E00) drop-shadow(0 .08em .12em rgba(0, 0, 0, .5));
+  animation: goldStingText 2.35s ease-out both;
+}
+.gold-sting-chevron {
+  display: inline-block; width: .5em; height: .78em;
+  background: linear-gradient(180deg, #FFF6C2 0%, #FFD84A 45%, #E0A10E 75%, #B87A06 100%);
+  clip-path: polygon(0 0, 48% 0, 100% 50%, 48% 100%, 0 100%, 52% 50%);
+}
+@keyframes goldStingText {
+  0%, 23% { opacity: 0; transform: translateX(-60%) skewX(-12deg); }
+  34% { opacity: 1; transform: translateX(0) skewX(0); }
+  72% { opacity: 1; transform: translateX(5%) skewX(0); animation-timing-function: cubic-bezier(.55, 0, .75, .5); }
+  94%, 100% { opacity: 1; transform: translateX(170%) skewX(-10deg); }
+}
+@media (prefers-reduced-motion: reduce) { .gold-bar, .gold-land, .gold-arrow-track { display: none; } }
 .single-item {
   display: inline-block;
   white-space: nowrap;
@@ -866,11 +983,6 @@ input, select, textarea { font-family: inherit; }
   to { width: 100%; }
 }
 
-/* Preview info */
-
-/* ============================================================
-   ANIMATIONS
-   ============================================================ */
 @keyframes tickerScroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -880,23 +992,14 @@ input, select, textarea { font-family: inherit; }
   50%       { opacity: 0.35; }
 }
 
-/* ============================================================
-   UTILITIES
-   ============================================================ */
 .hidden { display: none !important; }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .p-inner { animation: none !important; }
   .p-badge-dot, .mini-dot { animation: none !important; }
   .single-item { transition: none !important; animation: none !important; }
 }
 
-/* ============================================================
-   TEMPLATE GALLERY (landing page)
-   ============================================================ */
 .gallery {
   height: 100vh;
   display: flex;
@@ -905,16 +1008,8 @@ input, select, textarea { font-family: inherit; }
   overflow: hidden;
 }
 
-/* Coming-soon placeholder */
 
 .gallery-preview-bg { padding: 16px 16px; }
-
-/* Widget gallery's scratch card matches the 16:9 box the preset cards use,
-   instead of the ticker gallery's short fixed-height scratch card. */
-
-/* ============================================================
-   ITEMS EDITOR (single textarea, one item per line)
-   ============================================================ */
 #rssSec {
   flex: 1;
   display: flex;
@@ -1090,8 +1185,6 @@ input, select, textarea { font-family: inherit; }
   padding: 0.35em 0.6em;
   border-radius: var(--radius-sm);
 }
-/* Clamped inside the padding, so a line past the clamp can't show in it under the ellipsis.
-   WidgetView raises the clamps (from 3) while the card has room for more lines. */
 .widget-card-headline-text {
   display: -webkit-box;
   -webkit-line-clamp: var(--head-lines, 3);
@@ -1130,6 +1223,8 @@ input, select, textarea { font-family: inherit; }
 .widget-card-main.phase-out { pointer-events: none; }
 .widget-card-main.phase-in,
 .widget-card-main.phase-out { opacity: 0; }
+.widget-card-main.anim-none.phase-in,
+.widget-card-main.anim-none.phase-out { opacity: 1; }
 .widget-card-main.phase-hold { opacity: 1; transform: none; }
 .widget-card-main.anim-slide-up.phase-in { transform: translateY(20px); }
 .widget-card-main.anim-slide-up.phase-out { transform: translateY(-20px); }
@@ -1159,12 +1254,6 @@ input, select, textarea { font-family: inherit; }
   pointer-events: none;
 }
 @keyframes widgetShine { to { transform: translateX(100%); } }
-
-/* Page sweep: as one item gives way to the next, a glass sheet crosses the card from its
-   top-left corner (a broad translucent sheet with a bright folded edge),
-   while the old item fades out and the new one fades in under it. The layers are 3× the
-   card with the sheet across their middle; a sixth of their size either way puts it on the
-   card's top-left corner at the start and its bottom-right corner at the end. */
 .widget-sweep { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
 .widget-sweep::before {
   content: ''; position: absolute; left: -100%; top: -100%; width: 300%; height: 300%;
@@ -1174,6 +1263,54 @@ input, select, textarea { font-family: inherit; }
 @keyframes widgetSweep { from { transform: translate(-16.7%, -16.7%); } to { transform: translate(28%, 28%); } }
 .widget-card-main.anim-sweep.phase-hold { transition: opacity .2s ease; }
 @media (prefers-reduced-motion: reduce) { .widget-sweep, .breaking-sting { display: none; } .shatter-shard { animation: none; } }
+
+.part-anim, .part-shine { position: relative; }
+.part-w { display: inline-block; padding: .3em .15em; margin: -.3em -.15em; }
+:is(.part-write, .part-flare) .part-w {
+  -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+  mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+  -webkit-mask-size: 250% 100%;
+  mask-size: 250% 100%;
+  -webkit-mask-position: 100% 0;
+  mask-position: 100% 0;
+}
+.phase-hold :is(.part-write, .part-flare) .part-w { animation: partWrite var(--t) var(--d) linear both; }
+.parts-erase :is(.part-write, .part-flare) .part-w { animation: partErase var(--et) var(--ed) linear both; }
+@keyframes partWrite { from { -webkit-mask-position: 100% 0; mask-position: 100% 0; } to { -webkit-mask-position: 0 0; mask-position: 0 0; } }
+@keyframes partErase { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 100% 0; mask-position: 100% 0; } }
+/* Word by word */
+.part-words .part-w { opacity: 0; }
+.phase-hold .part-words .part-w { animation: partWordIn var(--t) var(--d) cubic-bezier(.2, .7, .3, 1) both; }
+.parts-erase .part-words .part-w { animation: partWordOut var(--et) var(--ed) ease-in both; }
+@keyframes partWordIn { from { opacity: 0; transform: translateY(.45em); } to { opacity: 1; transform: none; } }
+@keyframes partWordOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-.3em); } }
+.part-light { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.part-light::before, .part-light::after { content: ''; position: absolute; top: 50%; left: 0; opacity: 0; }
+.part-light::before {
+  width: 2.8em; height: 2.8em; margin: -1.4em 0 0 -1.4em; border-radius: 50%;
+  background: radial-gradient(circle, #FFF 0 7%, rgba(255, 246, 235, .85) 14%, rgba(255, 150, 120, .35) 34%, transparent 66%);
+}
+.part-light::after {
+  width: 10em; height: .16em; margin: -.08em 0 0 -5em;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .7) 50%, transparent);
+}
+.phase-hold .part-light::before, .phase-hold .part-light::after { animation: partLight var(--t) var(--d) ease-in-out both; }
+@keyframes partLight { 0% { left: 0; opacity: 0; } 12%, 85% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+.part-shine::after {
+  content: attr(data-text); position: absolute; inset: 0; pointer-events: none;
+  color: transparent; text-shadow: none;
+  filter: drop-shadow(0 0 .18em rgba(255, 214, 120, .9));
+  background: linear-gradient(100deg, transparent 41%, rgba(255, 196, 70, .9) 46%, #FFF 50%, rgba(255, 196, 70, .9) 54%, transparent 59%) no-repeat;
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: partShine 3.2s ease-in-out infinite;
+}
+@keyframes partShine { 0% { background-position: 100% 0; } 45%, 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .part-w { animation: none !important; opacity: 1 !important; -webkit-mask-image: none !important; mask-image: none !important; }
+  .part-light, .part-shine::after { display: none; }
+}
 
 /* Animations that build the item up part by part: the card itself stays put while
    its title, divider, image and description come in on their own. */

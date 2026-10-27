@@ -1,8 +1,8 @@
-// Text that assembles from broken glass: the words are drawn once per shard, each copy cut to
-// one irregular triangle of the text's box (clip-path), and every shard flies in from its own
-// offset and turn to land in place, slightly after the one before. The cut is the same every
-// time (a fixed seed), so a sting looks the same on every screen.
+import { useLayoutEffect, useRef } from 'react';
 const COLS = 8;
+const CAP_FILL = 0.8;
+const CAP_HEIGHT = 0.72;
+const WIDTH_FILL = 0.94;
 const ROWS = 3;
 
 function seeded(seed) {
@@ -13,7 +13,6 @@ function seeded(seed) {
   };
 }
 
-// The grid's corners, the inner ones nudged so the cracks run crooked like real glass.
 function shards() {
   const rand = seeded(7);
   const point = (c, r) => {
@@ -38,7 +37,7 @@ function shards() {
           dx: `${((cx - 50) * (1.2 + rand())).toFixed(1)}%`,
           dy: `${((cy - 50) * (3 + rand() * 3)).toFixed(1)}%`,
           rot: `${((rand() - 0.5) * 140).toFixed(0)}deg`,
-          delay: `${(rand() * 0.22).toFixed(2)}s`,
+          delay: `${(rand() * 0.14).toFixed(2)}s`,
         });
       }
     }
@@ -49,8 +48,28 @@ function shards() {
 const SHARDS = shards();
 
 export default function ShatterText({ text, style }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const box = el?.parentElement;
+    if (!box) return undefined;
+    const fit = () => {
+      el.style.fontSize = '100px';
+      const widthAt100 = el.offsetWidth;
+      if (!widthAt100 || !box.clientHeight) return;
+      const size = Math.min((box.clientHeight * CAP_FILL) / CAP_HEIGHT, (box.clientWidth * WIDTH_FILL * 100) / widthAt100);
+      el.style.fontSize = `${size.toFixed(1)}px`;
+    };
+    fit();
+    let live = true;
+    document.fonts?.ready.then(() => { if (live) fit(); });
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => { live = false; observer.disconnect(); };
+  }, [text]);
+
   return (
-    <span className="shatter-text" style={style} aria-label={text}>
+    <span ref={ref} className="shatter-text" style={style} aria-label={text}>
       <span className="shatter-text-size" aria-hidden="true">{text}</span>
       {SHARDS.map((s, i) => (
         <span

@@ -6,11 +6,13 @@ export const TEXT_ANIMATIONS = [
   { value: 'typewriter', label: 'Typewriter' },
   { value: 'breaking', label: 'Breaking News sting' },
   { value: 'shatter', label: 'Shatter sting' },
+  { value: 'gold', label: 'Gold sting' },
 ];
 
 // How the widget moves from one item to the next (behavior.transition).
 export const WIDGET_TRANSITIONS = [
   { value: 'fade', label: 'Fade in / out' },
+  { value: 'none', label: 'None (cut)' },
   { value: 'slide-up', label: 'Slide up' },
   { value: 'slide-down', label: 'Slide down' },
   { value: 'push', label: 'Push (slide left)' },
@@ -27,3 +29,14 @@ export const WIDGET_TRANSITIONS = [
   { value: 'sweep', label: 'Page sweep' },
 ];
 export const widgetTransition = (v) => (WIDGET_TRANSITIONS.some((a) => a.value === v) ? v : 'fade');
+
+// How a widget's heading or description comes in and goes out on its own (behavior.headingAnim,
+// behavior.descAnim; PartText.jsx).
+export const PART_ANIMATIONS = [
+  { value: 'none', label: 'No animation' },
+  { value: 'write', label: 'Write on' },
+  { value: 'flare', label: 'Write on + flare' },
+  { value: 'words', label: 'Word by word' },
+  { value: 'shine', label: 'Shine' },
+];
+export const partAnimation = (v) => (PART_ANIMATIONS.some((a) => a.value === v) ? v : 'none');
