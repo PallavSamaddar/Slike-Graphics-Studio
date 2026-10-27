@@ -30,8 +30,12 @@ export const WIDGET_TRANSITIONS = [
 ];
 export const widgetTransition = (v) => (WIDGET_TRANSITIONS.some((a) => a.value === v) ? v : 'fade');
 
-// How a widget's heading or description comes in and goes out on its own (behavior.headingAnim,
-// behavior.descAnim; PartText.jsx).
+export const PART_WISE_TRANSITIONS = ['stagger', 'rise', 'split'];
+export const cardTransition = (v, textWritesOn) => {
+  const t = widgetTransition(v);
+  return textWritesOn && PART_WISE_TRANSITIONS.includes(t) ? 'fade' : t;
+};
+
 export const PART_ANIMATIONS = [
   { value: 'none', label: 'No animation' },
   { value: 'write', label: 'Write on' },

@@ -1,8 +1,8 @@
 // The on-air page loads only the web fonts its graphic uses (Inter always, for its labels),
 // one stylesheet request; Georgia and Courier are system fonts.
 const WEB_FONTS = {
-  Inter: 'Inter:wght@400;500;600;700;800',
-  'Playfair Display': 'Playfair+Display:wght@600;700;800',
+  Inter: 'Inter:wght@400;500;600;700;800;900',
+  'Playfair Display': 'Playfair+Display:wght@600;700;800;900',
   Roboto: 'Roboto:wght@400;500;700',
   Merriweather: 'Merriweather:wght@400;700',
 };

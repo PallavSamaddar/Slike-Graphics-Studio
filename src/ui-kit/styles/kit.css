@@ -243,6 +243,8 @@ tbody tr:hover { background: var(--row-hover); }
 .sel-opt-l { flex: 1; min-width: 0; }
 .sel-opt.off { cursor: default; color: var(--ink-faint); opacity: .55; }
 .sel-opt.off:hover { background: transparent; }
+.sel-opt[aria-disabled="true"] { cursor: not-allowed; color: var(--ink-faint); opacity: .55; }
+.sel-opt[aria-disabled="true"]:hover { background: transparent; }
 .sel-grp {
   padding: 9px 10px 3px; font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .085em;
   text-transform: uppercase; color: var(--ink-faint); cursor: default;

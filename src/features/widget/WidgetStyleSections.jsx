@@ -8,7 +8,8 @@ import { FontSelect, ImagePosition, Stepper, TextFormat } from '../shared-editor
 import { feedMediaOn } from '../../constants/widgetTemplates.js';
 import { autoTextColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
-import { DESC_ANIMATIONS, HEADING_ANIMATIONS, STATIC_ANIMATIONS, WIDGET_TRANSITIONS, descAnimation, headingAnimation, staticAnimation, widgetTransition } from '../../constants/textAnimations.js';
+import { DESC_ANIMATIONS, HEADING_ANIMATIONS, PART_WISE_TRANSITIONS, STATIC_ANIMATIONS, WIDGET_TRANSITIONS, cardTransition, descAnimation, headingAnimation, staticAnimation } from '../../constants/textAnimations.js';
+import { writesWords } from '../../output/PartText.jsx';
 import { baseName, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
 import { uploadVideoWithSdk } from '../../services/uploadSdk.js';
@@ -33,16 +34,18 @@ const TEXTURES = [
 
 export default function WidgetStyleSections({ st, setSt }) {
   const { style: s, headingText: ht, bodyText: bt, behavior } = st;
-  const staticTitle = !!st.staticTitle && st.showFeedDescription === false; // only while descriptions are off
-  // Animated text is always centred (WidgetView): its alignment greys out while it's animated.
+  const staticTitle = !!st.staticTitle && st.showFeedDescription === false; 
   const headingAnimOn = (staticTitle ? descAnimation(behavior.headingAnim) : headingAnimation(behavior.headingAnim)) !== 'none';
+  const textWritesOn = writesWords(staticTitle ? descAnimation(behavior.headingAnim) : headingAnimation(behavior.headingAnim))
+    || (st.showFeedDescription !== false && writesWords(descAnimation(behavior.descAnim)));
+  const transitionOptions = WIDGET_TRANSITIONS.map((o) => (textWritesOn && PART_WISE_TRANSITIONS.includes(o.value)
+    ? { ...o, disabled: true, title: 'Not with a written-on text animation — the words come in on their own' }
+    : o));
   const isVideo = !!(s.texture && s.texture.startsWith('video'));
   const setStyle = (k, v) => setSt((state) => ({ ...state, style: { ...state.style, [k]: v } }));
   const setHt = (k, v) => setSt((state) => ({ ...state, headingText: { ...state.headingText, [k]: v } }));
   const setBt = (k, v) => setSt((state) => ({ ...state, bodyText: { ...state.bodyText, [k]: v } }));
   const setBehavior = (k, v) => setSt((state) => ({ ...state, behavior: { ...state.behavior, [k]: v } }));
-  // Picking a solid Background Colour should actually be visible — clear any
-  // preset gradient, which otherwise always wins over the solid `bg` value.
   const setSolidBg = (v) => setSt((state) => ({ ...state, style: { ...state.style, bg: v, bgGradient: null } }));
   const setHeadingBgColor = (v) => setSt((state) => ({ ...state, style: { ...state.style, headingBg: v, headingBgGradient: null } }));
   const setDescBgColor = (v) => setSt((state) => ({ ...state, style: { ...state.style, descBg: v, descBgGradient: null } }));
@@ -52,16 +55,12 @@ export default function WidgetStyleSections({ st, setSt }) {
   const [bgTab, setBgTab] = useState(isVideo ? 'video' : 'animation');
   const { videos: uploadedVideos, refresh: refreshUploaded } = useUploadedVideos(bgTab === 'video');
 
-  // Video files are too large to reasonably hold as base64 in state — use an object URL
-  // instead (valid for this browser session).
   const handleVideoUpload = (e) => {
     const file = takeFile(e);
     if (!file) return;
     setPendingVideo({ url: URL.createObjectURL(file), file, fileName: baseName(file) });
   };
 
-  // Uploaded through the Slike upload SDK as a Slike media. It plays from the local copy;
-  // the media's id is kept when the upload ends.
   const confirmVideoUpload = (name) => {
     const { url, file } = pendingVideo;
     setPendingVideo(null);
@@ -72,8 +71,6 @@ export default function WidgetStyleSections({ st, setSt }) {
     }).then(refreshUploaded);
   };
 
-  // An earlier upload, picked from the list: on air it streams from its CDN folder
-  // (<base>/hls/master.m3u8, output/GraphicVideo.jsx); the media id is the Cleo fallback.
   const pickUploadedVideo = (media) => setSt((state) => ({
     ...state,
     style: {
@@ -86,8 +83,6 @@ export default function WidgetStyleSections({ st, setSt }) {
     },
   }));
   const pickedUploaded = (media) => s.texture === 'video-custom' && s.customVideoMediaId === media.id;
-  // A just-finished upload (or a graphic saved before the base was kept) learns its CDN base
-  // once the uploaded list holds it, so on air it streams instead of loading the Cleo player.
   const pickedBase = uploadedVideos.find((m) => m.id === s.customVideoMediaId)?.cdn?.[0]?.base;
   useEffect(() => {
     if (pickedBase && !s.customVideoBase) setStyle('customVideoBase', pickedBase);
@@ -131,7 +126,7 @@ export default function WidgetStyleSections({ st, setSt }) {
               <TextColorButton kind="fill" value={s.bg} fallback="#8A1B12" bar={s.bgGradient || s.bg} onChange={setSolidBg} label="Card background" />
             </Field>
             <Field path="behavior.transition" className="cs-wide">
-              <Select value={widgetTransition(behavior.transition)} options={WIDGET_TRANSITIONS} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" title="Transition between items" />
+              <Select value={cardTransition(behavior.transition, textWritesOn)} options={transitionOptions} onChange={(v) => setBehavior('transition', v)} ariaLabel="Transition between items" title="Transition between items" />
             </Field>
             <Field path="behavior.itemDuration">
               <Stepper value={Math.max(MIN_ITEM_SECONDS, behavior.itemDuration || MIN_ITEM_SECONDS)} display={(v) => `${v}s`} step={1} min={MIN_ITEM_SECONDS} max={30} onChange={(v) => setBehavior('itemDuration', v)} label="duration" title="How long each item stays on screen" />
@@ -167,7 +162,6 @@ export default function WidgetStyleSections({ st, setSt }) {
             <Field path="headingText.fontFamily" className="cs-wide">
               <FontSelect tx={ht} setTx={setHt} label="Heading" />
             </Field>
-            {/* How it comes in and goes out (PartText) — with a static title the items' titles sit in the body: the body's animations. */}
             <Field path="behavior.headingAnim" className="cs-wide">
               {staticTitle ? (
                 <Select value={descAnimation(behavior.headingAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How each item's title comes in and goes out" />

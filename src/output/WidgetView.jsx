@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { autoTextColor, parseColor, textShadowFor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
 import { MIN_ITEM_SECONDS, feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTemplates.js';
-import { descAnimation, headingAnimation, staticAnimation, widgetTransition } from '../constants/textAnimations.js';
+import { cardTransition, descAnimation, headingAnimation, staticAnimation } from '../constants/textAnimations.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
 import GraphicVideo, { uploadStream } from './GraphicVideo.jsx';
@@ -12,7 +12,8 @@ const TRANSITION_MS = 200;
 
 const MIN_LINES = 3;
 const MAX_HEAD_LINES = 6;
-const MAX_SUMMARY_LINES = 12;
+const MAX_SUMMARY_LINES = 4;
+const MAX_DESC_SCALE = 1.6;
 export default function WidgetView({ st, preview = false }) {
   const { style: s, headingText: ht, bodyText: bt } = st;
   const fromFeed = st.src !== 'manual';
@@ -26,14 +27,16 @@ export default function WidgetView({ st, preview = false }) {
     .filter((line) => line.title.trim());
   const items = lines.map((line) => line.title);
 
-  const transition = widgetTransition(st.behavior?.transition);
   const durationSec = Math.max(MIN_ITEM_SECONDS, st.behavior?.itemDuration || MIN_ITEM_SECONDS);
   const headingAnim = headingAnimation(st.behavior?.headingAnim);
   const descAnim = descAnimation(st.behavior?.descAnim);
   const bodyTitleAnim = descAnimation(st.behavior?.headingAnim);
   // Static title only while descriptions are off.
   const staticTitle = !!st.staticTitle && st.showFeedDescription === false;
-  const eraseMs = writesWords(headingAnim) || writesWords(descAnim) || (staticTitle && writesWords(bodyTitleAnim)) ? ERASE_MS : 0;
+  const textWritesOn = writesWords(headingAnim) || (!hideDescriptions && writesWords(descAnim)) || (staticTitle && writesWords(bodyTitleAnim));
+  const transition = cardTransition(st.behavior?.transition, textWritesOn);
+  const cardMoves = !['fade', 'none', 'sweep'].includes(transition);
+  const eraseMs = !cardMoves && textWritesOn ? ERASE_MS : 0;
   const [activeIndex, setActiveIndex] = useState(0);
   const [phase, setPhase] = useState('in');
   const [erasing, setErasing] = useState(false);
@@ -101,16 +104,15 @@ export default function WidgetView({ st, preview = false }) {
     background: s.staticBg || '#FFFFFF',
     '--label-bg': s.staticBg || '#FFFFFF',
     color: s.staticColor || '#B5000F',
-    textShadow: 'none',
+    textShadow: '0 .06em .08em rgba(0, 0, 0, .45)',
     textAlign: 'center',
     lineHeight: headingStyle.lineHeight,
     fontFamily: ht.fontFamily,
-    fontWeight: ht.fontWeight,
+    fontWeight: 900, 
   };
   const titleBodyStyle = {
     color: ht.color || bodyTextColor,
     textShadow: textShadowFor(ht.color || bodyTextColor),
-    background: s.headingBgGradient || s.headingBg || undefined,
     textAlign: bodyTitleAnim !== 'none' ? 'center' : ht.align,
     lineHeight: headingStyle.lineHeight,
     fontFamily: ht.fontFamily,
@@ -264,16 +266,24 @@ function useFitLines(stageRef, st) {
       stage.style.setProperty('--summary-lines', summary);
     };
     const fits = (head, summary) => { set(head, summary); return tallest() <= stage.clientHeight; };
-    const fit = () => {
+    const scaleFits = (scale) => { stage.style.setProperty('--desc-scale', scale); return tallest() <= stage.clientHeight; };
+    const fitLines = () => {
       // Most cards (short text) fit even at the most lines: one measure, done.
       if (fits(MAX_HEAD_LINES, MAX_SUMMARY_LINES)) return;
       let head = MIN_LINES;
-      let summary = MIN_LINES;
+      let summary = Math.min(MIN_LINES, MAX_SUMMARY_LINES);
       while (summary > 1 && !fits(head, summary)) summary--;
       while (head > 1 && !fits(head, summary)) head--;
       while (head < MAX_HEAD_LINES && fits(head + 1, summary)) head++;
       while (summary < MAX_SUMMARY_LINES && fits(head, summary + 1)) summary++;
       set(head, summary);
+    };
+    const fit = () => {
+      stage.style.setProperty('--desc-scale', 1);
+      fitLines();
+      let scale = 1;
+      while (scale < MAX_DESC_SCALE - 0.01 && scaleFits(+(scale + 0.1).toFixed(1))) scale = +(scale + 0.1).toFixed(1);
+      stage.style.setProperty('--desc-scale', scale);
     };
     fit();
     let live = true;
@@ -317,8 +327,9 @@ function useItemScroll(stageRef, scrollRef, deps) {
     const measure = () => {
       let ms = 0;
       if (line) {
-        const dist = Math.max(0, Math.ceil(line.scrollWidth - line.clientWidth));
         const fontPx = parseFloat(getComputedStyle(line).fontSize) || 16;
+        const over = Math.ceil(line.scrollWidth - line.clientWidth);
+        const dist = over > fontPx / 2 ? over : 0;
         const lineMs = dist ? Math.max(600, (dist / (fontPx * SCROLL_EMS)) * 1000) : 0;
         line.style.setProperty('--scroll-dist', `${dist}px`);
         line.style.setProperty('--scroll-ms', `${Math.round(lineMs)}ms`);
@@ -326,10 +337,15 @@ function useItemScroll(stageRef, scrollRef, deps) {
       }
       tall = boxes.filter((box) => {
         const text = box.querySelector('.widget-card-headline-text, .widget-card-summary-text');
-        const dist = text ? Math.ceil(text.scrollHeight - text.clientHeight) : 0;
-        if (dist <= 1) return false;
+        if (!text) return false;
         const cs = getComputedStyle(text);
         const linePx = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 16) * 1.3;
+        const shown = text.clientHeight;
+        text.style.maxHeight = 'none';
+        const full = text.offsetHeight;
+        text.style.maxHeight = '';
+        const dist = Math.ceil(full - shown);
+        if (dist < linePx / 2) return false;
         const boxMs = Math.max(600, (dist / (linePx * SCROLL_LINES)) * 1000);
         box.style.setProperty('--vdist', `${dist}px`);
         box.style.setProperty('--vms', `${Math.round(boxMs)}ms`);

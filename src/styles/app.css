@@ -102,6 +102,7 @@ body.player-body {
 .player-widget .widget-card-headline { font-size: max(clamp(24px, 5cqh, 60px), calc(26px / var(--fill-scale, 1))); }
 .player-widget .widget-card-summary { font-size: max(clamp(16px, 3.4cqh, 38px), calc(22px / var(--fill-scale, 1))); }
 .player-widget .widget-card-title-body { font-size: max(clamp(24px, 5cqh, 60px), calc(26px / var(--fill-scale, 1))); }
+.player-widget .widget-static-title .widget-card-headline { font-size: max(clamp(34px, 7cqh, 84px), calc(34px / var(--fill-scale, 1))); }
 .player-widget .widget-card-category { font-size: max(clamp(11.5px, 1.8cqh, 20px), calc(18px / var(--fill-scale, 1))); }
 .player-widget .widget-card-footer { font-size: max(clamp(12.5px, 2cqh, 22px), calc(18px / var(--fill-scale, 1))); }
 .player-widget .widget-card-thumb { max-height: clamp(150px, 30cqh, 420px); }
@@ -1192,17 +1193,18 @@ input, select, textarea { font-family: inherit; }
 /* The ticker's top light (.p-top-light), along the heading bar's top edge, kept inside its corners. */
 .widget-card-headline.has-top-light { position: relative; overflow: hidden; }
 .widget-card-headline-text {
-  display: -webkit-box;
-  -webkit-line-clamp: var(--head-lines, 3);
-  line-clamp: var(--head-lines, 3);
-  -webkit-box-orient: vertical;
+  /* as many lines as fit (WidgetView's useFitLines), cut at their bottom — no … — the rest scrolling
+     up into view (useItemScroll); 1lh where known, the default line height otherwise */
+  display: block;
+  max-height: calc(var(--head-lines, 3) * 1.25em);
+  max-height: calc(var(--head-lines, 3) * 1lh);
   overflow: hidden;
 }
-/* With a description under it, the heading keeps to one line, … at its end; after a moment
+/* With a description under it, the heading keeps to one line, cut at its end; after a moment
    (WidgetView's useHeadlineScroll sets data-scrolling, the distance and the time) its words slide
    as one piece until their end shows — a transform, so it's smooth — and stay there. */
-.headline-scroll { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.headline-scroll > .headline-scroll-text { display: inline; overflow: visible; -webkit-line-clamp: none; line-clamp: none; }
+.headline-scroll { display: block; overflow: hidden; white-space: nowrap; }
+.headline-scroll > .headline-scroll-text { display: inline; overflow: visible; max-height: none; }
 .headline-scroll[data-scrolling] > .headline-scroll-text {
   display: inline-block; will-change: transform;
   animation: headlineScroll var(--scroll-ms, 0ms) linear forwards;
@@ -1210,7 +1212,7 @@ input, select, textarea { font-family: inherit; }
 @keyframes headlineScroll { to { transform: translateX(calc(-1 * var(--scroll-dist, 0px))); } }
 :is(.widget-card-headline, .widget-card-summary)[data-vscroll] { box-sizing: border-box; height: var(--vbox); overflow: hidden; }
 :is(.widget-card-headline, .widget-card-summary)[data-vscroll] > :is(.widget-card-headline-text, .widget-card-summary-text) {
-  display: block; -webkit-line-clamp: none; line-clamp: none; overflow: visible; will-change: transform;
+  display: block; max-height: none; overflow: visible; will-change: transform;
   animation: textScrollUp var(--vms, 0ms) linear forwards;
 }
 @keyframes textScrollUp { to { transform: translateY(calc(-1 * var(--vdist, 0px))); } }
@@ -1233,13 +1235,20 @@ input, select, textarea { font-family: inherit; }
 /* Static title: the fixed title label (the card's full width, its words centred), and each item's title
    under it in the description's place — at the heading's size, full strength. */
 .widget-static-title { align-self: stretch; }
+/* Raised: an edge in its text colour and a soft shadow under it, so it stands out as the heading. */
+.widget-static-title .widget-card-headline {
+  font-size: clamp(19px, 7cqi, 34px); /* about 1.4x a heading: the biggest words on the card */
+  box-shadow: 0 .14em 0 currentColor, 0 .3em .8em rgba(0, 0, 0, .35);
+}
 .widget-card-summary.widget-card-title-body { font-size: clamp(14px, 5cqi, 24px); opacity: 1; }
+/* a title stays at the heading's size (the description's growing font isn't for it), under the static heading */
+.widget-card-title-body .widget-card-summary-text { font-size: 1em; }
 /* clamped inside any padding, so a line past the clamp can't peek out under it */
 .widget-card-summary-text {
-  display: -webkit-box;
-  -webkit-line-clamp: var(--summary-lines, 3);
-  line-clamp: var(--summary-lines, 3);
-  -webkit-box-orient: vertical;
+  display: block;
+  font-size: calc(1em * var(--desc-scale, 1)); /* grown to the card's room (WidgetView's useFitLines) */
+  max-height: calc(var(--summary-lines, 3) * 1.5em);
+  max-height: calc(var(--summary-lines, 3) * 1lh);
   overflow: hidden;
 }
 .widget-card-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
@@ -1300,13 +1309,14 @@ input, select, textarea { font-family: inherit; }
   -webkit-mask-position: 100% 0;
   mask-position: 100% 0;
 }
-.phase-hold :is(.part-write, .part-flare, .part-flash, .part-flashwrite) .part-w { animation: partWrite var(--t) var(--d) linear both; }
+/* written on in the hold, and still written through the way out (a card that moves takes them with it) */
+:is(.phase-hold, .phase-out) :is(.part-write, .part-flare, .part-flash, .part-flashwrite) .part-w { animation: partWrite var(--t) var(--d) linear both; }
 .parts-erase :is(.part-write, .part-flare, .part-flash, .part-flashwrite) .part-w { animation: partErase var(--et) var(--ed) linear both; }
 @keyframes partWrite { from { -webkit-mask-position: 100% 0; mask-position: 100% 0; } to { -webkit-mask-position: 0 0; mask-position: 0 0; } }
 @keyframes partErase { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 100% 0; mask-position: 100% 0; } }
 /* Word by word */
 .part-words .part-w { opacity: 0; }
-.phase-hold .part-words .part-w { animation: partWordIn var(--t) var(--d) cubic-bezier(.2, .7, .3, 1) both; }
+:is(.phase-hold, .phase-out) .part-words .part-w { animation: partWordIn var(--t) var(--d) cubic-bezier(.2, .7, .3, 1) both; }
 .parts-erase .part-words .part-w { animation: partWordOut var(--et) var(--ed) ease-in both; }
 @keyframes partWordIn { from { opacity: 0; transform: translateY(.45em); } to { opacity: 1; transform: none; } }
 @keyframes partWordOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-.3em); } }
@@ -1376,7 +1386,14 @@ input, select, textarea { font-family: inherit; }
 .phase-hold .heading-sweep { animation: headingSweep 3.5s var(--d) ease-in-out infinite; }
 .parts-erase .heading-sweep { animation: none; }
 @keyframes headingSweep { 0% { background-position: 100% 0; } 32%, 100% { background-position: 0 0; } }
-.part-glintflash-box { position: relative; }
+.part-glintflash-box { position: relative; z-index: 0; }
+/* The words' drop shadow, on a copy under them (z-index -1, inside the box): the letters themselves
+   are painted by the light (transparent fill), so a text-shadow of their own would dull them. */
+.part-glintflash-box::before {
+  content: attr(data-text); position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  color: transparent; -webkit-text-fill-color: transparent;
+  text-shadow: 0 .06em .08em rgba(0, 0, 0, .45), 0 0 .3em rgba(0, 0, 0, .15);
+}
 .part-glintflash {
   --dot-y: 40%;
   text-shadow: none;

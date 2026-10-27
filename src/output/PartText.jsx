@@ -17,7 +17,7 @@ export default function PartText({ text, anim, className, delay = 0, pace = 1 })
   if (anim === 'shine') return <span className={className + ' part-shine'} data-text={text}>{text}</span>;
   if (anim === 'glintflash') {
     return (
-      <span className={className + ' part-glintflash-box'}>
+      <span className={className + ' part-glintflash-box'} data-text={text}>
         <span className="part-glintflash" data-text={text}>{text}</span>
       </span>
     );
