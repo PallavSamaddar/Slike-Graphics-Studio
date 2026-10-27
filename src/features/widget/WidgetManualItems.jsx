@@ -23,10 +23,32 @@ export const writeManualItems = (s, list) => {
     media: { ...s.media, manual: list.map((item) => item.media) },
   };
 };
+function ManualLines({ st, setSt }) {
+  const titles = st.drafts?.manual?.length ? st.drafts.manual : [''];
+  const count = titles.filter((t) => t.trim()).length;
+  const setLines = (text) => setSt((s) => {
+    const prev = readManualItems(s);
+    return writeManualItems(s, text.split('\n').map((title, i) => ({ title, description: prev[i]?.description || '', media: prev[i]?.media || null })));
+  });
+  return (
+    <div className="manual-items manual-lines">
+      <Field label={<>News items, one per line <span className="req-mark">*</span>{count > 0 && <span className="manual-lines-count"> · {count}</span>}</>} grow path="drafts.manual.0">
+        <textarea
+          className="manual-item-desc"
+          rows={10}
+          placeholder="Paste or type the news — one item per line"
+          value={titles.join('\n')}
+          onChange={(e) => setLines(e.target.value)}
+        />
+      </Field>
+    </div>
+  );
+}
 
 export default function WidgetManualItems({ st, setSt }) {
   const upload = useMediaUpload();
   const items = readManualItems(st);
+  if (st.showFeedDescription === false) return <ManualLines st={st} setSt={setSt} />;
 
   const update = (fn) => setSt((s) => writeManualItems(s, fn(readManualItems(s))));
   const setField = (i, key, value) => update((list) => list.map((item, j) => (j === i ? { ...item, [key]: value } : item)));
