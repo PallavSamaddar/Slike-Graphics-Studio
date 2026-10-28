@@ -174,7 +174,25 @@ html.in-frame .shell .studio-detail { --studio-top: 0px; --studio-col-h: calc(10
 .img-tile-empty svg { width: 18px; height: 18px; }
 .manual-item-text { display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; }
 .manual-lines .field { flex: 1 1 auto; display: flex; flex-direction: column; }
-.manual-lines textarea.manual-item-desc { flex: 1 1 auto; min-height: 220px; resize: vertical; line-height: 1.6; }
+.manual-lines-box { --gutter: 38px; position: relative; flex: 1 1 auto; display: flex; flex-direction: column; border-radius: var(--r-control); background: var(--panel); }
+.manual-lines-box::before {
+  content: ""; position: absolute; top: 1px; bottom: 1px; left: 1px; width: var(--gutter);
+  border-radius: var(--r-control) 0 0 var(--r-control); background: var(--surface-soft); border-right: 1px solid var(--card-line);
+}
+.manual-lines textarea.manual-item-desc {
+  position: relative; z-index: 1; flex: 1 1 auto; min-height: 220px; resize: vertical; line-height: 1.8;
+  padding: 10px 14px 10px calc(var(--gutter) + 12px); background: transparent;
+}
+.manual-lines-gutter {
+  position: absolute; top: 0; left: 0; bottom: 0; right: var(--sb, 0px); overflow: hidden; pointer-events: none;
+  border: 1px solid transparent; padding: 10px 14px 10px calc(var(--gutter) + 12px); font: inherit; font-size: var(--fs-md); line-height: 1.8;
+  white-space: pre-wrap; overflow-wrap: break-word; color: transparent;
+}
+.manual-lines-row { position: relative; margin-left: calc(-1 * var(--gutter) - 12px); padding-left: calc(var(--gutter) + 12px); }
+.manual-lines-row[data-n]::before {
+  content: attr(data-n); position: absolute; top: 0; left: 0; width: var(--gutter); text-align: center;
+  font-size: .85em; line-height: calc(1.8em / .85); color: var(--ink-faint); font-variant-numeric: tabular-nums;
+}
 .manual-lines-count { color: var(--ink-faint); font-weight: var(--fw-medium); }
 .manual-items-list { flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-12); margin-right: -8px; padding-right: 6px; scrollbar-width: thin; }
 .manual-item { --item-card-bg: #F5F5F5; display: flex; flex-direction: column; gap: var(--space-12); padding: var(--space-12) var(--space-14); border: 1px solid var(--card-line); border-radius: var(--r-card); background: var(--item-card-bg); }
@@ -186,11 +204,8 @@ html.in-frame .shell .studio-detail { --studio-top: 0px; --studio-col-h: calc(10
 .manual-item-remove svg { width: 14px; height: 14px; }
 .manual-item .field textarea.manual-item-desc { width: 100%; }
 .manual-items-divider { height: 1px; background: var(--line); }
-.btn.ghost.manual-items-add {
-  align-self: flex-end; display: inline-flex; align-items: center; gap: 6px;
-  border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: var(--fw-semibold);
-}
-.btn.ghost.manual-items-add:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.btn.manual-items-add { align-self: flex-end; display: inline-flex; align-items: center; gap: 6px; }
+.btn.manual-items-add:disabled { filter: none; box-shadow: none; transform: none; }
 .manual-items-add svg { width: 14px; height: 14px; }
 
 .show-bar { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 5px 8px; background: var(--panel); border: 1px solid var(--card-line); border-radius: var(--r-card); }

@@ -691,8 +691,6 @@ input, select, textarea { font-family: inherit; }
 }
 @keyframes topLight { 0% { opacity: 0; transform: translateX(-100%); } 6%, 70% { opacity: 1; } 78%, 100% { opacity: 0; transform: translateX(333%); } }
 @media (prefers-reduced-motion: reduce) { .p-top-light { display: none; } }
-/* Small gap after a wedge badge — its angled point otherwise touches the
-   scrolling text with no breathing room. */
 .p-badge-wedge + .p-track { padding-left: calc(8 / 1080 * 100cqh + 6px); }
 .p-inner {
   display: inline-flex;
@@ -951,9 +949,6 @@ input, select, textarea { font-family: inherit; }
   max-width: 100%;
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
-/* A headline too long for the bar even at its smallest (SingleItemTicker) scrolls left, after a
-   moment still, until its end shows, and stays there through its way out (the same animation
-   keeps running from hold to out, so it doesn't jump back). */
 .single-item-text { display: inline-block; }
 .single-item:is(.phase-hold, .phase-out) > .single-item-text {
   animation: singleItemScroll var(--scroll-ms, 0ms) linear var(--scroll-delay, 0ms) forwards;
@@ -1248,14 +1243,16 @@ input, select, textarea { font-family: inherit; }
 .widget-card-summary.has-bg { padding: 0.35em 0.6em; border-radius: var(--radius-sm); }
 .widget-static-title { align-self: stretch; }
 .widget-static-title .widget-card-headline {
-  font-size: clamp(19px, 7cqi, 34px); /* about 1.4x a heading: the biggest words on the card */
+  font-size: clamp(19px, 7cqi, 34px); 
+  padding: .12em .5em;
+  border-radius: 4px 4px 0 0;
   box-shadow: 0 .14em 0 currentColor, 0 .3em .8em rgba(0, 0, 0, .35);
 }
 .widget-card-summary.widget-card-title-body { font-size: clamp(14px, 5cqi, 24px); opacity: 1; }
 .widget-card-title-body .widget-card-summary-text { font-size: 1em; }
 .widget-card-summary-text {
   display: block;
-  font-size: calc(1em * var(--desc-scale, 1)); /* grown to the card's room (WidgetView's useFitLines) */
+  font-size: calc(1em * var(--desc-scale, 1));
   max-height: calc(var(--summary-lines, 3) * 1.5em);
   max-height: calc(var(--summary-lines, 3) * 1lh);
   overflow: hidden;
@@ -1354,7 +1351,7 @@ input, select, textarea { font-family: inherit; }
 }
 @keyframes partShine { 0% { background-position: 100% 0; } 45%, 100% { background-position: 0 0; } }
 .widget-card-headline.has-flash { position: relative; overflow: hidden; }
-.widget-card-headline.heading-label { border-radius: 2px; box-shadow: 0 .12em 0 currentColor; }
+.widget-card-headline.heading-label { box-shadow: 0 .12em 0 currentColor; }
 .heading-flash {
   position: absolute; top: 50%; left: 0; width: 7em; height: 3.4em; margin: -1.7em 0 0 -3.5em; opacity: 0; pointer-events: none;
   background: radial-gradient(ellipse at center, rgba(255, 170, 110, .75) 0%, rgba(255, 90, 50, .35) 32%, transparent 68%);
@@ -1370,9 +1367,6 @@ input, select, textarea { font-family: inherit; }
 }
 .phase-hold .heading-flash { animation: headingFlash var(--t) var(--d) ease-in-out both; }
 @keyframes headingFlash { 0% { left: 0; opacity: 0; } 10%, 85% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
-/* The description's Flash + write on (WidgetView's DescFlash): a big warm glow round a white-hot
-   core crosses the description along its first line as the words are written on behind it. The
-   description shows at full strength with it; inside a box of its own, the flash stays in the box. */
 .widget-card-summary.has-descflash { position: relative; opacity: 1; }
 .widget-card-summary.has-descflash.has-bg { overflow: hidden; }
 .desc-flash {
@@ -1397,8 +1391,6 @@ input, select, textarea { font-family: inherit; }
 .parts-erase .heading-sweep { animation: none; }
 @keyframes headingSweep { 0% { background-position: 100% 0; } 32%, 100% { background-position: 0 0; } }
 .part-glintflash-box { position: relative; z-index: 0; }
-/* The words' drop shadow, on a copy under them (z-index -1, inside the box): the letters themselves
-   are painted by the light (transparent fill), so a text-shadow of their own would dull them. */
 .part-glintflash-box::before {
   content: attr(data-text); position: absolute; inset: 0; z-index: -1; pointer-events: none;
   color: transparent; -webkit-text-fill-color: transparent;
@@ -1746,7 +1738,6 @@ input, select, textarea { font-family: inherit; }
   100% { background-position: -140% -140%; }
 }
 
-/* Circular Sweep — concentric rings expanding outward */
 .widget-texture-circular-sweep {
   background-image:
     repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.16) 0px, rgba(255,255,255,0.16) 1.5px, transparent 1.5px, transparent 26px);
@@ -1853,8 +1844,6 @@ input, select, textarea { font-family: inherit; }
   100% { transform: scale(1.1) translate(3%, -3%); }
 }
 
-/* Background drift — always animated in the live widget canvas. Scaled up
-   first so the pan/rotate never reveals an edge. */
 .widget-canvas .widget-frame-card > [class^="widget-texture-"]:not(.widget-texture-none):not(.widget-texture-wave-flow):not(.widget-texture-light-trails):not(.widget-texture-circular-sweep):not(.widget-texture-arrow-motion):not(.widget-texture-radar-sweep):not(.widget-texture-grid-pulse):not(.widget-texture-data-stream):not(.widget-texture-bokeh-glow) {
   transform: scale(1.15);
   animation-name: widgetTextureDrift;
@@ -2033,9 +2022,6 @@ input, select, textarea { font-family: inherit; }
   justify-content: center;
   gap: 10px;
 }
-/* Room to spare is shared evenly — above the heading, between it (with its divider) and the body,
-   and below the body — rather than all above and below, so a short description doesn't sit
-   bunched up in the middle. (Auto margins share it; one part alone sits centred.) */
 .widget-card-main > :first-child { margin-top: auto; }
 .widget-card-main > .widget-card-body { margin-top: auto; }
 .widget-card-main > :last-child { margin-bottom: auto; }
@@ -2053,18 +2039,16 @@ input, select, textarea { font-family: inherit; }
   display: flex;
   justify-content: center;
   overflow: hidden;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
 }
 .widget-card-thumb {
   display: block;
+  border-radius: 4px;
   width: 100%;
   height: auto;
   max-height: 150px;
   object-fit: contain;
 }
-/* Slow zoom: in over the item's time on screen (WidgetView sets the duration), then back out,
-   and so on for as long as the image stays (one item, or the same image again); easing at
-   each turn so it never stops dead. A new item's image starts again from the zoomed-out end. */
 .widget-card-thumb.slow-zoom { animation: widgetSlowZoom ease-in-out infinite alternate; }
 @keyframes widgetSlowZoom { from { transform: scale(1); } to { transform: scale(1.12); } }
 
@@ -2146,10 +2130,6 @@ input, select, textarea { font-family: inherit; }
   flex-direction: column;
   box-shadow: 0 0 0 1px var(--border);
 }
-/* Mini/gallery preview textures stay static until hovered, so the grid
-   doesn't feel busy. Every texture keyframe animation — the shared drift
-   below and each texture's own (arrow motion, radar sweep, etc.) — is
-   paused by default inside a gallery card and only runs on hover. */
 .widget-mini > [class^="widget-texture-"] { animation-play-state: paused; }
 .tpl-choice:hover .widget-mini > [class^="widget-texture-"] { animation-play-state: running; }
 .widget-mini > [class^="widget-texture-"]:not(.widget-texture-none):not(.widget-texture-wave-flow):not(.widget-texture-light-trails):not(.widget-texture-circular-sweep):not(.widget-texture-arrow-motion):not(.widget-texture-radar-sweep):not(.widget-texture-grid-pulse):not(.widget-texture-data-stream):not(.widget-texture-bokeh-glow) {
