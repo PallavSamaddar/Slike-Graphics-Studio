@@ -12,7 +12,11 @@ export default function ImageUpload({ src, name, onFile, onRemove, tile = false 
   if (tile) {
     return src ? (
       <div className="img-tile" title={name || 'Untitled image'}>
-        <img src={src} alt="" />
+        <img
+          src={src}
+          alt=""
+          onLoad={(e) => { const img = e.currentTarget; if (img.naturalWidth) img.parentElement.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`; }}
+        />
         <button type="button" className="img-tile-remove" onClick={onRemove} title="Remove image" aria-label="Remove image"><RemoveIcon /></button>
       </div>
     ) : (

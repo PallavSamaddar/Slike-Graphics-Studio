@@ -130,6 +130,7 @@ export default function WidgetView({ st, preview = false }) {
                 style={s.imageSlowZoom ? { animationDuration: `${durationSec}s` } : undefined}
                 src={image}
                 alt=""
+                onLoad={(e) => { const img = e.currentTarget; if (img.naturalWidth) img.parentElement.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`; }}
                 onError={(e) => { if (feedMedia && e.currentTarget.src !== standIn) e.currentTarget.src = standIn; }}
               />
             </div>
