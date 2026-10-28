@@ -71,20 +71,25 @@ export default function WidgetManualItems({ st, setSt }) {
             <div className="manual-item-hd">
               <span className="manual-item-num">Item {i + 1}</span>
               {items.length > 1 && (
-                <button type="button" className="manual-item-remove" onClick={() => remove(i)} title="Remove this item" aria-label={`Remove item ${i + 1}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                <button type="button" className="manual-item-remove" onClick={() => remove(i)} title="Delete this item" aria-label={`Delete item ${i + 1}`}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" /></svg>
                 </button>
               )}
             </div>
-            <Field label={<>Title <span className="req-mark">*</span></>} grow path={`drafts.manual.${i}`}>
-              <input type="text" placeholder="Enter title here" value={item.title} onChange={(e) => setField(i, 'title', e.target.value)} />
-            </Field>
-            <Field label="Description" grow>
-              <textarea className="manual-item-desc" rows={2} placeholder="Enter description (optional)" value={item.description} onChange={(e) => setField(i, 'description', e.target.value)} />
-            </Field>
-            <Field label="Image">
-              <ImageUpload src={item.media?.url} name={item.media?.name} onFile={(file) => pickImage(i, file)} onRemove={() => setField(i, 'media', null)} />
-            </Field>
+            {/* Title and description on the left, the image on their right. */}
+            <div className="manual-item-body">
+              <div className="manual-item-text">
+                <Field label={<>Title <span className="req-mark">*</span></>} grow path={`drafts.manual.${i}`}>
+                  <input type="text" placeholder="Enter title here" value={item.title} onChange={(e) => setField(i, 'title', e.target.value)} />
+                </Field>
+                <Field label="Description" grow>
+                  <textarea className="manual-item-desc" rows={2} placeholder="Enter description (optional)" value={item.description} onChange={(e) => setField(i, 'description', e.target.value)} />
+                </Field>
+              </div>
+              <Field label="Image">
+                <ImageUpload tile src={item.media?.url} name={item.media?.name} onFile={(file) => pickImage(i, file)} onRemove={() => setField(i, 'media', null)} />
+              </Field>
+            </div>
           </div>
         ))}
       </div>

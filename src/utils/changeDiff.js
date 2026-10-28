@@ -102,7 +102,6 @@ const MAPS = {
       media: ['Details', 'Feed images/videos', (v) => (v && v.length ? 'Included' : 'Off')],
       showFeedMedia: ['Details', 'Show feed images/videos', onOff],
       showFeedDescription: ['Details', 'Feed descriptions', onOff],
-      staticTitle: ['Details', 'Static heading', onOff],
       staticText: ['Content', 'Static heading'],
       showTime: ['Details', 'Show time posted', onOff],
       showProduct: ['Details', 'Show publisher', onOff],

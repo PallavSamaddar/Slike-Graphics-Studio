@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { autoTextColor, parseColor, textShadowFor } from '../utils/color.js';
+import { autoTextColor, textShadowFor } from '../utils/color.js';
 import { placeholderThumb } from '../utils/placeholderThumb.js';
 import { MIN_ITEM_SECONDS, feedMediaOn, lineHeightFor, usesFeedMedia } from '../constants/widgetTemplates.js';
-import { cardTransition, descAnimation, headingAnimation, staticAnimation } from '../constants/textAnimations.js';
+import { cardTransition, descAnimation, staticAnimation } from '../constants/textAnimations.js';
 import ParticleField from './ParticleField.jsx';
 import GlobeOrbit from './GlobeOrbit.jsx';
 import GraphicVideo, { uploadStream } from './GraphicVideo.jsx';
@@ -10,30 +10,23 @@ import PartText, { ERASE_MS, START_SEC, partSeconds, writesWords } from './PartT
 
 const TRANSITION_MS = 200;
 
-const MIN_LINES = 3;
-const MAX_HEAD_LINES = 6;
-const MAX_SUMMARY_LINES = 4;
-const MAX_DESC_SCALE = 1.6;
+const MAX_DESC_SCALE = 2;
 export default function WidgetView({ st, preview = false }) {
-  const { style: s, headingText: ht, bodyText: bt } = st;
+  const { style: s, headingText: ht } = st;
   const fromFeed = st.src !== 'manual';
   const previewItems = st.drafts?.[st.src] || st.items;
   const hideDescriptions = st.showFeedDescription === false;
   const descriptions = hideDescriptions ? [] : st.descriptions?.[st.src] || [];
-  const imagesOff = !fromFeed && st.showFeedMedia === false;
-  const itemMedia = fromFeed ? (usesFeedMedia(st) ? st.media.rss : null) : imagesOff ? null : st.media?.manual || [];
+  const imagesOff = st.showFeedMedia === false; // Images/videos off: none at all, from either source
+  const itemMedia = imagesOff ? null : fromFeed ? (usesFeedMedia(st) ? st.media.rss : null) : st.media?.manual || [];
   const lines = previewItems
     .map((title, i) => ({ title, description: descriptions[i] || '', media: itemMedia?.[i] || null }))
     .filter((line) => line.title.trim());
   const items = lines.map((line) => line.title);
 
   const durationSec = Math.max(MIN_ITEM_SECONDS, st.behavior?.itemDuration || MIN_ITEM_SECONDS);
-  const headingAnim = headingAnimation(st.behavior?.headingAnim);
-  const descAnim = descAnimation(st.behavior?.descAnim);
   const bodyTitleAnim = descAnimation(st.behavior?.headingAnim);
-  // Static title only while descriptions are off.
-  const staticTitle = !!st.staticTitle && st.showFeedDescription === false;
-  const textWritesOn = writesWords(headingAnim) || (!hideDescriptions && writesWords(descAnim)) || (staticTitle && writesWords(bodyTitleAnim));
+  const textWritesOn = writesWords(bodyTitleAnim);
   const transition = cardTransition(st.behavior?.transition, textWritesOn);
   const cardMoves = !['fade', 'none', 'sweep'].includes(transition);
   const eraseMs = !cardMoves && textWritesOn ? ERASE_MS : 0;
@@ -62,43 +55,19 @@ export default function WidgetView({ st, preview = false }) {
   const [sweeps, setSweeps] = useState(0);
   useEffect(() => { if (phase === 'out' && transition === 'sweep') setSweeps((n) => n + 1); }, [phase, transition]);
   const stageRef = useRef(null);
-  useFitLines(stageRef, st);
+  useFitLines(stageRef, [summaryIndex, st]);
   useItemScroll(stageRef, headlineScroll, [summaryIndex, st]);
 
   const bodyTextColor = autoTextColor(s.bg);
-  const headingTextColor = autoTextColor(s.headingBg);
   const bodyStyle = {
     background: s.bgGradient || s.bg,
     color: bodyTextColor,
     textShadow: textShadowFor(bodyTextColor),
     '--tex-speed': s.textureSpeed ?? 1,
   };
-  const headingBar = !!s.headingBgGradient || (!!s.headingBg && s.headingBg !== 'transparent' && parseColor(s.headingBg).a > 0);
-  const lightOnHeading = !!s.topLight && headingBar;
-  const descBg = s.descBgGradient || s.descBg;
-  const itemStyle = {
-    color: bt.color || bodyTextColor,
-    textShadow: textShadowFor(bt.color || bodyTextColor),
-    background: descBg || undefined,
-    textAlign: descAnim !== 'none' ? 'center' : bt.align, // animated text is always centred
-    lineHeight: lineHeightFor('body', s.textSpacing, bt),
-    fontFamily: bt.fontFamily,
-    fontWeight: bt.fontWeight,
-    fontStyle: bt.fontStyle,
-    textDecoration: bt.textDecoration,
-  };
-  const headingStyle = {
-    background: s.headingBgGradient || s.headingBg,
-    color: ht.color || headingTextColor,
-    textShadow: textShadowFor(ht.color || headingTextColor),
-    textAlign: headingAnim !== 'none' ? 'center' : ht.align,
-    lineHeight: lineHeightFor('heading', s.textSpacing, ht),
-    fontFamily: ht.fontFamily,
-    fontWeight: ht.fontWeight,
-    fontStyle: ht.fontStyle,
-    textDecoration: ht.textDecoration,
-    ...(headingAnim === 'glintflash' && { background: '#FFFFFF', '--label-bg': '#FFFFFF', color: ht.color || '#B5000F', textShadow: 'none' }),
-  };
+  const titleLineHeight = lineHeightFor('heading', s.textSpacing, ht);
+  // The description in the title's style, a step lighter (and 2px smaller, CSS) so the title leads.
+  const titleWeight = parseInt(ht.fontWeight, 10) || 400;
   const staticAnim = staticAnimation(st.behavior?.staticAnim);
   const staticStyle = {
     background: s.staticBg || '#FFFFFF',
@@ -106,20 +75,21 @@ export default function WidgetView({ st, preview = false }) {
     color: s.staticColor || '#B5000F',
     textShadow: '0 .06em .08em rgba(0, 0, 0, .45)',
     textAlign: 'center',
-    lineHeight: headingStyle.lineHeight,
+    lineHeight: titleLineHeight,
     fontFamily: ht.fontFamily,
-    fontWeight: 900, 
+    fontWeight: 900,
   };
   const titleBodyStyle = {
     color: ht.color || bodyTextColor,
     textShadow: textShadowFor(ht.color || bodyTextColor),
     textAlign: bodyTitleAnim !== 'none' ? 'center' : ht.align,
-    lineHeight: headingStyle.lineHeight,
+    lineHeight: titleLineHeight,
     fontFamily: ht.fontFamily,
     fontWeight: ht.fontWeight,
     fontStyle: ht.fontStyle,
     textDecoration: ht.textDecoration,
   };
+  const descStyle = { ...titleBodyStyle, fontWeight: Math.max(400, titleWeight - 300) };
 
   const feedMedia = fromFeed && itemMedia;
   const badgePos = (feedMedia ? itemMedia.find(Boolean)?.pos : s.badgeImagePos) || 'left';
@@ -141,9 +111,8 @@ export default function WidgetView({ st, preview = false }) {
     const sample = preview && !line;
     const summary = line?.description || (sample && st.showFeedDescription !== false ? 'Enter description here' : '');
     const hasDescription = !!summary.trim();
-    const asBody = staticTitle && !hasDescription; // the title shown under the static title label
-    const headingSec = asBody ? 0 : partSeconds(headline, headingAnim);
-    const pace = Math.max(1, (headingSec + (hasDescription ? partSeconds(summary, descAnim) : asBody ? partSeconds(headline, bodyTitleAnim) : 0)) / (durationSec / 2));
+    const titleSec = partSeconds(headline, bodyTitleAnim);
+    const pace = Math.max(1, (titleSec + (hasDescription ? partSeconds(summary, bodyTitleAnim) : 0)) / (durationSec / 2));
     const standIn = s.badgeImage || placeholderThumb(line?.title || '');
     const image = imagesOff ? null : line?.media?.url || (feedMedia ? standIn : s.badgeImage) || (sample && feedMediaOn(st) ? standIn : null);
     return (
@@ -152,49 +121,35 @@ export default function WidgetView({ st, preview = false }) {
         className={ghost ? 'widget-card-main widget-card-ghost' : `widget-card-main anim-${transition} phase-${phase}${eraseClass}`}
         aria-hidden={ghost || phase === 'out' || undefined}
       >
-        {!asBody && <div className={'widget-card-headline' + (lightOnHeading ? ' has-top-light' : '') + (headingAnim === 'flash' && !ghost ? ' has-flash' : '') + (headingAnim === 'glintflash' ? ' heading-label' : '')} style={headingStyle}>
-          {hasDescription ? (
-            <span className="headline-scroll">
-              <PartText className="widget-card-headline-text headline-scroll-text" text={headline} anim={ghost ? 'none' : headingAnim} pace={pace} />
-            </span>
-          ) : (
-            <PartText className="widget-card-headline-text" text={headline} anim={ghost ? 'none' : headingAnim} pace={pace} />
+        <div className={'widget-card-body widget-card-body-' + badgePos}>
+          {image && (
+            <div className="widget-card-thumb-wrap">
+              <img
+                key={image}
+                className={'widget-card-thumb' + (s.imageSlowZoom && !ghost ? ' slow-zoom' : '')}
+                style={s.imageSlowZoom ? { animationDuration: `${durationSec}s` } : undefined}
+                src={image}
+                alt=""
+                onError={(e) => { if (feedMedia && e.currentTarget.src !== standIn) e.currentTarget.src = standIn; }}
+              />
+            </div>
           )}
-          {headingAnim === 'flash' && !ghost && <HeadingFlash start={START_SEC} seconds={headingSec / pace} />}
-          {lightOnHeading && !ghost && <span className="p-top-light" aria-hidden="true" />}
-        </div>}
-        {(hasDescription || image || asBody) && (
-          <>
-            {!asBody && <div className="widget-card-divider" />}
-            <div className={'widget-card-body widget-card-body-' + badgePos}>
-              {image && (
-                <div className="widget-card-thumb-wrap">
-                  <img
-                    key={image}
-                    className={'widget-card-thumb' + (s.imageSlowZoom && !ghost ? ' slow-zoom' : '')}
-                    style={s.imageSlowZoom ? { animationDuration: `${durationSec}s` } : undefined}
-                    src={image}
-                    alt=""
-                    onError={(e) => { if (feedMedia && e.currentTarget.src !== standIn) e.currentTarget.src = standIn; }}
-                  />
-                </div>
-              )}
-              {asBody && (
-                <div className={'widget-card-summary widget-card-title-body' + (bodyTitleAnim === 'flashwrite' && !ghost ? ' has-descflash' : '')} style={titleBodyStyle}>
-                  <PartText className="widget-card-summary-text" text={headline} anim={ghost ? 'none' : bodyTitleAnim} pace={pace} />
-                  {bodyTitleAnim === 'flashwrite' && !ghost && <DescFlash start={START_SEC} seconds={partSeconds(headline, bodyTitleAnim) / pace} />}
-                </div>
-              )}
+          <div className="widget-card-copy">
+            <div className="widget-card-copy-inner">
+              <div className={'widget-card-summary widget-card-title-body' + (bodyTitleAnim === 'flashwrite' && !ghost ? ' has-descflash' : '')} style={titleBodyStyle}>
+                <PartText className="widget-card-summary-text" text={headline} anim={ghost ? 'none' : bodyTitleAnim} pace={pace} />
+                {bodyTitleAnim === 'flashwrite' && !ghost && <DescFlash start={START_SEC} seconds={titleSec / pace} />}
+              </div>
               {hasDescription && (
-                <div className={'widget-card-summary' + (descBg ? ' has-bg' : '') + (descAnim === 'flashwrite' && !ghost ? ' has-descflash' : '')} style={itemStyle}>
-                  {/* Written on once its heading is. */}
-                  <PartText className="widget-card-summary-text" text={summary} anim={ghost ? 'none' : descAnim} delay={headingSec / pace} pace={pace} />
-                  {descAnim === 'flashwrite' && !ghost && <DescFlash start={START_SEC + headingSec / pace} seconds={partSeconds(summary, descAnim) / pace} />}
+                <div className={'widget-card-summary widget-card-copy-desc' + (bodyTitleAnim === 'flashwrite' && !ghost ? ' has-descflash' : '')} style={descStyle}>
+                  {/* Written on once the title is. */}
+                  <PartText className="widget-card-summary-text" text={summary} anim={ghost ? 'none' : bodyTitleAnim} delay={titleSec / pace} pace={pace} />
+                  {bodyTitleAnim === 'flashwrite' && !ghost && <DescFlash start={START_SEC + titleSec / pace} seconds={partSeconds(summary, bodyTitleAnim) / pace} />}
                 </div>
               )}
             </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     );
   };
@@ -223,20 +178,21 @@ export default function WidgetView({ st, preview = false }) {
         </>
       )}
 
-      {s.topLight && !headingBar && <span className="p-top-light" aria-hidden="true" />}
       {transition === 'sweep' && sweeps > 0 && <span key={sweeps} className="widget-sweep" aria-hidden="true" />}
       <div className="widget-card-content">
-        {staticTitle && (
-          <div className="widget-static-title phase-hold">
-            <div className={'widget-card-headline' + (staticAnim === 'glintflash' ? ' heading-label' : '')} style={staticStyle}>
-              <PartText className="widget-card-headline-text" text={(st.staticText ?? st.category)?.trim() || 'BREAKING NEWS'} anim={staticAnim} />
-            </div>
+        {/* Always on top, outside the items, so it stays put while they change; phase-hold runs its
+            looping animation. Its top light, if on, runs along its top edge. */}
+        <div className="widget-static-title phase-hold">
+          <div className={'widget-card-headline' + (staticAnim === 'glintflash' ? ' heading-label' : '') + (s.topLight ? ' has-top-light' : '')} style={staticStyle}>
+            <PartText className="widget-card-headline-text" text={(st.staticText ?? st.category)?.trim() || 'BREAKING NEWS'} anim={staticAnim} />
+            {s.topLight && <span className="p-top-light" aria-hidden="true" />}
           </div>
-        )}
+        </div>
         <div className="widget-card-stage" ref={stageRef}>
-          {lines.map((_, i) => (i === summaryIndex ? null : renderItem(i, 'hold', true)))}
           {renderItem(summaryIndex, phase)}
         </div>
+        {/* Only with something in it: an empty footer would still take its gap, more room at the foot than the top. */}
+        {(st.showTime || st.showProduct) && (
         <div className="widget-card-footer">
           {st.showTime && (
             <span className="widget-card-time">
@@ -247,112 +203,77 @@ export default function WidgetView({ st, preview = false }) {
           {st.showTime && st.showProduct && <span className="widget-card-sep">•</span>}
           {st.showProduct && <span className="widget-card-product" style={{ color: bodyTextColor }}>Times of India</span>}
         </div>
+        )}
       </div>
     </div>
   );
 }
 
-function useFitLines(stageRef, st) {
+// The item on screen: its title and description grow together, a tenth at a time up to
+// MAX_DESC_SCALE, while they still fit its room whole (--desc-scale on the block) — a short one
+// fills the card in big type; a long one stays at its size and scrolls up (useItemScroll).
+function useFitLines(stageRef, deps) {
   useLayoutEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return undefined;
-    const tallest = () => Math.max(0, ...[...stage.children].map((item) => {
-      const parts = [...item.children];
-      const gap = parseFloat(getComputedStyle(item).rowGap) || 0;
-      return parts.reduce((h, part) => h + part.offsetHeight, 0) + gap * Math.max(0, parts.length - 1);
-    }));
-    const set = (head, summary) => {
-      stage.style.setProperty('--head-lines', head);
-      stage.style.setProperty('--summary-lines', summary);
-    };
-    const fits = (head, summary) => { set(head, summary); return tallest() <= stage.clientHeight; };
-    const scaleFits = (scale) => { stage.style.setProperty('--desc-scale', scale); return tallest() <= stage.clientHeight; };
-    const fitLines = () => {
-      // Most cards (short text) fit even at the most lines: one measure, done.
-      if (fits(MAX_HEAD_LINES, MAX_SUMMARY_LINES)) return;
-      let head = MIN_LINES;
-      let summary = Math.min(MIN_LINES, MAX_SUMMARY_LINES);
-      while (summary > 1 && !fits(head, summary)) summary--;
-      while (head > 1 && !fits(head, summary)) head--;
-      while (head < MAX_HEAD_LINES && fits(head + 1, summary)) head++;
-      while (summary < MAX_SUMMARY_LINES && fits(head, summary + 1)) summary++;
-      set(head, summary);
-    };
+    const copy = stageRef.current?.querySelector('.widget-card-main:not(.widget-card-ghost) .widget-card-copy');
+    if (!copy) return undefined;
+    const overflows = () => copy.firstElementChild.offsetHeight > copy.clientHeight + 1;
     const fit = () => {
-      stage.style.setProperty('--desc-scale', 1);
-      fitLines();
+      if (copy.dataset.vscroll !== undefined) return; // already scrolling: leave it be
+      copy.style.setProperty('--desc-scale', 1);
       let scale = 1;
-      while (scale < MAX_DESC_SCALE - 0.01 && scaleFits(+(scale + 0.1).toFixed(1))) scale = +(scale + 0.1).toFixed(1);
-      stage.style.setProperty('--desc-scale', scale);
+      if (!overflows()) {
+        for (let next = 1.1; next <= MAX_DESC_SCALE + 0.01; next = +(next + 0.1).toFixed(1)) {
+          copy.style.setProperty('--desc-scale', next);
+          if (overflows()) break;
+          scale = next;
+        }
+      }
+      copy.style.setProperty('--desc-scale', scale);
     };
     fit();
     let live = true;
-    document.fonts?.ready.then(() => { if (live) fit(); });
-    const observer = new ResizeObserver(fit);
-    observer.observe(stage);
-    stage.addEventListener('load', fit, true); 
+    // Later changes (its image loading, a resize, the fonts) fit once a frame, not once each.
+    let frame = 0;
+    const refit = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(fit); };
+    document.fonts?.ready.then(() => { if (live) refit(); });
+    const observer = new ResizeObserver(refit);
+    observer.observe(stageRef.current);
+    const item = copy.closest('.widget-card-main');
+    item.addEventListener('load', refit, true);
     return () => {
       live = false;
       observer.disconnect();
-      stage.removeEventListener('load', fit, true);
+      cancelAnimationFrame(frame);
+      item.removeEventListener('load', refit, true);
     };
-  }, [stageRef, st]);
-}
-
-function HeadingFlash({ start, seconds }) {
-  return (
-    <>
-      <span className="heading-flash" aria-hidden="true" style={{ '--d': `${start.toFixed(3)}s`, '--t': `${seconds.toFixed(3)}s` }} />
-      <span className="heading-sweep" aria-hidden="true" style={{ '--d': `${(start + seconds + 0.4).toFixed(3)}s` }} />
-    </>
-  );
+  }, [stageRef, ...deps]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 function DescFlash({ start, seconds }) {
   return <span className="desc-flash" aria-hidden="true" style={{ '--d': `${start.toFixed(3)}s`, '--t': `${Math.max(0.5, Math.min(1, seconds * 0.6)).toFixed(3)}s` }} />;
 }
 
+// An item's title and description longer than their room scroll up as one, once read a moment
+// (SCROLL_READ_MS), at SCROLL_LINES lines a second, until the end shows — the item staying on screen
+// for it and SCROLL_END_MS more. Measured as each item comes in, into `scrollRef` for the timers;
+// only a real overhang (half a line or more) counts. The block slides as one piece — a transform.
 const SCROLL_READ_MS = 2000;
 const SCROLL_END_MS = 1200;
-const SCROLL_EMS = 2.5;
 const SCROLL_LINES = 0.8;
 function useItemScroll(stageRef, scrollRef, deps) {
   useLayoutEffect(() => {
     scrollRef.current = { ms: 0 };
-    const item = stageRef.current?.querySelector('.widget-card-main:not(.widget-card-ghost)');
-    if (!item) return undefined;
-    const line = item.querySelector('.headline-scroll');
-    const boxes = [...item.querySelectorAll('.widget-card-headline, .widget-card-summary')].filter((el) => !el.querySelector('.headline-scroll'));
-    let tall = [];
+    const copy = stageRef.current?.querySelector('.widget-card-main:not(.widget-card-ghost) .widget-card-copy');
+    if (!copy) return undefined;
+    let dist = 0;
     const measure = () => {
-      let ms = 0;
-      if (line) {
-        const fontPx = parseFloat(getComputedStyle(line).fontSize) || 16;
-        const over = Math.ceil(line.scrollWidth - line.clientWidth);
-        const dist = over > fontPx / 2 ? over : 0;
-        const lineMs = dist ? Math.max(600, (dist / (fontPx * SCROLL_EMS)) * 1000) : 0;
-        line.style.setProperty('--scroll-dist', `${dist}px`);
-        line.style.setProperty('--scroll-ms', `${Math.round(lineMs)}ms`);
-        ms = lineMs;
-      }
-      tall = boxes.filter((box) => {
-        const text = box.querySelector('.widget-card-headline-text, .widget-card-summary-text');
-        if (!text) return false;
-        const cs = getComputedStyle(text);
-        const linePx = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 16) * 1.3;
-        const shown = text.clientHeight;
-        text.style.maxHeight = 'none';
-        const full = text.offsetHeight;
-        text.style.maxHeight = '';
-        const dist = Math.ceil(full - shown);
-        if (dist < linePx / 2) return false;
-        const boxMs = Math.max(600, (dist / (linePx * SCROLL_LINES)) * 1000);
-        box.style.setProperty('--vdist', `${dist}px`);
-        box.style.setProperty('--vms', `${Math.round(boxMs)}ms`);
-        box.style.setProperty('--vbox', `${box.offsetHeight}px`);
-        ms = Math.max(ms, boxMs);
-        return true;
-      });
+      const text = copy.querySelector('.widget-card-summary-text');
+      const linePx = (text && parseFloat(getComputedStyle(text).lineHeight)) || 24;
+      const over = Math.ceil(copy.firstElementChild.offsetHeight - copy.clientHeight);
+      dist = over >= linePx / 2 ? over : 0;
+      const ms = dist ? Math.max(600, (dist / (linePx * SCROLL_LINES)) * 1000) : 0;
+      copy.style.setProperty('--vdist', `${dist}px`);
+      copy.style.setProperty('--vms', `${Math.round(ms)}ms`);
       scrollRef.current = { ms };
     };
     measure();
@@ -362,8 +283,7 @@ function useItemScroll(stageRef, scrollRef, deps) {
     // From the item's hold (30ms in) plus the read.
     const start = setTimeout(() => {
       started = true;
-      if (line && parseFloat(line.style.getPropertyValue('--scroll-dist')) > 0) line.dataset.scrolling = '';
-      tall.forEach((box) => { box.dataset.vscroll = ''; });
+      if (dist) copy.dataset.vscroll = '';
     }, 30 + SCROLL_READ_MS);
     return () => { live = false; clearTimeout(start); };
   }, [stageRef, scrollRef, ...deps]); // eslint-disable-line react-hooks/exhaustive-deps

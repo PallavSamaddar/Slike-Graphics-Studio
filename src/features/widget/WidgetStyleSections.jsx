@@ -8,7 +8,7 @@ import { FontSelect, ImagePosition, Stepper, TextFormat } from '../shared-editor
 import { feedMediaOn } from '../../constants/widgetTemplates.js';
 import { autoTextColor } from '../../utils/color.js';
 import VideoNameModal from '../shared-editor/VideoNameModal.jsx';
-import { DESC_ANIMATIONS, HEADING_ANIMATIONS, PART_WISE_TRANSITIONS, STATIC_ANIMATIONS, WIDGET_TRANSITIONS, cardTransition, descAnimation, headingAnimation, staticAnimation } from '../../constants/textAnimations.js';
+import { DESC_ANIMATIONS, PART_WISE_TRANSITIONS, STATIC_ANIMATIONS, WIDGET_TRANSITIONS, cardTransition, descAnimation, staticAnimation } from '../../constants/textAnimations.js';
 import { writesWords } from '../../output/PartText.jsx';
 import { baseName, takeFile } from '../../utils/files.js';
 import { useMediaUpload } from '../../hooks/useMediaUpload.js';
@@ -33,22 +33,19 @@ const TEXTURES = [
 ];
 
 export default function WidgetStyleSections({ st, setSt }) {
-  const { style: s, headingText: ht, bodyText: bt, behavior } = st;
-  const staticTitle = !!st.staticTitle && st.showFeedDescription === false; 
-  const headingAnimOn = (staticTitle ? descAnimation(behavior.headingAnim) : headingAnimation(behavior.headingAnim)) !== 'none';
-  const textWritesOn = writesWords(staticTitle ? descAnimation(behavior.headingAnim) : headingAnimation(behavior.headingAnim))
-    || (st.showFeedDescription !== false && writesWords(descAnimation(behavior.descAnim)));
+  const { style: s, headingText: ht, behavior } = st;
+  // The static heading is always on top; each item's title sits under it, written on its own way.
+  const titleAnim = descAnimation(behavior.headingAnim);
+  const headingAnimOn = titleAnim !== 'none';
+  const textWritesOn = writesWords(titleAnim);
   const transitionOptions = WIDGET_TRANSITIONS.map((o) => (textWritesOn && PART_WISE_TRANSITIONS.includes(o.value)
     ? { ...o, disabled: true, title: 'Not with a written-on text animation — the words come in on their own' }
     : o));
   const isVideo = !!(s.texture && s.texture.startsWith('video'));
   const setStyle = (k, v) => setSt((state) => ({ ...state, style: { ...state.style, [k]: v } }));
   const setHt = (k, v) => setSt((state) => ({ ...state, headingText: { ...state.headingText, [k]: v } }));
-  const setBt = (k, v) => setSt((state) => ({ ...state, bodyText: { ...state.bodyText, [k]: v } }));
   const setBehavior = (k, v) => setSt((state) => ({ ...state, behavior: { ...state.behavior, [k]: v } }));
   const setSolidBg = (v) => setSt((state) => ({ ...state, style: { ...state.style, bg: v, bgGradient: null } }));
-  const setHeadingBgColor = (v) => setSt((state) => ({ ...state, style: { ...state.style, headingBg: v, headingBgGradient: null } }));
-  const setDescBgColor = (v) => setSt((state) => ({ ...state, style: { ...state.style, descBg: v, descBgGradient: null } }));
 
   const [pendingVideo, setPendingVideo] = useState(null); // { url, file, fileName }
   const upload = useMediaUpload();
@@ -135,83 +132,38 @@ export default function WidgetStyleSections({ st, setSt }) {
               <Select value={s.textSpacing || 'default'} options={TEXT_SPACING} onChange={(v) => setStyle('textSpacing', v)} ariaLabel="Text spacing" title="Spacing of the heading and description text" />
             </Field>
             <Field path="style.topLight">
-              <label className="cs-check" title="A light glides slowly along the top edge of the heading bar (or of the card, when the heading has no background), again and again">
+              <label className="cs-check" title="A light glides slowly along the top edge of the static heading, again and again">
                 <input type="checkbox" checked={!!s.topLight} onChange={(e) => setStyle('topLight', e.target.checked)} />
                 Top light
               </label>
             </Field>
           </div>
+          {/* Always on top of the card: the static heading. */}
           <div className="cs-row">
             <span className="cs-label">Heading</span>
-            <Field path={['style.headingBg', 'style.headingBgGradient']} off={!staticTitle && headingAnimation(behavior.headingAnim) === 'glintflash'} offReason="Glitch + fire flash puts the heading on a white label — pick another animation to colour its bar">
-              <TextColorButton
-                kind="fill"
-                value={s.headingBg}
-                fallback="#1A1714"
-                bar={s.headingBgGradient || s.headingBg}
-                onChange={setHeadingBgColor}
-                allowGradient
-                gradientValue={s.headingBgGradient}
-                onChangeGradient={(css) => setStyle('headingBgGradient', css)}
-                label="Heading background"
-              />
+            <Field path="style.staticBg">
+              <TextColorButton kind="fill" value={s.staticBg || '#FFFFFF'} fallback="#FFFFFF" bar={s.staticBg || '#FFFFFF'} onChange={(v) => setStyle('staticBg', v)} label="Static heading background" />
             </Field>
+            <Field path="style.staticColor">
+              <TextColorButton value={s.staticColor || '#B5000F'} auto={autoTextColor(s.staticBg || '#FFFFFF')} onChange={(v) => setStyle('staticColor', v)} label="Static heading" />
+            </Field>
+            <Field path="behavior.staticAnim" className="cs-wide">
+              <Select value={staticAnimation(behavior.staticAnim)} options={STATIC_ANIMATIONS} onChange={(v) => setBehavior('staticAnim', v)} ariaLabel="Static heading animation" title="How the static heading is animated, over and over" />
+            </Field>
+          </div>
+          <div className="cs-row">
+            <span className="cs-label">Text</span>
             <Field path="headingText.color">
-              <TextColorButton value={ht.color} auto={autoTextColor(s.headingBg)} onChange={(v) => setHt('color', v)} label="Heading" />
+              <TextColorButton value={ht.color} auto={autoTextColor(s.bg)} onChange={(v) => setHt('color', v)} label="Text" />
             </Field>
             <Field path="headingText.fontFamily" className="cs-wide">
-              <FontSelect tx={ht} setTx={setHt} label="Heading" />
+              <FontSelect tx={ht} setTx={setHt} label="Text" />
             </Field>
             <Field path="behavior.headingAnim" className="cs-wide">
-              {staticTitle ? (
-                <Select value={descAnimation(behavior.headingAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How each item's title comes in and goes out" />
-              ) : (
-                <Select value={headingAnimation(behavior.headingAnim)} options={HEADING_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Heading animation" title="How the heading comes in and goes out" />
-              )}
+              <Select value={titleAnim} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('headingAnim', v)} ariaLabel="Text animation" title="How each item's text comes in and goes out" />
             </Field>
-            <TextFormat tx={ht} setTx={setHt} path="headingText" label="Heading" alignOff={headingAnimOn} alignReason={CENTRED} />
+            <TextFormat tx={ht} setTx={setHt} path="headingText" label="Text" alignOff={headingAnimOn} alignReason={CENTRED} />
           </div>
-          {staticTitle ? (
-            <div className="cs-row">
-              <span className="cs-label">Static heading</span>
-              <Field path="style.staticBg">
-                <TextColorButton kind="fill" value={s.staticBg || '#FFFFFF'} fallback="#FFFFFF" bar={s.staticBg || '#FFFFFF'} onChange={(v) => setStyle('staticBg', v)} label="Static heading background" />
-              </Field>
-              <Field path="style.staticColor">
-                <TextColorButton value={s.staticColor || '#B5000F'} auto={autoTextColor(s.staticBg || '#FFFFFF')} onChange={(v) => setStyle('staticColor', v)} label="Static heading" />
-              </Field>
-              <Field path="behavior.staticAnim" className="cs-wide">
-                <Select value={staticAnimation(behavior.staticAnim)} options={STATIC_ANIMATIONS} onChange={(v) => setBehavior('staticAnim', v)} ariaLabel="Static heading animation" title="How the static heading is animated, over and over" />
-              </Field>
-            </div>
-          ) : st.showFeedDescription !== false && (
-            <div className="cs-row">
-              <span className="cs-label">Description</span>
-              <Field path={['style.descBg', 'style.descBgGradient']}>
-                <TextColorButton
-                  kind="fill"
-                  value={s.descBg}
-                  fallback="transparent"
-                  bar={s.descBgGradient || s.descBg}
-                  onChange={setDescBgColor}
-                  allowGradient
-                  gradientValue={s.descBgGradient}
-                  onChangeGradient={(css) => setStyle('descBgGradient', css)}
-                  label="Description background"
-                />
-              </Field>
-              <Field path="bodyText.color">
-                <TextColorButton value={bt.color} auto={autoTextColor(s.bg)} onChange={(v) => setBt('color', v)} label="Description" />
-              </Field>
-              <Field path="bodyText.fontFamily" className="cs-wide">
-                <FontSelect tx={bt} setTx={setBt} label="Description" />
-              </Field>
-              <Field path="behavior.descAnim" className="cs-wide">
-                <Select value={descAnimation(behavior.descAnim)} options={DESC_ANIMATIONS} onChange={(v) => setBehavior('descAnim', v)} ariaLabel="Description animation" title="How the description comes in and goes out" />
-              </Field>
-              <TextFormat tx={bt} setTx={setBt} path="bodyText" label="Description" alignOff={descAnimation(behavior.descAnim) !== 'none'} alignReason={CENTRED} />
-            </div>
-          )}
           <div className="cs-row">
             <span className="cs-label">Image</span>
             <Field path={['style.badgeImagePos', 'media']} off={!showsImage} offReason={noImage}>

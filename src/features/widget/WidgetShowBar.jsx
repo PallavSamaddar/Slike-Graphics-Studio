@@ -1,14 +1,5 @@
 import { CheckChip } from '../../ui-kit';
-import { WIDGET_TPLS, feedMediaOn } from '../../constants/widgetTemplates.js';
-
-const withHeadingDefaults = (state) => {
-  const design = WIDGET_TPLS.find((t) => t.id === state.template)?.style || {};
-  return {
-    ...state,
-    style: { ...state.style, headingBg: design.headingBg ?? state.style?.headingBg, headingBgGradient: design.headingBgGradient ?? null },
-    headingText: { ...state.headingText, color: undefined },
-  };
-};
+import { feedMediaOn } from '../../constants/widgetTemplates.js';
 import { loadFeed, withFeedItems } from '../../services/feed.js';
 
 export default function WidgetShowBar({ st, setSt }) {
@@ -45,10 +36,7 @@ export default function WidgetShowBar({ st, setSt }) {
         </CheckChip>
         <CheckChip on={!!st.showProduct} onChange={(v) => setSt((state) => ({ ...state, showProduct: v }))}>Publisher</CheckChip>
         <CheckChip on={mediaOn} onChange={setFeedMedia}>Images/videos</CheckChip>
-        <CheckChip on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => withHeadingDefaults({ ...state, showFeedDescription: v, ...(v && { staticTitle: false }) }))}>Descriptions</CheckChip>
-        {st.showFeedDescription === false && (
-          <CheckChip on={!!st.staticTitle} onChange={(v) => setSt((state) => withHeadingDefaults({ ...state, staticTitle: v }))}>Static heading</CheckChip>
-        )}
+        <CheckChip on={st.showFeedDescription !== false} onChange={(v) => setSt((state) => ({ ...state, showFeedDescription: v }))}>Descriptions</CheckChip>
       </div>
     </div>
   );

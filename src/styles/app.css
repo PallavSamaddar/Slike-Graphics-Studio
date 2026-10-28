@@ -1210,12 +1210,28 @@ input, select, textarea { font-family: inherit; }
   animation: headlineScroll var(--scroll-ms, 0ms) linear forwards;
 }
 @keyframes headlineScroll { to { transform: translateX(calc(-1 * var(--scroll-dist, 0px))); } }
-:is(.widget-card-headline, .widget-card-summary)[data-vscroll] { box-sizing: border-box; height: var(--vbox); overflow: hidden; }
+:is(.widget-card-headline, .widget-card-summary)[data-vscroll] { box-sizing: border-box; height: var(--vbox); margin-block: var(--vtrim, 0px); overflow: hidden; }
 :is(.widget-card-headline, .widget-card-summary)[data-vscroll] > :is(.widget-card-headline-text, .widget-card-summary-text) {
-  display: block; max-height: none; overflow: visible; will-change: transform;
+  display: block; max-height: none; margin-block: 0; overflow: visible; will-change: transform;
   animation: textScrollUp var(--vms, 0ms) linear forwards;
 }
 @keyframes textScrollUp { to { transform: translateY(calc(-1 * var(--vdist, 0px))); } }
+.widget-card-main > .widget-card-body { min-height: 0; align-items: stretch; }
+/* The image fills its half — as tall as the text beside it (or its own shape, if that's taller),
+   cropped to fit (cover) rather than shrunk into the middle of the room. */
+.widget-card-body > .widget-card-thumb-wrap { align-self: stretch; }
+.widget-card-body .widget-card-thumb-wrap .widget-card-thumb { height: 100%; max-height: none; object-fit: cover; }
+.widget-card-copy { min-width: 0; align-self: stretch; display: flex; flex-direction: column; overflow: hidden; }
+.widget-card-copy-inner { margin-block: auto; }
+.widget-card-body > .widget-card-copy:only-child { flex-basis: 100%; }
+.widget-card-copy .widget-card-summary-text { max-height: none; overflow: visible; margin-block: 0; }
+.widget-card-copy-desc { margin-top: .9em; }
+.widget-card-copy { font-size: calc(clamp(14px, 5cqi, 24px) * var(--desc-scale, 1)); }
+.player-widget .widget-card-copy { font-size: calc(max(clamp(24px, 5cqh, 60px), calc(26px / var(--fill-scale, 1))) * var(--desc-scale, 1)); }
+.widget-card-copy .widget-card-summary.widget-card-title-body { font-size: 1em; opacity: 1; word-spacing: .12em; /* bold words sit tight otherwise */ }
+.widget-card-copy .widget-card-summary.widget-card-copy-desc { font-size: calc(1em - 2px); opacity: 1; }
+.widget-card-copy .widget-card-summary .widget-card-summary-text { font-size: 1em; }
+.widget-card-copy[data-vscroll] > .widget-card-copy-inner { will-change: transform; animation: textScrollUp var(--vms, 0ms) linear forwards; }
 .widget-card-divider {
   align-self: center;
   width: 64px;
@@ -1230,28 +1246,23 @@ input, select, textarea { font-family: inherit; }
   line-height: 1.5;
   opacity: 0.75;
 }
-/* with a background of its own, the description sits in a padded box like the heading's */
 .widget-card-summary.has-bg { padding: 0.35em 0.6em; border-radius: var(--radius-sm); }
-/* Static title: the fixed title label (the card's full width, its words centred), and each item's title
-   under it in the description's place — at the heading's size, full strength. */
 .widget-static-title { align-self: stretch; }
-/* Raised: an edge in its text colour and a soft shadow under it, so it stands out as the heading. */
 .widget-static-title .widget-card-headline {
   font-size: clamp(19px, 7cqi, 34px); /* about 1.4x a heading: the biggest words on the card */
   box-shadow: 0 .14em 0 currentColor, 0 .3em .8em rgba(0, 0, 0, .35);
 }
 .widget-card-summary.widget-card-title-body { font-size: clamp(14px, 5cqi, 24px); opacity: 1; }
-/* a title stays at the heading's size (the description's growing font isn't for it), under the static heading */
 .widget-card-title-body .widget-card-summary-text { font-size: 1em; }
-/* clamped inside any padding, so a line past the clamp can't peek out under it */
 .widget-card-summary-text {
   display: block;
   font-size: calc(1em * var(--desc-scale, 1)); /* grown to the card's room (WidgetView's useFitLines) */
   max-height: calc(var(--summary-lines, 3) * 1.5em);
   max-height: calc(var(--summary-lines, 3) * 1lh);
   overflow: hidden;
+  margin-block: calc((1em - 1lh) / 2);
 }
-.widget-card-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); overflow: hidden; }
+.widget-card-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); overflow: hidden; }
 .widget-card-stage > .widget-card-main { grid-area: 1 / 1; }
 .widget-card-main.widget-card-ghost { visibility: hidden; pointer-events: none; }
 .widget-card-main { transition: opacity 0.2s ease, transform 0.2s ease, clip-path 0.2s ease, filter 0.2s ease; }
@@ -2023,6 +2034,12 @@ input, select, textarea { font-family: inherit; }
   justify-content: center;
   gap: 10px;
 }
+/* Room to spare is shared evenly — above the heading, between it (with its divider) and the body,
+   and below the body — rather than all above and below, so a short description doesn't sit
+   bunched up in the middle. (Auto margins share it; one part alone sits centred.) */
+.widget-card-main > :first-child { margin-top: auto; }
+.widget-card-main > .widget-card-body { margin-top: auto; }
+.widget-card-main > :last-child { margin-bottom: auto; }
 .widget-card-body {
   display: flex;
   align-items: center;
@@ -2046,7 +2063,10 @@ input, select, textarea { font-family: inherit; }
   max-height: 150px;
   object-fit: contain;
 }
-.widget-card-thumb.slow-zoom { animation: widgetSlowZoom linear forwards; }
+/* Slow zoom: in over the item's time on screen (WidgetView sets the duration), then back out,
+   and so on for as long as the image stays (one item, or the same image again); easing at
+   each turn so it never stops dead. A new item's image starts again from the zoomed-out end. */
+.widget-card-thumb.slow-zoom { animation: widgetSlowZoom ease-in-out infinite alternate; }
 @keyframes widgetSlowZoom { from { transform: scale(1); } to { transform: scale(1.12); } }
 
 .badge-img-row { display: flex; }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ItemsEditor from './ItemsEditor.jsx';
 import ContentTitle from './ContentTitle.jsx';
 import { loadFeed, withFeedItems, withoutFeedItems, REFRESH_OPTIONS } from '../../services/feed.js';
@@ -42,21 +42,6 @@ export default function ContentSource({ st, setSt, title = 'Content source', bar
 
   const drafts = st.drafts || { manual: [], rss: [] };
   const showDescriptions = st.showFeedDescription !== false;
-  useEffect(() => {
-    const url = (st.rssUrl || '').trim();
-    const missing = kind === 'widget' && st.src === 'rss' && url && drafts.rss?.length && !(st.descriptions?.rss || []).some(Boolean);
-    if (!missing) return undefined;
-    let stopped = false;
-    loadFeed(url)
-      .then((items) => {
-        if (stopped) return;
-        setSt((s) => withFeedItems(kind, s, items));
-      })
-      .catch(() => {});
-    return () => { stopped = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Editing a source's content (typing, or validating a Feed URL) makes it the live content at once.
   const setDraft = (key, items) => setSt((s) => ({ ...s, drafts: { ...(s.drafts || {}), [key]: items }, src: key, items }));
 
   const loadRss = async () => {

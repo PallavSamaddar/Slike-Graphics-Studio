@@ -2,7 +2,7 @@
 // one stylesheet request; Georgia and Courier are system fonts.
 const WEB_FONTS = {
   Inter: 'Inter:wght@400;500;600;700;800;900',
-  'Playfair Display': 'Playfair+Display:wght@600;700;800;900',
+  'Playfair Display': 'Playfair+Display:wght@400;500;600;700;800;900',
   Roboto: 'Roboto:wght@400;500;700',
   Merriweather: 'Merriweather:wght@400;700',
 };

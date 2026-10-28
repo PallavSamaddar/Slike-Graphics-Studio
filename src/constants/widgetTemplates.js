@@ -3,7 +3,6 @@ const DESIGNS = [
     id: 'breaking-red',
     name: 'Breaking News',
     desc: 'Broadcast red · page sweep',
-    // Starts with the BREAKING NEWS heading and the page-sweep change between items.
     preset: { category: 'BREAKING NEWS', behavior: { transition: 'sweep', itemDuration: 5 } },
     style: {
       bg: '#B3101A',
@@ -200,7 +199,7 @@ export const TEXT_SPACING = [
 ];
 
 const LINE_HEIGHT = {
-  heading: { compact: 1.05, default: 1.25, comfortable: 1.4 },
-  body: { compact: 1.3, default: 1.5, comfortable: 1.75 },
+  heading: { compact: 1.25, default: 1.4, comfortable: 1.55 },
+  body: { compact: 1.5, default: 1.75, comfortable: 2 },
 };
 export const lineHeightFor = (part, spacing, tx) => LINE_HEIGHT[part][spacing ?? tx?.spacing] ?? tx?.lineHeight ?? LINE_HEIGHT[part].default;
