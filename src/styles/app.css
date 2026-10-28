@@ -1213,7 +1213,13 @@ input, select, textarea { font-family: inherit; }
 @keyframes textScrollUp { to { transform: translateY(calc(-1 * var(--vdist, 0px))); } }
 .widget-card-main > .widget-card-body { min-height: 0; align-items: stretch; }
 .widget-card-body > .widget-card-thumb-wrap { align-self: stretch; flex: 0 1 auto; max-width: calc(50% - 7px); min-width: 0; }
-.widget-card-body .widget-card-thumb-wrap .widget-card-thumb { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+/* The frame may be wider or taller than the picture; size the picture itself to fit it so its own corners round. */
+.widget-card-body > .widget-card-thumb-wrap { container-type: size; align-items: center; border-radius: 0; }
+.widget-card-thumb-frame {
+  flex: none; width: min(100cqw, 100cqh * var(--ar, 1.7778)); aspect-ratio: var(--ar, 1.7778);
+  overflow: hidden; border-radius: 6px; isolation: isolate;
+}
+.widget-card-body .widget-card-thumb-wrap .widget-card-thumb { width: 100%; height: 100%; max-height: none; object-fit: cover; border-radius: 0; }
 .widget-card-body > .widget-card-copy { flex: 1 1 0; }
 .widget-card-copy { min-width: 0; align-self: stretch; display: flex; flex-direction: column; overflow: hidden; }
 .widget-card-copy-inner { margin-block: auto; }

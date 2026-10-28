@@ -124,15 +124,17 @@ export default function WidgetView({ st, preview = false }) {
         <div className={'widget-card-body widget-card-body-' + badgePos}>
           {image && (
             <div className="widget-card-thumb-wrap">
-              <img
-                key={image}
-                className={'widget-card-thumb' + (s.imageSlowZoom && !ghost ? ' slow-zoom' : '')}
-                style={s.imageSlowZoom ? { animationDuration: `${durationSec}s` } : undefined}
-                src={image}
-                alt=""
-                onLoad={(e) => { const img = e.currentTarget; if (img.naturalWidth) img.parentElement.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`; }}
-                onError={(e) => { if (feedMedia && e.currentTarget.src !== standIn) e.currentTarget.src = standIn; }}
-              />
+              <div className="widget-card-thumb-frame">
+                <img
+                  key={image}
+                  className={'widget-card-thumb' + (s.imageSlowZoom && !ghost ? ' slow-zoom' : '')}
+                  style={s.imageSlowZoom ? { animationDuration: `${durationSec}s` } : undefined}
+                  src={image}
+                  alt=""
+                  onLoad={(e) => { const img = e.currentTarget; if (img.naturalWidth) { const wrap = img.closest('.widget-card-thumb-wrap'); wrap.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`; wrap.style.setProperty('--ar', img.naturalWidth / img.naturalHeight); } }}
+                  onError={(e) => { if (feedMedia && e.currentTarget.src !== standIn) e.currentTarget.src = standIn; }}
+                />
+              </div>
             </div>
           )}
           <div className="widget-card-copy">
