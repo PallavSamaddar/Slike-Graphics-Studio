@@ -103,9 +103,9 @@ export function useKindCounts(view, refresh) {
     const controller = new AbortController();
     const { signal } = controller;
     const countOf = (kind) => previewGraphics({ kind, sourceType, state, search, size: 1 }, { signal }).then(({ count = 0 }) => count);
-    Promise.all([countOf(undefined), ...kinds.map(countOf)])
-      .then(([total, ...perKind]) => {
-        if (!signal.aborted) setCounts({ total, kind: Object.fromEntries(kinds.map((k, i) => [k, perKind[i]])) });
+    Promise.all(kinds.map(countOf))
+      .then((perKind) => {
+        if (!signal.aborted) setCounts({ total: perKind.reduce((a, b) => a + b, 0), kind: Object.fromEntries(kinds.map((k, i) => [k, perKind[i]])) });
       })
       .catch(() => {});
     return () => controller.abort();
