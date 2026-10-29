@@ -34,9 +34,13 @@ export default function CaptionView({ st, setSt, picture = false }) {
   const frameRef = useRef(null);
   const [drag, setDrag] = useState(null); // { x, y } while dragging
   const pos = drag || st.pos || { x: 6, y: 66 };
+  // Detaches a drag in progress; leaving the editor mid-drag drops it without saving.
+  const endDrag = useRef(null);
+  useEffect(() => () => endDrag.current?.(), []);
 
   const startDrag = (e) => {
     if (!editing || e.button !== 0) return;
+    endDrag.current?.();
     e.preventDefault();
     const strap = e.currentTarget;
     const frame = frameRef.current.getBoundingClientRect();
@@ -54,14 +58,26 @@ export default function CaptionView({ st, setSt, picture = false }) {
       last = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
       setDrag(last);
     };
-    const onUp = () => {
+    const detach = () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      endDrag.current = null;
+    };
+    const onUp = () => {
+      detach();
       setDrag(null);
       if (last) setSt((state) => ({ ...state, pos: last }));
     };
+    // The browser took the pointer back (touch interrupted, window lost): the strap returns.
+    const onCancel = () => {
+      detach();
+      setDrag(null);
+    };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+    endDrag.current = detach;
   };
 
   const nameSize = (parseFloat(nt?.fontSize) || 24) / 6.4; // px on the 640-wide design → % of the frame

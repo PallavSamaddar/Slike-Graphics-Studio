@@ -18,7 +18,7 @@ const REQUIRED = {
     const names = st.names?.length ? st.names : [''];
     return names.map((name, i) => ({
       path: `names.${i}`,
-      label: names.length > 1 ? `Name (caption ${i + 1})` : 'Name',
+      label: names.length > 1 ? `Title (caption ${i + 1})` : 'Title',
       isMissing: () => !filled(name),
     }));
   },

@@ -9,7 +9,7 @@ npm run build
 ```
 
 Saving talks to the b2b-cms backend (`VITE_API_BACKEND`, JSON-RPC `graphic.*`) and uploads media
-through `VITE_UPLOAD`; both are set in `.env` / `.env.production`.
+through `VITE_UPLOAD`; both are set in `.env` / `.env.production` (not in git; ask the team for them).
 
 ## Routes
 
