@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { previewGraphics, getGraphicStats } from '../../services/graphics.js';
+import { previewGraphics, getGraphicStats, GRAPHIC_KIND } from '../../services/graphics.js';
 import { isAbort } from '../../services/rpc.js';
 import { airFromPublished, isOnAir, liveStream } from '../../services/air.js';
 
@@ -82,4 +82,34 @@ export function useGraphicStats(refresh) {
     return () => controller.abort();
   }, [refresh]);
   return stats;
+}
+
+export function useKindCounts(view, refresh) {
+  const search = useDebounced(view.query.trim(), SEARCH_DEBOUNCE_MS);
+  const sourceType = only(view.sources);
+  const state = only(view.states);
+  const [counts, setCounts] = useState(null);
+
+  useEffect(() => {
+    if (!search && sourceType === undefined && state === undefined) {
+      setCounts(null);
+      return undefined;
+    }
+    const kinds = Object.values(GRAPHIC_KIND);
+    if (sourceType === null || state === null) {
+      setCounts({ total: 0, kind: Object.fromEntries(kinds.map((k) => [k, 0])) });
+      return undefined;
+    }
+    const controller = new AbortController();
+    const { signal } = controller;
+    const countOf = (kind) => previewGraphics({ kind, sourceType, state, search, size: 1 }, { signal }).then(({ count = 0 }) => count);
+    Promise.all([countOf(undefined), ...kinds.map(countOf)])
+      .then(([total, ...perKind]) => {
+        if (!signal.aborted) setCounts({ total, kind: Object.fromEntries(kinds.map((k, i) => [k, perKind[i]])) });
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [search, sourceType, state, refresh]);
+
+  return counts;
 }

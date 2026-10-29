@@ -3,7 +3,7 @@ import { CheckChip, ChooserGrid, EmptyState, Tabs, useToast } from '../../ui-kit
 import { SortMenu, ViewToggle } from './LibControls.jsx';
 import { GRAPHIC_KIND, SOURCE_TYPE, duplicateGraphic, archiveGraphic } from '../../services/graphics.js';
 import GraphicCard, { GraphicRow, KIND_LABEL } from './GraphicCard.jsx';
-import { useGraphicsPage, toCard, PAGE } from './useGraphicsIndex.js';
+import { useGraphicsPage, useKindCounts, toCard, PAGE } from './useGraphicsIndex.js';
 
 const SOURCES = [{ value: SOURCE_TYPE.MANUAL, label: 'Manual' }, { value: SOURCE_TYPE.RSS, label: 'Feed' }];
 const STATES = [{ value: 'published', label: 'Published' }, { value: 'draft', label: 'Draft' }];
@@ -40,9 +40,11 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
   const reload = () => setRetry((n) => n + 1);
 
   const total = stats?.total ?? 0;
+  const filtered = useKindCounts(filters, `${refresh}:${retry}`);
+  const tabCounts = filtered || stats;
   const tabs = [
-    { id: 'all', label: stats ? `All · ${total}` : 'All' },
-    ...Object.values(GRAPHIC_KIND).map((k) => ({ id: k, label: stats ? `${KIND_LABEL[k]}s · ${stats.kind?.[k] ?? 0}` : `${KIND_LABEL[k]}s` })),
+    { id: 'all', label: tabCounts ? `All · ${tabCounts.total ?? 0}` : 'All' },
+    ...Object.values(GRAPHIC_KIND).map((k) => ({ id: k, label: tabCounts ? `${KIND_LABEL[k]}s · ${tabCounts.kind?.[k] ?? 0}` : `${KIND_LABEL[k]}s` })),
   ];
 
   const narrowed = !!filters.query || filters.kind !== 'all' || filters.sources.length < SOURCES.length || filters.states.length < STATES.length;
