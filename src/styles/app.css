@@ -2427,3 +2427,70 @@ img.widget-mini-badge-img { height: 84%; object-fit: contain; outline: 0; backgr
   flex-shrink: 0;
   width: 14%;
 }
+
+.caption-frame { position: relative; width: 100%; max-width: 640px; aspect-ratio: 16 / 9; overflow: hidden; container-type: size; }
+.caption-frame-picture { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 38%, #4A5A76 0%, #222C40 48%, #0B0F17 100%); }
+.caption-frame-picture::before,
+.caption-frame-picture::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); background: #0D121C; opacity: .55; }
+.caption-frame-picture::before { top: 22%; width: 15%; aspect-ratio: 1; border-radius: 50%; }
+.caption-frame-picture::after { bottom: -12%; width: 46%; height: 52%; border-radius: 50% 50% 0 0; }
+.caption-guide { position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dashed rgba(255, 255, 255, .75); pointer-events: none; z-index: 2; }
+
+.caption-anchor {
+  --u: min(1cqw, 1.7778cqh);
+  position: absolute; z-index: 1; max-width: 88%;
+  font-size: calc(var(--u) * var(--name-size, 3.75)); line-height: 1.2; touch-action: none; user-select: none;
+}
+.caption-frame-edit .caption-anchor { cursor: grab; border-radius: 4px; outline: 1.5px dashed transparent; outline-offset: .3em; transition: outline-color .15s; }
+.caption-frame-edit .caption-anchor:hover,
+.caption-frame-edit .caption-anchor.dragging { outline-color: rgba(255, 255, 255, .7); }
+.caption-frame-edit .caption-anchor.dragging { cursor: grabbing; }
+
+.caption-strap { position: relative; display: inline-flex; flex-direction: column; align-items: flex-start; max-width: 100%; }
+.caption-name { max-width: 100%; padding: .26em .7em .3em; box-sizing: border-box; }
+.caption-name > span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.caption-role {
+  max-width: 100%; box-sizing: border-box; padding: .4em 1.15em; font-size: .6em; font-weight: 600; letter-spacing: .01em;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.caption-tag {
+  margin-bottom: .3em; padding: .28em .75em; font-size: .46em; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--accent); color: #111;
+}
+
+.caption-bar .caption-name,
+.caption-bar .caption-role { border-left: .22em solid var(--accent); }
+
+.caption-slant .caption-name { padding-right: 1.5em; clip-path: polygon(0 0, 100% 0, calc(100% - .75em) 100%, 0 100%); }
+.caption-slant .caption-role { margin-left: .45em; padding-right: 1.6em; clip-path: polygon(0 0, calc(100% - .7em) 0, 100% 100%, 0 100%); }
+
+.caption-line { align-items: stretch; text-shadow: 0 .05em .35em rgba(0, 0, 0, .65); }
+.caption-line .caption-name { padding: 0 0 .18em; }
+.caption-line .caption-role { padding: .5em 0 0; border-top: .14em solid var(--accent); }
+
+.caption-glass { padding: .45em .95em .55em; border-left: .2em solid var(--accent); border-radius: .3em; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 .3em 1em rgba(0, 0, 0, .25); }
+.caption-glass .caption-name { padding: 0; }
+.caption-glass .caption-role { padding: .3em 0 0; }
+
+.caption-pill .caption-name { border-radius: 999px; padding: .28em .95em .32em; }
+.caption-pill .caption-role { margin: .3em 0 0 .7em; border-radius: 999px; padding: .38em 1.1em; }
+
+.caption-strap:not(.caption-line):not(.caption-glass) > :is(.caption-name, .caption-role) { box-shadow: 0 .15em .6em rgba(0, 0, 0, .22); }
+
+.caption-strap > * { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); animation-fill-mode: backwards; }
+.caption-strap > .caption-role { animation-delay: .16s; }
+.caption-anim-slide.phase-in > * { animation-name: captionSlide; }
+.caption-anim-wipe.phase-in > * { animation-name: captionWipe; }
+.caption-anim-fade.phase-in > * { animation-name: captionFade; }
+.caption-glass.phase-in { animation: captionFade .45s ease-out both; }
+.caption-strap.phase-out,
+.caption-strap.phase-out > * { animation: captionOut .42s ease-in both; }
+@keyframes captionSlide { from { opacity: 0; transform: translateX(-1.2em); clip-path: inset(0 100% 0 0); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+@keyframes captionWipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes captionFade { from { opacity: 0; transform: translateY(.35em); } to { opacity: 1; transform: none; } }
+@keyframes captionOut { to { opacity: 0; transform: translateX(-.6em); } }
+.caption-slant.phase-in > * { animation-name: captionSlantIn; }
+@keyframes captionSlantIn { from { opacity: 0; transform: translateX(-1.2em); } to { opacity: 1; transform: none; } }
+
+.player-caption { width: 100vw; height: 100vh; }
+.player-caption .caption-frame { width: 100%; height: 100%; max-width: none; aspect-ratio: auto; }

@@ -57,5 +57,10 @@ export function savedThumb(g) {
     text.imagePos = (src === 'rss' && feedMedia.find(Boolean)?.pos) || config.style?.badgeImagePos;
     return { t, text };
   }
+  if (g.kind === 'caption') {
+    const names = config.names || lines;
+    const first = names.findIndex((n) => n?.trim());
+    return { t, text: first >= 0 ? { name: names[first], role: config.roles?.[first] || '', nameText: config.nameText } : { nameText: config.nameText } };
+  }
   return { t, text: {} };
 }

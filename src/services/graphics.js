@@ -1,6 +1,6 @@
 import { callRpc, getPublic } from './rpc.js';
 
-export const GRAPHIC_KIND = { TICKER: 'ticker', WIDGET: 'widget', JACKET: 'jacket' };
+export const GRAPHIC_KIND = { TICKER: 'ticker', WIDGET: 'widget', JACKET: 'jacket', CAPTION: 'caption' };
 export const SOURCE_TYPE = { MANUAL: 'manual', RSS: 'rss' };
 export const SOURCE_LABEL = { [SOURCE_TYPE.MANUAL]: 'Manual', [SOURCE_TYPE.RSS]: 'Feed' };
 

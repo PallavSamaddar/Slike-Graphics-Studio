@@ -1,7 +1,8 @@
-import { initialState, initialWidgetState, initialJacketState } from './initialState.js';
+import { initialState, initialWidgetState, initialJacketState, initialCaptionState } from './initialState.js';
 import { TPLS } from './tickerTemplates.js';
 import { WIDGET_TPLS } from './widgetTemplates.js';
 import { JACKET_TPLS } from './jacketTemplates.js';
+import { CAPTION_TPLS } from './captionTemplates.js';
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -52,9 +53,19 @@ export const GRAPHICS = {
       return !t ? { ...s, template: id } : { ...s, template: id, style: clone(t.style) };
     },
   },
+  caption: {
+    name: 'Caption',
+    category: 'captions',
+    templates: CAPTION_TPLS,
+    initial: initialCaptionState,
+    applyTemplate: (s, id) => {
+      const t = CAPTION_TPLS.find((tpl) => tpl.id === id);
+      return !t ? { ...s, template: id } : { ...s, template: id, style: clone(t.style) };
+    },
+  },
 };
 
-export const KIND_BY_CATEGORY = { ticker: 'ticker', widgets: 'widget', jackets: 'jacket' };
+export const KIND_BY_CATEGORY = { ticker: 'ticker', widgets: 'widget', jackets: 'jacket', captions: 'caption' };
 
 export const galleryTemplates = (kind) => GRAPHICS[kind].templates.filter((t) => !t.hidden);
 

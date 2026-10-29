@@ -68,7 +68,7 @@ export default function GraphicsLibrary({ stats, refresh, onChanged, onOpen }) {
       </EmptyState>
     );
   } else if (!narrowed && count === 0) {
-    body = <EmptyState title="Nothing saved yet">Start a ticker, widget or jacket above; it shows up here once saved.</EmptyState>;
+    body = <EmptyState title="Nothing saved yet">Start a ticker, widget, jacket or caption above; it shows up here once saved.</EmptyState>;
   } else if (graphics.length === 0) {
     body = (
       <EmptyState title="Nothing matches">

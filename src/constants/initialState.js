@@ -135,3 +135,32 @@ export const initialJacketState = {
     textTransform: 'uppercase',
   },
 };
+
+export const initialCaptionState = {
+  template: 'crimson-bar',
+  names: [''],
+  roles: [''],
+  tag: '',
+  pos: { x: 6, y: 66 }, // the strap's top-left corner, as % of the frame
+  style: {
+    shape: 'bar',
+    nameBg: '#C22F1E',
+    nameBgGradient: 'linear-gradient(90deg, #E3262F 0%, #A3121B 100%)',
+    nameColor: '#FFFFFF',
+    roleBg: '#FFFFFF',
+    roleColor: '#1A1714',
+    accent: '#FFD400',
+  },
+  nameText: {
+    fontFamily: 'Inter, sans-serif',
+    fontSize: '24px',
+    fontWeight: '800',
+    fontStyle: 'normal',
+    textDecoration: 'none',
+    textTransform: 'uppercase',
+  },
+  behavior: {
+    animation: 'slide',
+    itemDuration: 6,
+  },
+};

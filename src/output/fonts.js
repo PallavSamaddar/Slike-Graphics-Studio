@@ -9,7 +9,7 @@ const WEB_FONTS = {
 const loaded = new Set();
 
 export function loadFontsFor(st) {
-  const used = [st?.text, st?.headingText, st?.bodyText, st?.headlineText, st?.style]
+  const used = [st?.text, st?.headingText, st?.bodyText, st?.headlineText, st?.nameText, st?.style]
     .map((t) => t?.fontFamily || '')
     .join(' ');
   const wanted = Object.keys(WEB_FONTS).filter((name) => (name === 'Inter' || used.includes(name)) && !loaded.has(name));

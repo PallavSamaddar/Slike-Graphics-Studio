@@ -1,4 +1,6 @@
 import { autoTextColor } from '../../utils/color.js';
+import CaptionView from '../../output/CaptionView.jsx';
+import { initialCaptionState } from '../../constants/initialState.js';
 
 export function TickerThumb({ t, lines = ['Breaking news from India', 'Markets hit record high'] }) {
   const m = t.mini;
@@ -72,5 +74,10 @@ export function JacketThumb({ t }) {
   );
 }
 
+export function CaptionThumb({ t, name = 'Title', role = 'Subtitle', nameText }) {
+  const st = { ...initialCaptionState, style: t.style, names: [name], roles: [role], nameText: nameText || initialCaptionState.nameText, pos: { x: 6, y: 64 } };
+  return <div className="caption-mini"><CaptionView st={st} picture /></div>;
+}
+
 // The thumbnail for a template of a given kind.
-export const THUMBS = { ticker: TickerThumb, widget: WidgetThumb, jacket: JacketThumb };
+export const THUMBS = { ticker: TickerThumb, widget: WidgetThumb, jacket: JacketThumb, caption: CaptionThumb };

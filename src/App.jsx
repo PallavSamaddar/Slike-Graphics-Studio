@@ -14,12 +14,13 @@ import StudioLoading from './pages/StudioLoading.jsx';
 import { TickerContent, TickerStyle, TickerPreview } from './features/ticker';
 import { WidgetContent, WidgetStyle, WidgetPreview } from './features/widget';
 import { JacketContent, JacketStyle, JacketPreview } from './features/jacket';
+import { CaptionContent, CaptionStyle, CaptionPreview } from './features/caption';
 import LiveFeedPreview from './features/shared-editor/LiveFeedPreview.jsx';
 
 // The app shell: the header band, and which page the route (hooks/useRoute.js) shows.
 export default function App() {
   const route = useRoute();
-  const graphics = { ticker: useGraphic(GRAPHICS.ticker), widget: useGraphic(GRAPHICS.widget), jacket: useGraphic(GRAPHICS.jacket) };
+  const graphics = { ticker: useGraphic(GRAPHICS.ticker), widget: useGraphic(GRAPHICS.widget), jacket: useGraphic(GRAPHICS.jacket), caption: useGraphic(GRAPHICS.caption) };
   const { setPick: setThemePick, theme } = useTheme({ followHost: inFrame });
   const user = useCurrentUser();
 
@@ -117,6 +118,11 @@ export default function App() {
         content: <JacketContent st={g.cur} setSt={g.setCur} />,
         style: <JacketStyle st={g.cur} setSt={g.setCur} />,
         preview: <JacketPreview st={g.cur} setSt={g.setCur} />,
+      },
+      caption: {
+        content: <CaptionContent st={g.cur} setSt={g.setCur} />,
+        style: <CaptionStyle st={g.cur} setSt={g.setCur} />,
+        preview: <CaptionPreview st={g.cur} setSt={g.setCur} />,
       },
     }[kind];
     page = (

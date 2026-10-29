@@ -14,6 +14,14 @@ const REQUIRED = {
   jacket: [
     { path: 'headline', label: 'Headline', isMissing: (st) => !filled(st.headline) },
   ],
+  caption: (st) => {
+    const names = st.names?.length ? st.names : [''];
+    return names.map((name, i) => ({
+      path: `names.${i}`,
+      label: names.length > 1 ? `Name (caption ${i + 1})` : 'Name',
+      isMissing: () => !filled(name),
+    }));
+  },
 };
 
 export const missingFields = (kind, st) => {

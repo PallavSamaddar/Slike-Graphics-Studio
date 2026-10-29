@@ -11,6 +11,7 @@ const DEFAULT_TITLE = {
   [GRAPHIC_KIND.TICKER]: 'Untitled ticker',
   [GRAPHIC_KIND.WIDGET]: 'Untitled widget',
   [GRAPHIC_KIND.JACKET]: 'Untitled jacket',
+  [GRAPHIC_KIND.CAPTION]: 'Untitled caption',
 };
 
 const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key)));
@@ -18,6 +19,9 @@ const omit = (obj, keys) => Object.fromEntries(Object.entries(obj).filter(([key]
 function toSource(kind, st) {
   if (kind === GRAPHIC_KIND.JACKET) {
     return { type: SOURCE_TYPE.MANUAL, items: st.headline ? [st.headline] : [] };
+  }
+  if (kind === GRAPHIC_KIND.CAPTION) {
+    return { type: SOURCE_TYPE.MANUAL, items: (st.names || []).filter((name) => name?.trim()) };
   }
   const clean = (list) => list.filter((item) => item?.trim());
   if (st.src !== SOURCE_TYPE.RSS) return { type: SOURCE_TYPE.MANUAL, items: clean(st.items || []) };
@@ -43,7 +47,7 @@ export function toGraphicPayload(kind, st, title) {
 export function fromGraphic(graphic, initialState) {
   const st = { ...initialState, ...omit(graphic.config || {}, LEGACY_KEYS), template: graphic.template_id ?? initialState.template };
   const src = graphic.source;
-  if (graphic.kind === GRAPHIC_KIND.JACKET || !src) return st;
+  if (graphic.kind === GRAPHIC_KIND.JACKET || graphic.kind === GRAPHIC_KIND.CAPTION || !src) return st;
   st.src = src.type || graphic.published?.source?.type || SOURCE_TYPE.RSS;
   st.rssUrl = src.url || (src.type ? '' : graphic.published?.source?.url) || st.rssUrl || '';
   if (st.src !== SOURCE_TYPE.RSS) {

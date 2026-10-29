@@ -1,6 +1,7 @@
 import { TPLS } from '../constants/tickerTemplates.js';
 import { TEXT_SPACING, WIDGET_TPLS } from '../constants/widgetTemplates.js';
 import { JACKET_TPLS } from '../constants/jacketTemplates.js';
+import { CAPTION_ANIMATIONS, CAPTION_SHAPES, CAPTION_TPLS } from '../constants/captionTemplates.js';
 import { FONT_NAME } from '../constants/fonts.js';
 import { DESC_ANIMATIONS, HEADING_ANIMATIONS, STATIC_ANIMATIONS, WIDGET_TRANSITIONS } from '../constants/textAnimations.js';
 import { REFRESH_OPTIONS } from '../services/feed.js';
@@ -25,6 +26,8 @@ const TEXTURE = {
   'data-stream': 'Data Stream', 'bokeh-glow': 'Bokeh Glow', 'video-custom': 'Uploaded video',
 };
 const onOff = (v) => (v ? 'On' : 'Off');
+const CAPTION_SHAPE = Object.fromEntries(CAPTION_SHAPES.map((o) => [o.value, o.label]));
+const CAPTION_ANIMATION = Object.fromEntries(CAPTION_ANIMATIONS.map((o) => [o.value, o.label]));
 const tplName = (list) => (v) => {
   const t = list.find((tpl) => tpl.id === v);
   if (!t) return v === 'scratch' ? 'From scratch' : v;
@@ -165,6 +168,28 @@ const MAPS = {
       'tickerBadgeOverrides.bgColor': ['Style', 'Badge colour'],
       'tickerBadgeOverrides.type': ['Style', 'Badge text'],
       'tickerBadgeOverrides.show': ['Style', 'Badge', onOff],
+    },
+  },
+  caption: {
+    order: ['Content', 'Position', 'Style'],
+    skip: [],
+    keys: {
+      template: ['Style', 'Template', tplName(CAPTION_TPLS)],
+      names: ['Content', 'Title'],
+      roles: ['Content', 'Subtitle'],
+      tag: ['Content', 'Label above the title'],
+      'pos.x': ['Position', 'From the left', (v) => `${v}%`],
+      'pos.y': ['Position', 'From the top', (v) => `${v}%`],
+      'style.shape': ['Style', 'Shape', (v) => CAPTION_SHAPE[v] ?? v],
+      'style.nameBg': ['Style', 'Title background'],
+      'style.nameBgGradient': ['Style', 'Title background gradient'],
+      'style.nameColor': ['Style', 'Title text colour'],
+      'style.roleBg': ['Style', 'Subtitle background'],
+      'style.roleColor': ['Style', 'Subtitle text colour'],
+      'style.accent': ['Style', 'Accent colour'],
+      ...Object.fromEntries(Object.entries(fmt('title ')).map(([k, [l, f]]) => [`nameText.${k}`, ['Style', cap(l), f]])),
+      'behavior.animation': ['Style', 'Animation', (v) => CAPTION_ANIMATION[v] ?? v],
+      'behavior.itemDuration': ['Style', 'Each caption', (v) => `${v}s`],
     },
   },
 };

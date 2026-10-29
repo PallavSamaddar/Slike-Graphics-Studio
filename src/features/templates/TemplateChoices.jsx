@@ -9,9 +9,9 @@ export const CATEGORIES = [
   { id: 'captions', label: 'Captions' },
   { id: 'jackets', label: 'Jackets' },
 ];
-export const TITLES = { ticker: 'Choose a template', widgets: 'Choose a widget style', jackets: 'Choose a jacket style', captions: 'Captions' };
+export const TITLES = { ticker: 'Choose a template', widgets: 'Choose a widget style', jackets: 'Choose a jacket style', captions: 'Choose a caption style' };
 // "Start from scratch" opens this template for each kind (as before).
-const SCRATCH = { ticker: 'scratch', widgets: 'crimson-dots', jackets: 'crimson-global' };
+const SCRATCH = { ticker: 'scratch', widgets: 'crimson-dots', jackets: 'crimson-global', captions: 'crimson-bar' };
 
 // One kind's templates as chooser cards, led by Start from scratch — on the Templates page and
 // in the home page's template picker alike.

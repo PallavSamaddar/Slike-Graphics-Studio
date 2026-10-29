@@ -7,7 +7,7 @@ import { THUMBS } from '../templates/TemplateThumbs.jsx';
 import { savedThumb } from './savedThumb.js';
 import MiniThumb from './MiniThumb.jsx';
 
-export const KIND_LABEL = { [GRAPHIC_KIND.TICKER]: 'Ticker', [GRAPHIC_KIND.WIDGET]: 'Widget', [GRAPHIC_KIND.JACKET]: 'Jacket' };
+export const KIND_LABEL = { [GRAPHIC_KIND.TICKER]: 'Ticker', [GRAPHIC_KIND.WIDGET]: 'Widget', [GRAPHIC_KIND.JACKET]: 'Jacket', [GRAPHIC_KIND.CAPTION]: 'Caption' };
 
 // The words a saved graphic shows in its card, row and tooltips.
 const graphicName = (g) => g.title || `Untitled ${g.kind}`;

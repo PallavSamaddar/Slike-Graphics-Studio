@@ -9,6 +9,7 @@ import { loadFontsFor } from './fonts.js';
 import TickerView from './TickerView.jsx';
 import WidgetView from './WidgetView.jsx';
 import JacketView from './JacketView.jsx';
+import CaptionView from './CaptionView.jsx';
 import FitToWindow, { FillWindow, NATURAL_WIDTH } from './FitToWindow.jsx';
 
 const ON_AIR_POLL_MS = 15 * 1000;
@@ -73,6 +74,8 @@ function GraphicOnPage({ kind, st }) {
     return () => observer.disconnect();
   }, [kind]);
 
+  // A caption fills the window itself: its strap sits at the same % of the frame as in the editor.
+  if (kind === 'caption') return <div className="player-page player-caption"><CaptionView st={st} /></div>;
   const view = kind === 'jacket' ? <JacketView st={st} /> : kind === 'widget' ? <WidgetView st={st} /> : <TickerView st={st} />;
   const width = PLAYER_WIDTH[kind];
   const fitted = kind === 'widget' ? <FillWindow width={width} height={WIDGET_DESIGN_HEIGHT}>{view}</FillWindow>

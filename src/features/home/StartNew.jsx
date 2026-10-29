@@ -5,6 +5,7 @@ const KINDS = [
   { kind: 'ticker', blurb: 'Scrolling headlines bar' },
   { kind: 'widget', blurb: 'News card with title & image' },
   { kind: 'jacket', blurb: 'Full-screen overlay' },
+  { kind: 'caption', blurb: 'Lower-third name strap' },
 ];
 export default function StartNew({ onPick }) {
   return (
@@ -34,15 +35,6 @@ export default function StartNew({ onPick }) {
             </li>
           );
         })}
-        <li>
-          <div className="start-soon" aria-disabled="true">
-            <span className="start-row-text">
-              <span className="start-row-name">Captions</span>
-              <span className="start-row-sub">Live subtitles</span>
-            </span>
-            <span className="start-row-soon">Soon</span>
-          </div>
-        </li>
       </ul>
     </section>
   );
